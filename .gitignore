@@ -1,0 +1,12 @@
+# dependencias
+node_modules/
+# base de datos local (regenerable con `npm run seed`) y archivos WAL
+data/*.db
+data/*.db-shm
+data/*.db-wal
+# compilado del cliente (regenerable con `npm run build`)
+public/assets/
+public/index.html
+# temporales
+*.log
+.DS_Store

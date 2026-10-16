@@ -1,0 +1,31 @@
+{
+  "name": "sistema-calificaciones",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Sistema de Calificaciones del Personal afecto al Estatuto Administrativo (DTO 1825/1998) - con identificación de asociados ANEIICH",
+  "scripts": {
+    "dev": "vite",
+    "dev:server": "node --disable-warning=ExperimentalWarning --watch server/index.js",
+    "build": "vite build",
+    "start": "node --disable-warning=ExperimentalWarning server/index.js",
+    "seed": "node --disable-warning=ExperimentalWarning server/seed.js --reset",
+    "wipe": "node --disable-warning=ExperimentalWarning server/seed.js --wipe"
+  },
+  "dependencies": {
+    "express": "^4.21.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "recharts": "^2.13.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "tailwindcss": "^4.0.0",
+    "vite": "^6.0.7"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
