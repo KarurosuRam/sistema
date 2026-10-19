@@ -1,0 +1,2243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Registro de votación de la Junta Calificadora, compuesta por Representante, Integrante 1, Integrante 2 y Presidenta.">
+<meta name="color-scheme" content="light">
+<title>Junta Calificadora · Registro de votación</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='10' fill='%230f2235'/%3E%3Ccircle cx='24' cy='24' r='15' fill='none' stroke='%23d8b878' stroke-width='2'/%3E%3Cpath d='M17 24l5 5 9-10' fill='none' stroke='%23d8b878' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --ink:#182839;
+    --ink-soft:#4d5b6c;
+    --navy:#0f2235;
+    --navy-2:#17344e;
+    --cream:#f5f0e5;
+    --paper:#fffdf8;
+    --gold:#b7893d;
+    --gold-dark:#8f6828;
+    --gold-soft:#e8d7b6;
+    --line:#e2dacb;
+    --line-soft:#eee7da;
+    --favor:#1c7357;
+    --favor-bg:#e8f3ed;
+    --favor-line:#cbe3d8;
+    --contra:#a3402c;
+    --contra-bg:#f9eae5;
+    --contra-line:#ecd3ca;
+    --abst:#7f642e;
+    --abst-bg:#f5efdf;
+    --abst-line:#e8dcc0;
+    --pending:#8b8272;
+    --pending-bg:#f1ede4;
+    --shadow:0 1px 2px rgba(20,35,53,.05), 0 20px 44px -30px rgba(20,35,53,.4);
+    --radius:16px;
+    --serif:Georgia,"Iowan Old Style","Palatino Linotype","Times New Roman",serif;
+    --sans:"Avenir Next","Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;
+  }
+
+  *,*::before,*::after{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    min-height:100vh;
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:16px;
+    line-height:1.5;
+    background:
+      radial-gradient(1100px 460px at 88% -8%, #efe4d0 0%, rgba(239,228,208,0) 62%),
+      radial-gradient(900px 420px at -8% 4%, #e9efe9 0%, rgba(233,239,233,0) 58%),
+      var(--cream);
+    -webkit-font-smoothing:antialiased;
+  }
+  body.modal-open{overflow:hidden;}
+  [hidden]{display:none !important;}
+  h1,h2,h3,p,dl,dd{margin-top:0;}
+  button{font:inherit; cursor:pointer;}
+  button:disabled{cursor:not-allowed; opacity:.45;}
+  svg{display:block;}
+  ::selection{background:#e4cfa7; color:#1a2839;}
+  :focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
+  input:focus-visible,textarea:focus-visible{outline:none;}
+
+  .wrap{width:min(1180px, calc(100% - 48px)); margin-inline:auto;}
+  .noscript-note{
+    margin:0; padding:12px 16px;
+    background:#f6e0d8; color:#7d3826;
+    font-size:.85rem; text-align:center;
+  }
+  .sr-only{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
+
+  /* ---------- Hero ---------- */
+  .hero{
+    position:relative;
+    overflow:hidden;
+    color:#f8f2e6;
+    background:
+      radial-gradient(760px 360px at 84% 0%, rgba(55,92,121,.55) 0%, rgba(55,92,121,0) 68%),
+      linear-gradient(132deg,#0c1d2e 0%,#132d45 55%,#1a3c58 100%);
+    border-bottom:3px solid var(--gold);
+  }
+  .hero::before{
+    content:"";
+    position:absolute;
+    width:620px; height:620px;
+    right:-210px; top:-360px;
+    border:1px solid rgba(231,208,166,.16);
+    border-radius:50%;
+  }
+  .hero::after{
+    content:"";
+    position:absolute;
+    width:380px; height:380px;
+    right:-70px; top:-240px;
+    border:1px solid rgba(231,208,166,.1);
+    border-radius:50%;
+  }
+  .hero-inner{position:relative; z-index:1; padding:32px 0 54px;}
+  .brand-row{
+    display:flex; align-items:center; justify-content:space-between; gap:20px;
+    padding-bottom:28px;
+    border-bottom:1px solid rgba(246,240,228,.13);
+  }
+  .brand{display:flex; align-items:center; gap:12px; min-width:0;}
+  .seal{
+    width:44px; height:44px; flex:none;
+    color:#d8b878;
+    border:1px solid rgba(216,184,120,.5);
+    border-radius:50%;
+    display:grid; place-items:center;
+    background:rgba(255,255,255,.04);
+  }
+  .seal svg{width:30px; height:30px;}
+  .brand-text{display:flex; flex-direction:column; gap:1px; min-width:0;}
+  .brand-eyebrow{
+    font-size:.58rem; font-weight:800; letter-spacing:.24em;
+    text-transform:uppercase; color:#c7a76b;
+  }
+  .brand-name{
+    font-family:var(--serif); font-size:1.06rem; letter-spacing:.015em; color:#f7f1e4;
+  }
+  .hero-chips{display:flex; flex-wrap:wrap; justify-content:flex-end; gap:7px;}
+  .chip{
+    font-size:.64rem; font-weight:700; letter-spacing:.04em;
+    color:#c9d3dd;
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.045);
+    border-radius:999px;
+    padding:5px 10px;
+    white-space:nowrap;
+  }
+  .hero-copy{max-width:860px; padding-top:34px;}
+  .eyebrow{
+    font-size:.66rem; font-weight:800; letter-spacing:.22em;
+    text-transform:uppercase; color:#8b6a2e; margin-bottom:10px;
+  }
+  .hero .eyebrow{color:#d6b77d; margin-bottom:12px;}
+  .hero h1{
+    font-family:var(--serif);
+    font-weight:400;
+    font-size:clamp(2.05rem, 4.4vw, 3.35rem);
+    line-height:1.08;
+    letter-spacing:-.015em;
+    color:#fbf7ee;
+    margin-bottom:16px;
+  }
+  .hero h1 span{color:#e3c48d; font-style:italic;}
+  .hero-lede{max-width:660px; margin-bottom:0; color:#c1cddb; font-size:.98rem; line-height:1.65;}
+
+  /* ---------- Layout ---------- */
+  .layout{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 356px;
+    gap:26px;
+    align-items:start;
+    padding:36px 0 8px;
+  }
+  .col-main{min-width:0;}
+  .col-side{min-width:0;}
+
+  /* ---------- Cards & sections ---------- */
+  .card{
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:26px 26px 24px;
+    margin-bottom:20px;
+  }
+  .section-head{display:flex; align-items:flex-start; gap:13px; margin-bottom:22px;}
+  .step{
+    flex:none;
+    width:38px; height:38px;
+    display:grid; place-items:center;
+    border-radius:11px;
+    border:1px solid #e3d2ae;
+    background:#f6eedf;
+    color:#8d6829;
+    font-size:.68rem; font-weight:800; letter-spacing:.08em;
+  }
+  .section-head h2{
+    font-family:var(--serif);
+    font-size:1.28rem;
+    font-weight:400;
+    letter-spacing:-.005em;
+    margin-bottom:3px;
+  }
+  .section-head p{margin:0; color:#7a7264; font-size:.8rem; line-height:1.5;}
+
+  /* ---------- Fields ---------- */
+  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  .span-2{grid-column:1 / -1;}
+  .field{display:flex; flex-direction:column; gap:6px; min-width:0;}
+  .label{
+    display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+    font-size:.76rem; font-weight:800; color:#4b596a; letter-spacing:.015em;
+  }
+  .req{color:#a76a2c; font-weight:800;}
+  .optional{font-size:.68rem; font-weight:600; color:#938b7c; letter-spacing:.01em;}
+  .hint{font-size:.71rem; color:#8d8474; line-height:1.45; margin:0;}
+  .char-count{font-size:.68rem; color:#9b9283; font-variant-numeric:tabular-nums; white-space:nowrap;}
+  .field-footer{display:flex; justify-content:space-between; align-items:flex-start; gap:12px;}
+  .error-msg{font-size:.72rem; font-weight:700; color:#a84832; margin:0;}
+
+  input[type="text"],input[type="date"],textarea{
+    width:100%;
+    font:inherit;
+    font-size:.9rem;
+    color:var(--ink);
+    background:#fffefb;
+    border:1px solid #d8d0c0;
+    border-radius:10px;
+    padding:11px 12px;
+    transition:border-color .15s ease, box-shadow .15s ease, background .15s ease;
+  }
+  input[type="text"]:hover,input[type="date"]:hover,textarea:hover{border-color:#c5bba6;}
+  input[type="text"]:focus,input[type="date"]:focus,textarea:focus{
+    border-color:var(--gold);
+    box-shadow:0 0 0 3px rgba(183,137,61,.16);
+    background:#fff;
+  }
+  input::placeholder,textarea::placeholder{color:#a9a08f;}
+  textarea{resize:vertical; min-height:108px; line-height:1.6;}
+  input[type="date"]{min-height:43px;}
+  .field.invalid input,.field.invalid textarea{
+    border-color:#c16a54;
+    box-shadow:0 0 0 3px rgba(193,106,84,.12);
+  }
+
+  /* ---------- Member cards ---------- */
+  .members{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px;}
+  .member{
+    position:relative;
+    min-width:0;
+    background:#fffdf8;
+    border:1px solid #e3dccd;
+    border-radius:14px;
+    padding:18px 18px 16px;
+    transition:border-color .2s ease, box-shadow .2s ease;
+  }
+  .member:hover{border-color:#d2c4a9;}
+  .member--presidenta{
+    background:linear-gradient(180deg,#fffdf8 0%,#fbf5e8 100%);
+    border-color:#dfcba0;
+  }
+  .member--presidenta::before{
+    content:"";
+    position:absolute; left:16px; right:16px; top:-1px; height:3px;
+    border-radius:0 0 4px 4px;
+    background:linear-gradient(90deg,#c59a4f,#e6cf9f);
+  }
+  .member.missing{
+    border-color:#cb7a62;
+    box-shadow:0 0 0 3px rgba(203,122,98,.12);
+  }
+  .member-head{display:flex; align-items:center; gap:8px; margin-bottom:14px; min-width:0;}
+  .member-index{
+    flex:none;
+    font-size:.58rem; font-weight:800; letter-spacing:.08em;
+    line-height:1;
+    color:#a98748;
+    background:#faf3e5;
+    border:1px solid #e7d7b7;
+    border-radius:6px;
+    padding:4px 5px;
+  }
+  .member-role{
+    margin:0;
+    min-width:0;
+    font-size:.71rem; font-weight:800; letter-spacing:.12em;
+    text-transform:uppercase;
+    line-height:1.3;
+    color:#1c3348;
+  }
+  .preside-tag{
+    display:inline-block;
+    margin-left:5px;
+    padding:2px 5px;
+    border:1px solid #e2cea2;
+    border-radius:5px;
+    background:#f5e9cf;
+    color:#876427;
+    font-size:.5rem;
+    letter-spacing:.09em;
+    vertical-align:2px;
+  }
+  .member-status{
+    flex:none;
+    margin-left:auto;
+    padding:4px 7px;
+    border:1px solid #e7e0d2;
+    border-radius:999px;
+    background:var(--pending-bg);
+    color:var(--pending);
+    font-size:.55rem; font-weight:800; letter-spacing:.07em;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+  .member-status.favor{background:var(--favor-bg); border-color:var(--favor-line); color:var(--favor);}
+  .member-status.contra{background:var(--contra-bg); border-color:var(--contra-line); color:var(--contra);}
+  .member-status.abstencion{background:var(--abst-bg); border-color:var(--abst-line); color:var(--abst);}
+  .member.missing .member-status{background:#fae8e2; border-color:#ecc7bc; color:var(--contra);}
+  .member .field{gap:5px;}
+  .member .label{
+    font-size:.63rem; letter-spacing:.09em; text-transform:uppercase; color:#817867;
+  }
+  .member input[type="text"]{font-size:.84rem; padding:9px 10px; border-radius:9px;}
+
+  .vote-group{border:0; padding:0; margin:14px 0 0; min-width:0;}
+  .vote-group legend{
+    padding:0; margin-bottom:7px;
+    font-size:.61rem; font-weight:800; letter-spacing:.1em;
+    text-transform:uppercase; color:#8a8170;
+  }
+  .vote-group legend .legend-note{
+    margin-left:5px;
+    letter-spacing:.02em;
+    text-transform:none;
+    font-weight:600;
+    color:#a08a5e;
+  }
+  .vote-options{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px;}
+  .vote{
+    position:relative;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    min-width:0;
+    padding:9px 3px 8px;
+    border:1px solid #e0d8c9;
+    border-radius:9px;
+    background:#fff;
+    color:#6c6456;
+    font-size:.64rem; font-weight:700; line-height:1.15;
+    text-align:center;
+    user-select:none;
+    transition:border-color .15s ease, background .15s ease, color .15s ease, transform .15s ease;
+  }
+  .vote svg{width:14px; height:14px; flex:none;}
+  .vote:hover{border-color:#ccb88c; color:#413827; background:#fffcf5;}
+  .vote:active{transform:scale(.98);}
+  .vote input{position:absolute; width:1px; height:1px; opacity:0; pointer-events:none;}
+  .vote:focus-within{outline:2px solid var(--gold); outline-offset:2px;}
+  .vote.selected{border-color:currentColor;}
+  .vote-favor.selected{background:var(--favor-bg); color:var(--favor);}
+  .vote-contra.selected{background:var(--contra-bg); color:var(--contra);}
+  .vote-abst.selected{background:var(--abst-bg); color:var(--abst);}
+
+  /* ---------- Summary ---------- */
+  .summary-card{
+    position:sticky;
+    top:22px;
+    padding:24px 22px 22px;
+    border-radius:var(--radius);
+    color:#f5efe3;
+    background:
+      radial-gradient(420px 240px at 100% 0%, rgba(72,111,142,.5) 0%, rgba(72,111,142,0) 70%),
+      linear-gradient(160deg,#0e2032 0%,#17334c 100%);
+    box-shadow:0 30px 60px -34px rgba(12,26,41,.85);
+  }
+  .summary-eyebrow{
+    font-size:.6rem; font-weight:800; letter-spacing:.2em;
+    text-transform:uppercase; color:#d3b47b; margin-bottom:6px;
+  }
+  .summary-card h2{
+    font-family:var(--serif); font-weight:400; font-size:1.35rem;
+    letter-spacing:-.005em; color:#fbf6ea; margin-bottom:16px;
+  }
+  .summary-subject{
+    padding-bottom:14px;
+    margin-bottom:15px;
+    border-bottom:1px solid rgba(255,255,255,.12);
+    font-size:.61rem; font-weight:800; letter-spacing:.13em;
+    text-transform:uppercase; color:#92a3b5;
+  }
+  .summary-subject strong{
+    display:block;
+    margin-top:4px;
+    font-size:.94rem; font-weight:600; letter-spacing:0;
+    text-transform:none; color:#fdfaf2;
+    overflow-wrap:anywhere;
+  }
+  .summary-subject strong.is-empty{color:#8e9cac; font-style:italic; font-weight:400;}
+  .result-box{
+    padding:13px 14px;
+    border:1px solid rgba(255,255,255,.11);
+    border-radius:11px;
+    background:rgba(255,255,255,.055);
+  }
+  .result-kicker{
+    display:block;
+    font-size:.55rem; font-weight:800; letter-spacing:.14em;
+    text-transform:uppercase; color:#93a3b4; margin-bottom:3px;
+  }
+  .result-label{
+    display:block;
+    font-family:var(--serif);
+    font-size:1.17rem;
+    line-height:1.25;
+    color:#dfe6ee;
+  }
+  .result-label.is-favor{color:#91d8b9;}
+  .result-label.is-contra{color:#f0a68f;}
+  .result-label.is-empate{color:#e7c884;}
+  .result-label.is-none{color:#c3cedb;}
+  .result-label.is-pending{color:#dfe6ee;}
+  .result-detail{
+    display:block;
+    margin-top:4px;
+    font-size:.72rem;
+    color:#aebaca;
+    line-height:1.45;
+  }
+  .seat-bar{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:5px;
+    height:7px; margin:17px 0 8px;
+  }
+  .seat-bar span{
+    border-radius:999px;
+    background:rgba(255,255,255,.14);
+    transition:background .25s ease;
+  }
+  .seat-bar span.favor{background:#5fc29d;}
+  .seat-bar span.contra{background:#e2836a;}
+  .seat-bar span.abstencion{background:#d5b36c;}
+  .seat-caption{
+    margin-bottom:16px;
+    font-size:.68rem; letter-spacing:.02em; color:#93a2b3;
+  }
+  .tally{margin-bottom:4px;}
+  .tally-row{display:flex; align-items:center; gap:9px; margin:10px 0;}
+  .dot{width:7px; height:7px; flex:none; border-radius:50%;}
+  .dot-favor{background:#5fc29d;}
+  .dot-contra{background:#e2836a;}
+  .dot-abstencion{background:#d5b36c;}
+  .tally-name{flex:none; width:78px; font-size:.78rem; color:#ccd6e1;}
+  .tally-track{
+    flex:1;
+    height:5px;
+    border-radius:999px;
+    background:rgba(255,255,255,.1);
+    overflow:hidden;
+  }
+  .tally-track i{
+    display:block; width:0; height:100%;
+    border-radius:inherit;
+    transition:width .3s ease;
+  }
+  #barFavor{background:#5fc29d;}
+  #barContra{background:#e2836a;}
+  #barAbstencion{background:#d5b36c;}
+  .tally-count{
+    flex:none; width:15px;
+    font-size:.82rem; font-weight:700; text-align:right;
+    font-variant-numeric:tabular-nums; color:#f4efe4;
+  }
+  .summary-note{
+    margin:18px 0 14px;
+    padding:9px 11px;
+    border-left:2px solid var(--gold);
+    border-radius:0 7px 7px 0;
+    background:rgba(255,255,255,.05);
+    color:#b8c4d2;
+    font-size:.72rem;
+    line-height:1.55;
+  }
+  .summary-actions{display:grid; gap:9px;}
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:7px;
+    padding:10px 15px;
+    border:1px solid transparent;
+    border-radius:10px;
+    font-size:.82rem; font-weight:800; letter-spacing:.01em;
+    line-height:1.2;
+    text-decoration:none;
+    transition:background .15s ease, border-color .15s ease, color .15s ease, transform .15s ease, filter .15s ease;
+  }
+  .btn svg{width:15px; height:15px; flex:none;}
+  .btn-block{width:100%;}
+  .btn-gold{
+    background:linear-gradient(180deg,#d3ab63 0%,#bd8f43 100%);
+    border-color:#d5b273;
+    color:#1b2735;
+    box-shadow:0 12px 26px -14px rgba(189,143,67,.9);
+  }
+  .btn-gold:hover{filter:brightness(1.05); transform:translateY(-1px);}
+  .btn-gold:active{transform:translateY(0);}
+  .btn-ghost{
+    background:transparent;
+    border-color:rgba(255,255,255,.24);
+    color:#f2ecdf;
+  }
+  .btn-ghost:hover{background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.4);}
+  .btn-outline{
+    background:#fffdf8;
+    border-color:#d9cfba;
+    color:#4c5a6b;
+  }
+  .btn-outline:hover{border-color:#bda26a; color:#2d3c4d; background:#fdf8ec;}
+  .btn-small{padding:8px 12px; font-size:.74rem; border-radius:9px;}
+
+  .aside-note{
+    margin-top:16px;
+    padding:15px 17px;
+    border:1px solid #e4d5b8;
+    border-radius:13px;
+    background:rgba(243,235,218,.75);
+    color:#665e4d;
+    font-size:.76rem;
+    line-height:1.55;
+  }
+  .aside-note-title{
+    margin-bottom:4px;
+    font-size:.58rem; font-weight:800; letter-spacing:.14em;
+    text-transform:uppercase; color:#7c5e26;
+  }
+  .aside-note p:last-child{margin-bottom:0;}
+
+  /* ---------- History ---------- */
+  .history{padding:26px 0 58px;}
+  .history-head{
+    display:flex; align-items:flex-end; justify-content:space-between; gap:20px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+  }
+  .history-head h2{
+    font-family:var(--serif); font-weight:400; font-size:1.6rem;
+    letter-spacing:-.01em; margin-bottom:4px;
+    display:flex; align-items:center; gap:9px; flex-wrap:wrap;
+  }
+  .count-badge{
+    display:inline-grid; place-items:center;
+    min-width:25px; height:23px;
+    padding:0 8px;
+    border-radius:999px;
+    background:#e9ddc4;
+    color:#745726;
+    font-family:var(--sans);
+    font-size:.68rem; font-weight:800;
+    letter-spacing:0;
+    font-variant-numeric:tabular-nums;
+  }
+  .history-sub{max-width:600px; margin:0; color:#7c7465; font-size:.8rem; line-height:1.5;}
+  .history-actions{display:flex; flex-wrap:wrap; gap:8px;}
+  .history-card{
+    overflow:hidden;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+  }
+  .history-foot{
+    margin:12px 2px 0;
+    color:#8a8273;
+    font-size:.71rem;
+    line-height:1.5;
+  }
+  .empty-state{max-width:470px; margin:0 auto; padding:50px 24px; text-align:center;}
+  .empty-icon{
+    width:54px; height:54px;
+    display:grid; place-items:center;
+    margin:0 auto 15px;
+    border:1px solid #e6d6b6;
+    border-radius:50%;
+    background:#f6efe1;
+    color:#a28242;
+  }
+  .empty-icon svg{width:25px; height:25px;}
+  .empty-state h3{font-family:var(--serif); font-size:1.16rem; font-weight:400; margin-bottom:7px;}
+  .empty-state p{margin:0; color:#7d7567; font-size:.82rem; line-height:1.6;}
+  .empty-state strong{color:#4a3f2b;}
+
+  .table-wrap{width:100%; overflow-x:auto;}
+  table{width:100%; border-collapse:collapse; font-size:.82rem;}
+  .history-table{min-width:880px;}
+  .history-table th:last-child{text-align:right;}
+  .history-table th{
+    padding:10px 14px;
+    background:#f4eee2;
+    border-bottom:1px solid var(--line);
+    color:#766c59;
+    font-size:.62rem; font-weight:800; letter-spacing:.09em;
+    text-transform:uppercase;
+    text-align:left;
+    white-space:nowrap;
+  }
+  .history-table td{
+    padding:13px 14px;
+    border-bottom:1px solid var(--line-soft);
+    vertical-align:middle;
+  }
+  .history-table tbody tr:last-child td{border-bottom:0;}
+  .history-table tbody tr:hover{background:#fbf7ee;}
+  .folio-cell{font-weight:800; color:#8a6729; font-variant-numeric:tabular-nums; white-space:nowrap;}
+  .date-cell{color:#5d6673; white-space:nowrap;}
+  .subject-name{display:block; font-weight:700; color:#1c2b3c; font-size:.85rem; line-height:1.35;}
+  .cell-sub{display:block; margin-top:2px; color:#8e8677; font-size:.7rem; line-height:1.35;}
+  .vote-summary{display:flex; flex-wrap:wrap; gap:4px; max-width:250px;}
+  .mini-chip{
+    padding:3px 7px;
+    border:1px solid transparent;
+    border-radius:6px;
+    font-size:.63rem; font-weight:700;
+    white-space:nowrap;
+  }
+  .mini-chip.favor{background:#eff6f2; border-color:#d6e8df; color:var(--favor);}
+  .mini-chip.contra{background:#fbefeb; border-color:#efdad2; color:var(--contra);}
+  .mini-chip.abstencion{background:#f8f2e5; border-color:#eadfc5; color:var(--abst);}
+  .mini-chip.pending{background:var(--pending-bg); border-color:#e5ded0; color:var(--pending);}
+  .badge{
+    display:inline-flex; align-items:center; gap:5px;
+    padding:4px 9px;
+    border-radius:999px;
+    font-size:.64rem; font-weight:800;
+    letter-spacing:.01em;
+    white-space:nowrap;
+  }
+  .badge::before{content:""; width:5px; height:5px; border-radius:50%; background:currentColor; opacity:.8;}
+  .badge.favor{background:var(--favor-bg); color:var(--favor);}
+  .badge.contra{background:var(--contra-bg); color:var(--contra);}
+  .badge.empate{background:var(--abst-bg); color:var(--abst);}
+  .badge.none,.badge.pending{background:#eef0f3; color:#5a6878;}
+  .row-actions{display:flex; align-items:center; justify-content:flex-end; gap:6px;}
+  .icon-btn{
+    display:inline-flex; align-items:center; gap:5px;
+    padding:6px 9px;
+    border:1px solid #e2dacb;
+    border-radius:8px;
+    background:#fffdf8;
+    color:#6c6455;
+    font-size:.68rem; font-weight:700;
+    white-space:nowrap;
+    transition:border-color .15s ease, color .15s ease, background .15s ease;
+  }
+  .icon-btn svg{width:13px; height:13px;}
+  .icon-btn:hover{border-color:#c3a568; color:#2d3b4c; background:#fdf8ec;}
+  .icon-btn.danger:hover{border-color:#cf8b77; color:var(--contra); background:#fdf2ee;}
+  .new-row{animation:rowHighlight 2.2s ease;}
+  @keyframes rowHighlight{
+    0%{background:#f7ead0;}
+    100%{background:transparent;}
+  }
+
+  /* ---------- Footer ---------- */
+  .site-footer{
+    padding:20px 0;
+    border-top:1px solid #e2d9ca;
+    background:rgba(243,236,224,.7);
+  }
+  .footer-inner{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    color:#7f7768; font-size:.71rem;
+  }
+  .footer-inner p{margin:0;}
+  .footer-inner strong{color:#35485c; font-weight:700;}
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position:fixed;
+    left:50%; bottom:24px;
+    z-index:140;
+    max-width:min(480px, calc(100% - 32px));
+    padding:11px 16px;
+    border:1px solid rgba(224,199,155,.4);
+    border-radius:10px;
+    background:#102234;
+    color:#f7f1e4;
+    font-size:.79rem;
+    line-height:1.45;
+    box-shadow:0 18px 40px -18px rgba(8,18,29,.7);
+    opacity:0;
+    pointer-events:none;
+    transform:translate(-50%, 14px);
+    transition:opacity .2s ease, transform .2s ease;
+  }
+  .toast.show{opacity:1; transform:translate(-50%, 0);}
+
+  /* ---------- Modal & acta ---------- */
+  .modal-overlay{
+    position:fixed; inset:0;
+    z-index:80;
+    display:flex; align-items:flex-start; justify-content:center;
+    padding:24px;
+    overflow-y:auto;
+    background:rgba(8,18,29,.66);
+    backdrop-filter:blur(5px);
+  }
+  .modal{
+    position:relative;
+    width:min(840px,100%);
+    margin:auto;
+    border-radius:15px;
+    background:#fffefb;
+    box-shadow:0 40px 90px -30px rgba(4,14,25,.75);
+    overflow:hidden;
+  }
+  .modal:focus{outline:none;}
+  .modal-bar{
+    position:sticky; top:0; z-index:2;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    padding:10px 12px;
+    border-bottom:1px solid #e3d8c4;
+    background:#f5efe3;
+  }
+  .modal-bar-info{display:flex; align-items:center; gap:9px; min-width:0;}
+  .modal-chip{
+    flex:none;
+    padding:4px 8px;
+    border-radius:6px;
+    background:#e8dcc2;
+    color:#775a26;
+    font-size:.58rem; font-weight:800; letter-spacing:.1em;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+  .modal-chip.saved{background:#dcece4; color:#226e54;}
+  .modal-chip.warn{background:#f6e0d8; color:#954431;}
+  .modal-bar-info strong{
+    flex:1 1 auto; min-width:0;
+    font-size:.79rem; color:#3d4b5c; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .modal-bar-actions{display:flex; align-items:center; gap:7px; flex:none;}
+  .modal-close{
+    width:32px; height:32px;
+    display:grid; place-items:center;
+    border:1px solid #d8cdb8;
+    border-radius:50%;
+    background:#fffdf8;
+    color:#6a6254;
+    font-size:1rem; line-height:1;
+    transition:background .15s ease, color .15s ease;
+  }
+  .modal-close:hover{background:#efe5d2; color:#2f2a20;}
+
+  .acta{
+    padding:44px 50px 38px;
+    color:#233142;
+    background:#fffefb;
+    font-size:.9rem;
+  }
+  .acta-head{
+    display:flex; align-items:flex-start; gap:15px;
+    padding-bottom:17px;
+    border-bottom:2px solid #cbbd9f;
+  }
+  .acta-seal{
+    flex:none;
+    width:52px; height:52px;
+    display:grid; place-items:center;
+    border:1.5px solid var(--gold);
+    border-radius:50%;
+    color:var(--gold);
+  }
+  .acta-seal svg{width:28px; height:28px;}
+  .acta-head-copy{flex:1 1 auto; min-width:0;}
+  .acta-eyebrow{
+    margin-bottom:3px;
+    color:#9b7a3a;
+    font-size:.56rem; font-weight:800; letter-spacing:.22em;
+    text-transform:uppercase;
+  }
+  .acta-head h2{
+    margin:0;
+    font-family:var(--serif); font-weight:400;
+    font-size:1.44rem; letter-spacing:.005em;
+    color:#1c2c3e;
+  }
+  .acta-head h2 span{
+    display:block;
+    margin-top:3px;
+    color:#7d7566;
+    font-family:var(--sans); font-size:.68rem; font-style:italic; font-weight:400;
+    letter-spacing:.02em;
+  }
+  .acta-folio{flex:none; text-align:right;}
+  .acta-folio strong{
+    display:block;
+    font-family:var(--serif); font-size:1.02rem; font-weight:700;
+    color:#4c3d22;
+    font-variant-numeric:tabular-nums;
+  }
+  .acta-folio span{display:block; margin-top:2px; font-size:.6rem; color:#8e8677;}
+  .acta-intro{
+    margin:17px 0 0;
+    color:#4c5866;
+    font-size:.8rem;
+    line-height:1.65;
+  }
+  .acta-meta{
+    display:grid; grid-template-columns:1.15fr 1fr;
+    margin:18px 0 4px;
+    border:1px solid #e6ddcc;
+    border-radius:10px;
+    overflow:hidden;
+    background:#fdfaf3;
+  }
+  .acta-meta div{
+    padding:9px 13px;
+    border-bottom:1px solid #eee6d7;
+    min-width:0;
+  }
+  .acta-meta div:nth-child(odd){border-right:1px solid #eee6d7;}
+  .acta-meta div:nth-last-child(-n+2){border-bottom:0;}
+  .acta-meta dt{
+    margin:0;
+    color:#8b8272;
+    font-size:.55rem; font-weight:800; letter-spacing:.11em;
+    text-transform:uppercase;
+  }
+  .acta-meta dd{
+    margin:3px 0 0;
+    color:#243447;
+    font-size:.81rem; font-weight:600;
+    line-height:1.4;
+    overflow-wrap:anywhere;
+  }
+  .acta h3{
+    margin:22px 0 9px;
+    padding-bottom:5px;
+    border-bottom:1px solid #e6ddcc;
+    color:#26374a;
+    font-family:var(--serif); font-weight:400;
+    font-size:.98rem;
+  }
+  .acta-table{width:100%; border-collapse:collapse; table-layout:fixed; font-size:.78rem;}
+  .acta-table col.col-num{width:6%;}
+  .acta-table col.col-role{width:27%;}
+  .acta-table col.col-vote{width:22%;}
+  .acta-table th,.acta-table td{vertical-align:top;}
+  .acta-table td:nth-child(3){overflow-wrap:anywhere;}
+  .acta-table td:nth-child(2),.acta-table th:nth-child(2){white-space:nowrap;}
+  .acta-table th{
+    padding:6px 8px;
+    border-bottom:1px solid #e6ddcc;
+    color:#8b8272;
+    font-size:.55rem; font-weight:800; letter-spacing:.1em;
+    text-align:left;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+  .acta-table td{
+    padding:9px 8px;
+    border-bottom:1px solid #f0e9dc;
+    color:#334254;
+    vertical-align:top;
+  }
+  .acta-table tr:last-child td{border-bottom:0;}
+  .acta-table .num{color:#a1947d; font-variant-numeric:tabular-nums;}
+  .acta-role{font-weight:700; color:#223245;}
+  .preside-note{
+    display:block;
+    margin-top:2px;
+    color:#9b7a3a;
+    font-size:.53rem; font-weight:800; letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .acta-vote{font-weight:800; white-space:nowrap;}
+  .acta-vote.favor{color:var(--favor);}
+  .acta-vote.contra{color:var(--contra);}
+  .acta-vote.abstencion{color:var(--abst);}
+  .acta-vote.pending{color:#9b9487; font-weight:600;}
+  .muted{color:#a29a8c;}
+  .acta-result{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    margin-top:15px;
+    padding:11px 14px;
+    border:1px solid #e0d3b8;
+    border-radius:10px;
+    background:#faf6ec;
+  }
+  .acta-result-kicker{
+    display:block;
+    color:#93815e;
+    font-size:.53rem; font-weight:800; letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+  .acta-result strong{
+    display:block;
+    margin-top:1px;
+    font-family:var(--serif); font-size:1.05rem; font-weight:700;
+    color:#2a3a4d;
+  }
+  .acta-result strong.favor{color:var(--favor);}
+  .acta-result strong.contra{color:var(--contra);}
+  .acta-result strong.empate{color:var(--abst);}
+  .acta-result strong.none{color:#5a6878;}
+  .acta-result strong.pending{color:#6f6656;}
+  .acta-result-counts{
+    color:#6f6656;
+    font-size:.7rem;
+    text-align:right;
+    line-height:1.45;
+  }
+  .acta-result-note{display:block; margin-top:2px; color:#8a6a2f; font-size:.62rem;}
+  .acta-obs{
+    margin:0;
+    padding:9px 13px;
+    border-left:3px solid #dcc9a4;
+    border-radius:0 8px 8px 0;
+    background:#fcf9f2;
+    color:#4a5665;
+    font-size:.78rem;
+    line-height:1.65;
+    white-space:pre-wrap;
+    overflow-wrap:anywhere;
+  }
+  .acta-obs.empty{color:#938b7d; font-style:italic;}
+  .acta-signatures{
+    display:grid; grid-template-columns:1fr 1fr;
+    gap:32px 38px;
+    margin-top:38px;
+  }
+  .signature{text-align:center;}
+  .signature-line{
+    display:block;
+    width:86%;
+    margin:0 auto 6px;
+    border-top:1px solid #9a917f;
+  }
+  .signature strong{display:block; color:#2a3a4d; font-size:.75rem; font-weight:700; overflow-wrap:anywhere;}
+  .signature span{
+    display:block;
+    margin-top:2px;
+    color:#8a8172;
+    font-size:.58rem; font-weight:700; letter-spacing:.09em;
+    text-transform:uppercase;
+  }
+  .acta-foot{
+    margin:28px 0 0;
+    padding-top:11px;
+    border-top:1px solid #ece4d6;
+    color:#9a9285;
+    font-size:.58rem;
+    line-height:1.55;
+    text-align:center;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media screen and (max-width:1020px){
+    .layout{grid-template-columns:1fr; gap:0;}
+    .col-side{margin-bottom:26px;}
+    .summary-card{position:static;}
+    .col-main{display:contents;}
+    .layout{padding-top:28px;}
+    .summary-card{margin-top:20px;}
+    .aside-note{margin-top:14px;}
+  }
+  @media screen and (max-width:780px){
+    .members{grid-template-columns:1fr;}
+    .hero-chips{display:none;}
+    .brand-row{padding-bottom:22px;}
+    .hero-copy{padding-top:28px;}
+    .history-head{align-items:flex-start;}
+    .acta{padding:30px 26px 30px;}
+    .acta-meta{grid-template-columns:1fr;}
+    .acta-meta div{border-right:0 !important;}
+    .acta-meta div:nth-last-child(-n+2){border-bottom:1px solid #eee6d7;}
+    .acta-meta div:last-child{border-bottom:0;}
+    .acta-signatures{grid-template-columns:1fr; gap:26px;}
+  }
+  @media screen and (max-width:640px){
+    .wrap{width:calc(100% - 32px);}
+    .hero-inner{padding:24px 0 38px;}
+    .hero h1{font-size:clamp(1.9rem, 9vw, 2.6rem);}
+    .card{padding:20px 17px 19px;}
+    .form-grid{grid-template-columns:1fr;}
+    .span-2{grid-column:auto;}
+    .section-head{gap:10px;}
+    .step{width:34px; height:34px; border-radius:9px; font-size:.63rem;}
+    .history{padding-top:18px;}
+    .history-actions{width:100%;}
+    .history-actions .btn{flex:1;}
+    .acta{padding:26px 19px 26px;}
+    .modal-overlay{padding:0;}
+    .modal{width:100%; border-radius:0; min-height:100dvh;}
+    .acta-head{flex-wrap:wrap; gap:12px;}
+    .acta-head-copy{flex:1 1 auto;}
+    .acta-head h2{font-size:1.1rem;}
+    .acta-folio{margin-left:0; text-align:left;}
+    .acta-table{font-size:.74rem;}
+    .acta-table th,.acta-table td{padding:8px 6px;}
+    .acta-table th{white-space:normal; letter-spacing:.05em; line-height:1.35;}
+    .acta-table col.col-num{width:6%;}
+    .acta-table col.col-role{width:37%;}
+    .acta-table col.col-vote{width:26%;}
+    .acta-result-counts{text-align:left;}
+    .toast{bottom:16px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto;}
+    *,*::before,*::after{animation:none !important; transition:none !important;}
+  }
+
+  /* ---------- Print ---------- */
+  @page{size:A4; margin:16mm;}
+  @media print{
+    html,body{background:#fff !important; overflow:visible !important;}
+    body.modal-open #app,
+    body.modal-open .toast{display:none !important;}
+    body.modal-open .modal-overlay{
+      position:static !important;
+      display:block !important;
+      padding:0 !important;
+      overflow:visible !important;
+      background:#fff !important;
+      backdrop-filter:none !important;
+    }
+    body.modal-open .modal{
+      width:100% !important;
+      max-width:100% !important;
+      margin:0 !important;
+      border-radius:0 !important;
+      box-shadow:none !important;
+      overflow:visible !important;
+      background:#fff !important;
+    }
+    body.modal-open .modal-bar{display:none !important;}
+    body.modal-open .acta{padding:0 !important; background:#fff !important;}
+    .acta,.acta *{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    .acta{font-size:.86rem;}
+    .acta-meta{margin:14px 0 2px;}
+    .acta h3{margin:17px 0 7px; break-after:avoid; page-break-after:avoid;}
+    .acta-table td{padding:7px 8px;}
+    .acta-result{margin-top:12px;}
+    .acta-signatures{margin-top:26px; gap:26px 38px;}
+    .acta-foot{margin-top:18px;}
+    .acta-table tr,
+    .acta-result,
+    .acta-obs,
+    .acta-signatures,
+    .signature{break-inside:avoid; page-break-inside:avoid;}
+  }
+</style>
+</head>
+<body>
+<noscript>
+  <p class="noscript-note">
+    Este registro necesita JavaScript para contabilizar los votos y guardar las actas.
+  </p>
+</noscript>
+
+<div id="app">
+  <header class="hero">
+    <div class="wrap hero-inner">
+      <div class="brand-row">
+        <div class="brand">
+          <span class="seal" aria-hidden="true">
+            <svg viewBox="0 0 48 48" fill="none" stroke="currentColor">
+              <circle cx="24" cy="24" r="21" stroke-width="1.4"/>
+              <circle cx="24" cy="24" r="16.5" stroke-width=".7" opacity=".55"/>
+              <path d="M15.5 24.4l5.8 5.8L33 18.5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="brand-text">
+            <span class="brand-eyebrow">Acta oficial</span>
+            <span class="brand-name">Junta Calificadora</span>
+          </span>
+        </div>
+        <div class="hero-chips" role="group" aria-label="Características del registro">
+          <span class="chip">4 integrantes</span>
+          <span class="chip">1 voto por integrante</span>
+          <span class="chip">Acta imprimible</span>
+        </div>
+      </div>
+      <div class="hero-copy">
+        <p class="eyebrow">Registro de votación</p>
+        <h1>Deja constancia de cómo vota la <span>Junta Calificadora</span></h1>
+        <p class="hero-lede">Identifica a la persona evaluada, registra el nombre y el voto de cada integrante, y genera un acta lista para imprimir o guardar en PDF.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap layout" id="formulario">
+    <div class="col-main">
+      <section class="card" aria-labelledby="secIdentificacion">
+        <div class="section-head">
+          <span class="step" aria-hidden="true">01</span>
+          <div>
+            <h2 id="secIdentificacion">Identificación de la evaluación</h2>
+            <p>¿A quién evalúa la junta? Estos datos encabezan el acta.</p>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="field span-2">
+            <label class="label" for="evaluado">Nombre de la persona evaluada <span class="req" aria-hidden="true">*</span></label>
+            <input type="text" id="evaluado" autocomplete="off" placeholder="Ej.: María José Fuentes Rojas" aria-describedby="evaluadoHint" required>
+            <p class="hint" id="evaluadoHint">Escribe el nombre completo tal como debe figurar en el acta.</p>
+            <p class="error-msg" hidden></p>
+          </div>
+
+          <div class="field">
+            <label class="label" for="cargo">Cargo o función evaluada</label>
+            <input type="text" id="cargo" autocomplete="off" placeholder="Ej.: Docente de Lenguaje">
+          </div>
+
+          <div class="field">
+            <label class="label" for="fecha">Fecha de la sesión <span class="req" aria-hidden="true">*</span></label>
+            <input type="date" id="fecha" required>
+            <p class="error-msg" hidden></p>
+          </div>
+
+          <div class="field span-2">
+            <label class="label" for="proceso">Proceso o motivo</label>
+            <input type="text" id="proceso" autocomplete="off" placeholder="Ej.: Evaluación anual 2026 · Proceso de calificación">
+          </div>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="secJunta">
+        <div class="section-head">
+          <span class="step" aria-hidden="true">02</span>
+          <div>
+            <h2 id="secJunta">Composición y votación de la junta</h2>
+            <p>Registra el nombre y el voto de cada integrante. Se requieren los cuatro votos para guardar.</p>
+          </div>
+        </div>
+
+        <div class="members">
+          <article class="member" data-member="representante">
+            <div class="member-head">
+              <span class="member-index" aria-hidden="true">01</span>
+              <h3 class="member-role">Representante</h3>
+              <span class="member-status pending" data-status>Pendiente</span>
+            </div>
+            <div class="field">
+              <label class="label" for="nombre-representante">Nombre y apellido</label>
+              <input type="text" id="nombre-representante" data-name autocomplete="off" placeholder="Nombre del representante">
+            </div>
+            <fieldset class="vote-group">
+              <legend>Voto<span class="legend-note">· un voto por integrante</span></legend>
+              <div class="vote-options">
+                <label class="vote vote-favor">
+                  <input type="radio" name="voto-representante" value="favor" data-vote>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>
+                  <span>A favor</span>
+                </label>
+                <label class="vote vote-contra">
+                  <input type="radio" name="voto-representante" value="contra" data-vote>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                  <span>En contra</span>
+                </label>
+                <label class="vote vote-abst">
+                  <input type="radio" name="voto-representante" value="abstencion" data-vote>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>
+                  <span>Abstención</span>
+                </label>
+              </div>
+            </fieldset>
+          </article>
+
+          <article class="member" data-member="integrante1">
+            <div class="member-head">
+              <span class="member-index" aria-hidden="true">02</span>
+              <h3 class="member-role">Integrante 1</h3>
+              <span class="member-status pending" data-status>Pendiente</span>
+            </div>
+            <div class="field">
+              <label class="label" for="nombre-integrante1">Nombre y apellido</label>
+              <input type="text" id="nombre-integrante1" data-name autocomplete="off" placeholder="Nombre del integrante 1">
+            </div>
+            <fieldset class="vote-group">
+              <legend>Voto<span class="legend-note">· un voto por integrante</span></legend>
+              <div class="vote-options">
+                <label class="vote vote-favor">
+                  <input type="radio" name="voto-integrante1" value="favor" data-vote>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>
+                  <span>A favor</span>
+                </label>
+                <label class="vote vote-contra">
+                  <input type="radio" name="voto-integrante1" value="contra" data-vote>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                  <span>En contra</span>
+                </label>
+                <label class="vote vote-abst">
+                  <input type="radio" name="voto-integrante1" value="abstencion" data-vote>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>
+                  <span>Abstención</span>
+                </label>
+              </div>
+            </fieldset>
+          </article>
+
+          <article class="member" data-member="integrante2">
+            <div class="member-head">
+              <span class="member-index" aria-hidden="true">03</span>
+              <h3 class="member-role">Integrante 2</h3>
+              <span class="member-status pending" data-status>Pendiente</span>
+            </div>
+            <div class="field">
+              <label class="label" for="nombre-integrante2">Nombre y apellido</label>
+              <input type="text" id="nombre-integrante2" data-name autocomplete="off" placeholder="Nombre del integrante 2">
+            </div>
+            <fieldset class="vote-group">
+              <legend>Voto<span class="legend-note">· un voto por integrante</span></legend>
+              <div class="vote-options">
+                <label class="vote vote-favor">
+                  <input type="radio" name="voto-integrante2" value="favor" data-vote>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>
+                  <span>A favor</span>
+                </label>
+                <label class="vote vote-contra">
+                  <input type="radio" name="voto-integrante2" value="contra" data-vote>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                  <span>En contra</span>
+                </label>
+                <label class="vote vote-abst">
+                  <input type="radio" name="voto-integrante2" value="abstencion" data-vote>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>
+                  <span>Abstención</span>
+                </label>
+              </div>
+            </fieldset>
+          </article>
+
+          <article class="member member--presidenta" data-member="presidenta">
+            <div class="member-head">
+              <span class="member-index" aria-hidden="true">04</span>
+              <h3 class="member-role">Presidenta <span class="preside-tag">Preside</span></h3>
+              <span class="member-status pending" data-status>Pendiente</span>
+            </div>
+            <div class="field">
+              <label class="label" for="nombre-presidenta">Nombre y apellido</label>
+              <input type="text" id="nombre-presidenta" data-name autocomplete="off" placeholder="Nombre de la presidenta">
+            </div>
+            <fieldset class="vote-group">
+              <legend>Voto<span class="legend-note">· un voto por integrante</span></legend>
+              <div class="vote-options">
+                <label class="vote vote-favor">
+                  <input type="radio" name="voto-presidenta" value="favor" data-vote>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12.5l5 5 10-11"/></svg>
+                  <span>A favor</span>
+                </label>
+                <label class="vote vote-contra">
+                  <input type="radio" name="voto-presidenta" value="contra" data-vote>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+                  <span>En contra</span>
+                </label>
+                <label class="vote vote-abst">
+                  <input type="radio" name="voto-presidenta" value="abstencion" data-vote>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>
+                  <span>Abstención</span>
+                </label>
+              </div>
+            </fieldset>
+          </article>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="secObservaciones">
+        <div class="section-head">
+          <span class="step" aria-hidden="true">03</span>
+          <div>
+            <h2 id="secObservaciones">Observaciones del acta</h2>
+            <p>Acuerdos, incidencias o fundamentos que quieras dejar por escrito.</p>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label" for="observaciones">Observaciones y fundamentos <span class="optional">(opcional)</span></label>
+          <textarea id="observaciones" rows="4" maxlength="600" placeholder="Ej.: Se deja constancia de que la votación se realizó en sesión ordinaria..."></textarea>
+          <div class="field-footer">
+            <p class="hint">Se incluirán al final del acta y en la exportación.</p>
+            <span class="char-count" id="charCount">0 / 600</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <aside class="col-side" aria-label="Resumen de la votación">
+      <div class="summary-card">
+        <p class="summary-eyebrow">Resumen en vivo</p>
+        <h2>Resultado de la votación</h2>
+
+        <div class="summary-subject">
+          Persona evaluada
+          <strong id="summaryName" class="is-empty">Aún sin nombre</strong>
+        </div>
+
+        <div class="result-box" aria-live="polite" aria-atomic="true">
+          <span class="result-kicker">Estado</span>
+          <span class="result-label is-pending" id="resultLabel">Sin votos registrados</span>
+          <span class="result-detail" id="resultDetail">0 de 4 integrantes han votado.</span>
+        </div>
+
+        <div class="seat-bar" id="seatBar" aria-hidden="true">
+          <span class="pending"></span><span class="pending"></span><span class="pending"></span><span class="pending"></span>
+        </div>
+        <p class="seat-caption" id="seatCaption">0 de 4 votos registrados</p>
+
+        <div class="tally">
+          <div class="tally-row">
+            <span class="dot dot-favor" aria-hidden="true"></span>
+            <span class="tally-name">A favor</span>
+            <span class="tally-track" aria-hidden="true"><i id="barFavor"></i></span>
+            <span class="tally-count" id="countFavor">0</span>
+          </div>
+          <div class="tally-row">
+            <span class="dot dot-contra" aria-hidden="true"></span>
+            <span class="tally-name">En contra</span>
+            <span class="tally-track" aria-hidden="true"><i id="barContra"></i></span>
+            <span class="tally-count" id="countContra">0</span>
+          </div>
+          <div class="tally-row">
+            <span class="dot dot-abstencion" aria-hidden="true"></span>
+            <span class="tally-name">Abstención</span>
+            <span class="tally-track" aria-hidden="true"><i id="barAbstencion"></i></span>
+            <span class="tally-count" id="countAbstencion">0</span>
+          </div>
+        </div>
+
+        <p class="summary-note" id="summaryNote">Ingresa el nombre de la persona evaluada para identificar el acta.</p>
+
+        <div class="summary-actions">
+          <button type="button" class="btn btn-gold btn-block" id="saveBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4"/><path d="M8 20v-6h8v6"/></svg>
+            Guardar registro
+          </button>
+          <button type="button" class="btn btn-ghost btn-block" id="previewBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.8"/></svg>
+            Ver acta
+          </button>
+        </div>
+      </div>
+
+      <div class="aside-note">
+        <p class="aside-note-title">Antes de guardar</p>
+        <p>Se exige el nombre de la persona evaluada y el voto de los cuatro integrantes. Los nombres de quienes votan son opcionales, pero recomendables para el acta.</p>
+      </div>
+    </aside>
+  </main>
+
+  <section class="wrap history" id="historial" aria-labelledby="historyTitle">
+    <div class="history-head">
+      <div>
+        <p class="eyebrow">Archivo</p>
+        <h2 id="historyTitle">Registros guardados <span class="count-badge" id="historyCount">0</span></h2>
+        <p class="history-sub">Cada acta conserva la identificación de la persona evaluada y el detalle de los cuatro votos.</p>
+      </div>
+      <div class="history-actions">
+        <button type="button" class="btn btn-outline btn-small" id="exportCsv">Exportar CSV</button>
+        <button type="button" class="btn btn-outline btn-small" id="exportJson">Respaldo JSON</button>
+      </div>
+    </div>
+
+    <div class="history-card">
+      <div class="empty-state" id="emptyState">
+        <span class="empty-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 3h8l4 4v14H6z"/>
+            <path d="M14 3v4h4"/>
+            <path d="M9 12h6M9 15.5h6M9 19h3.5"/>
+          </svg>
+        </span>
+        <h3>Aún no hay actas guardadas</h3>
+        <p>Completa la identificación, registra los cuatro votos y presiona <strong>Guardar registro</strong>. El acta aparecerá aquí y podrás imprimirla o exportarla.</p>
+      </div>
+
+      <div class="table-wrap" id="tableWrap" hidden>
+        <table class="history-table">
+          <caption class="sr-only">Actas de votación guardadas</caption>
+          <thead>
+            <tr>
+              <th scope="col">N.º</th>
+              <th scope="col">Fecha</th>
+              <th scope="col">Persona evaluada</th>
+              <th scope="col">Votación</th>
+              <th scope="col">Resultado</th>
+              <th scope="col">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <p class="history-foot">Los registros se almacenan solo en este navegador. Si borras los datos del sitio, se eliminarán también las actas: descarga un respaldo periódicamente.</p>
+  </section>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <p><strong>Junta Calificadora</strong> · Registro de votación</p>
+      <p>Representante · Integrante 1 · Integrante 2 · Presidenta</p>
+    </div>
+  </footer>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<div class="modal-overlay" id="modalOverlay" hidden>
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalHeading" tabindex="-1">
+    <div class="modal-bar">
+      <div class="modal-bar-info">
+        <span class="modal-chip" id="modalChip">Borrador</span>
+        <strong id="modalHeading">Acta de votación</strong>
+      </div>
+      <div class="modal-bar-actions">
+        <button type="button" class="btn btn-gold btn-small" id="printBtn">Imprimir / PDF</button>
+        <button type="button" class="modal-close" id="closeModal" aria-label="Cerrar vista del acta">&#10005;</button>
+      </div>
+    </div>
+    <div id="actaDoc"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  const STORE_KEY = 'juntaCalificadora.registros.v1';
+  const FOLIO_KEY = 'juntaCalificadora.folio.v1';
+  const MAX_CHARS = 600;
+
+  const ROLES = [
+    { key: 'representante', nombre: 'Representante' },
+    { key: 'integrante1', nombre: 'Integrante 1' },
+    { key: 'integrante2', nombre: 'Integrante 2' },
+    { key: 'presidenta', nombre: 'Presidenta' }
+  ];
+
+  const VOTOS = {
+    favor: 'A favor',
+    contra: 'En contra',
+    abstencion: 'Abstención'
+  };
+
+  const $ = (selector, context = document) => context.querySelector(selector);
+  const $$ = (selector, context = document) => Array.from(context.querySelectorAll(selector));
+
+  const evaluadoInput = $('#evaluado');
+  const cargoInput = $('#cargo');
+  const fechaInput = $('#fecha');
+  const procesoInput = $('#proceso');
+  const obsInput = $('#observaciones');
+  const charCount = $('#charCount');
+
+  const summaryName = $('#summaryName');
+  const resultLabel = $('#resultLabel');
+  const resultDetail = $('#resultDetail');
+  const seatBar = $('#seatBar');
+  const seatCaption = $('#seatCaption');
+  const countFavor = $('#countFavor');
+  const countContra = $('#countContra');
+  const countAbst = $('#countAbstencion');
+  const barFavor = $('#barFavor');
+  const barContra = $('#barContra');
+  const barAbst = $('#barAbstencion');
+  const summaryNote = $('#summaryNote');
+
+  const saveBtn = $('#saveBtn');
+  const previewBtn = $('#previewBtn');
+
+  const historyBody = $('#historyBody');
+  const historyCount = $('#historyCount');
+  const emptyState = $('#emptyState');
+  const tableWrap = $('#tableWrap');
+  const exportCsvBtn = $('#exportCsv');
+  const exportJsonBtn = $('#exportJson');
+
+  const toastEl = $('#toast');
+
+  const modalOverlay = $('#modalOverlay');
+  const modal = $('#modal');
+  const modalChip = $('#modalChip');
+  const modalPrint = $('#printBtn');
+  const modalClose = $('#closeModal');
+  const actaDoc = $('#actaDoc');
+
+  let registros = [];
+  let lastSavedId = null;
+  let lastFocus = null;
+  let toastTimer = 0;
+
+  const SEAL_SVG = `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" aria-hidden="true">
+    <circle cx="24" cy="24" r="21" stroke-width="1.4"/>
+    <circle cx="24" cy="24" r="16.5" stroke-width=".7" opacity=".55"/>
+    <path d="M15.5 24.4l5.8 5.8L33 18.5" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+
+  const ICON_EYE = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="2.8"/></svg>`;
+  const ICON_TRASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6.5 7l1 13h9l1-13"/><path d="M10 11v5M14 11v5"/></svg>`;
+
+  const pad3 = value => String(value).padStart(3, '0');
+  const plural = (n, one, many) => (n === 1 ? one : many);
+
+  const todayISO = () => {
+    const now = new Date();
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  };
+
+  const uid = () => {
+    try {
+      if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
+    } catch (error) { /* sin acceso a crypto */ }
+    return 'acta-' + Date.now() + '-' + Math.random().toString(36).slice(2, 9);
+  };
+
+  const escapeHtml = value => String(value == null ? '' : value).replace(/[&<>"']/g, character => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[character]));
+
+  const fmtShort = new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const fmtLong = new Intl.DateTimeFormat('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
+  const fmtStamp = new Intl.DateTimeFormat('es-CL', { dateStyle: 'long', timeStyle: 'short' });
+
+  function parseFecha(value) {
+    if (!value) return null;
+    const date = new Date(value + 'T12:00:00');
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  function formatFecha(value, long = false) {
+    const date = parseFecha(value);
+    if (!date) return 'Sin fecha';
+    const text = (long ? fmtLong : fmtShort).format(date);
+    return long ? text.charAt(0).toUpperCase() + text.slice(1) : text;
+  }
+
+  function formatStamp(value) {
+    const date = value ? new Date(value) : new Date();
+    return Number.isNaN(date.getTime()) ? '' : fmtStamp.format(date);
+  }
+
+  function readStorage(key, fallback) {
+    try {
+      const raw = window.localStorage.getItem(key);
+      if (raw === null) return fallback;
+      const parsed = JSON.parse(raw);
+      return parsed === null || parsed === undefined ? fallback : parsed;
+    } catch (error) {
+      console.warn('No se pudo leer el almacenamiento local.', error);
+      return fallback;
+    }
+  }
+
+  function saveStorage(key, value) {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+      return true;
+    } catch (error) {
+      console.warn('No se pudo guardar en el almacenamiento local.', error);
+      return false;
+    }
+  }
+
+  function normalizeRecord(raw) {
+    const source = raw && typeof raw === 'object' ? raw : {};
+    const storedMembers = Array.isArray(source.integrantes) ? source.integrantes : [];
+    const integrantes = ROLES.map(role => {
+      const found = storedMembers.find(member => member && member.rol === role.nombre);
+      const voto = found && Object.prototype.hasOwnProperty.call(VOTOS, found.voto) ? found.voto : null;
+      return {
+        rol: role.nombre,
+        nombre: found && found.nombre ? String(found.nombre) : '',
+        voto
+      };
+    });
+    return {
+      id: source.id ? String(source.id) : uid(),
+      folio: Number.isFinite(Number(source.folio)) ? Number(source.folio) : 0,
+      evaluado: source.evaluado ? String(source.evaluado) : '',
+      cargo: source.cargo ? String(source.cargo) : '',
+      fecha: source.fecha ? String(source.fecha) : '',
+      proceso: source.proceso ? String(source.proceso) : '',
+      observaciones: source.observaciones ? String(source.observaciones) : '',
+      integrantes,
+      createdAt: source.createdAt ? String(source.createdAt) : new Date().toISOString()
+    };
+  }
+
+  function loadRecords() {
+    const stored = readStorage(STORE_KEY, []);
+    if (!Array.isArray(stored)) return [];
+    return stored
+      .map(normalizeRecord)
+      .sort((a, b) => (b.folio - a.folio) || (new Date(b.createdAt) - new Date(a.createdAt)));
+  }
+
+  function currentFolio() {
+    const stored = Number(readStorage(FOLIO_KEY, 0)) || 0;
+    const maxRecord = registros.reduce((max, record) => Math.max(max, Number(record.folio) || 0), 0);
+    return Math.max(stored, maxRecord);
+  }
+
+  function nextFolio() {
+    const folio = currentFolio() + 1;
+    saveStorage(FOLIO_KEY, folio);
+    return folio;
+  }
+
+  function peekFolio() {
+    return currentFolio() + 1;
+  }
+
+  function memberCard(key) {
+    return document.querySelector('.member[data-member="' + key + '"]');
+  }
+
+  function memberNameInput(key) {
+    const card = memberCard(key);
+    return card ? card.querySelector('[data-name]') : null;
+  }
+
+  function memberVote(key) {
+    const card = memberCard(key);
+    const checked = card ? card.querySelector('input[data-vote]:checked') : null;
+    return checked ? checked.value : null;
+  }
+
+  function getIntegrantes() {
+    return ROLES.map(role => {
+      const input = memberNameInput(role.key);
+      return {
+        rol: role.nombre,
+        nombre: input ? input.value.trim() : '',
+        voto: memberVote(role.key)
+      };
+    });
+  }
+
+  function getFormData() {
+    return {
+      evaluado: evaluadoInput.value.trim(),
+      cargo: cargoInput.value.trim(),
+      fecha: fechaInput.value,
+      proceso: procesoInput.value.trim(),
+      observaciones: obsInput.value.trim().slice(0, MAX_CHARS),
+      integrantes: getIntegrantes()
+    };
+  }
+
+  function countVotes(integrantes) {
+    const counts = { favor: 0, contra: 0, abstencion: 0, pendientes: 0, emitidos: 0, total: integrantes.length };
+    integrantes.forEach(member => {
+      if (member.voto && Object.prototype.hasOwnProperty.call(VOTOS, member.voto)) {
+        counts[member.voto] += 1;
+        counts.emitidos += 1;
+      } else {
+        counts.pendientes += 1;
+      }
+    });
+    return counts;
+  }
+
+  function getResult(counts) {
+    if (counts.favor > counts.contra) return { key: 'favor', label: 'Mayoría a favor' };
+    if (counts.contra > counts.favor) return { key: 'contra', label: 'Mayoría en contra' };
+    if (counts.favor === 0 && counts.contra === 0) return { key: 'none', label: 'Sin mayoría' };
+    return { key: 'empate', label: 'Empate' };
+  }
+
+  function countsText(counts) {
+    if (counts.emitidos === 0) return 'Sin votos registrados';
+    return counts.favor + ' a favor · ' + counts.contra + ' en contra · ' +
+      counts.abstencion + ' ' + plural(counts.abstencion, 'abstención', 'abstenciones');
+  }
+
+  function renderSummary() {
+    const data = getFormData();
+    const counts = countVotes(data.integrantes);
+
+    summaryName.textContent = data.evaluado || 'Aún sin nombre';
+    summaryName.classList.toggle('is-empty', !data.evaluado);
+
+    countFavor.textContent = String(counts.favor);
+    countContra.textContent = String(counts.contra);
+    countAbst.textContent = String(counts.abstencion);
+    barFavor.style.width = (counts.favor / 4 * 100) + '%';
+    barContra.style.width = (counts.contra / 4 * 100) + '%';
+    barAbst.style.width = (counts.abstencion / 4 * 100) + '%';
+
+    seatBar.innerHTML = '';
+    data.integrantes.forEach(member => {
+      const segment = document.createElement('span');
+      segment.className = member.voto || 'pending';
+      segment.title = member.rol + (member.nombre ? ' · ' + member.nombre : '') + ': ' +
+        (member.voto ? VOTOS[member.voto] : 'pendiente');
+      seatBar.appendChild(segment);
+    });
+
+    seatCaption.textContent = counts.emitidos + ' de 4 votos registrados' +
+      (counts.pendientes ? ' · ' + counts.pendientes + ' ' + plural(counts.pendientes, 'pendiente', 'pendientes') : '');
+
+    let label = 'Sin votos registrados';
+    let detail = '0 de 4 integrantes han votado.';
+    let key = 'pending';
+
+    if (counts.emitidos > 0 && counts.emitidos < counts.total) {
+      label = 'Votación en curso';
+      detail = counts.emitidos + ' de 4 votos registrados.';
+    } else if (counts.emitidos === counts.total && counts.total > 0) {
+      const result = getResult(counts);
+      label = result.label;
+      detail = countsText(counts);
+      key = result.key;
+    }
+
+    resultLabel.textContent = label;
+    resultLabel.className = 'result-label is-' + key;
+    resultDetail.textContent = detail;
+
+    if (!data.evaluado) {
+      summaryNote.textContent = 'Ingresa el nombre de la persona evaluada para identificar el acta.';
+    } else if (counts.emitidos === 0) {
+      summaryNote.textContent = 'Selecciona el voto de cada integrante para completar la junta.';
+    } else if (counts.pendientes > 0) {
+      summaryNote.textContent = 'Faltan ' + counts.pendientes + ' ' + plural(counts.pendientes, 'voto', 'votos') + ' por registrar para poder guardar.';
+    } else if (key === 'empate') {
+      summaryNote.textContent = 'La votación quedó empatada. Deja constancia en Observaciones de cómo se resolvió.';
+    } else if (key === 'none') {
+      summaryNote.textContent = 'Solo se registraron abstenciones. Deja constancia del acuerdo en Observaciones.';
+    } else {
+      summaryNote.textContent = 'Junta completa. Guarda el registro para generar el acta.';
+    }
+  }
+
+  function updateCharCount() {
+    charCount.textContent = obsInput.value.length + ' / ' + MAX_CHARS;
+  }
+
+  function setFieldError(input, message) {
+    const field = input.closest('.field');
+    if (!field) return;
+    field.classList.toggle('invalid', Boolean(message));
+    input.setAttribute('aria-invalid', message ? 'true' : 'false');
+    const error = field.querySelector('.error-msg');
+    if (error) {
+      error.textContent = message || '';
+      error.hidden = !message;
+    }
+  }
+
+  function syncMemberCard(key) {
+    const card = memberCard(key);
+    if (!card) return;
+    const checked = card.querySelector('input[data-vote]:checked');
+    card.querySelectorAll('.vote').forEach(label => {
+      const input = label.querySelector('input');
+      label.classList.toggle('selected', Boolean(input && input.checked));
+    });
+    const status = card.querySelector('[data-status]');
+    if (status) {
+      status.className = 'member-status ' + (checked ? checked.value : 'pending');
+      status.textContent = checked ? VOTOS[checked.value] : 'Pendiente';
+    }
+    if (checked) card.classList.remove('missing');
+  }
+
+  function validateForm() {
+    const problems = [];
+    let firstTarget = null;
+
+    if (!evaluadoInput.value.trim()) {
+      setFieldError(evaluadoInput, 'Ingresa el nombre de la persona evaluada.');
+      problems.push('nombre de la persona evaluada');
+      firstTarget = firstTarget || evaluadoInput;
+    } else {
+      setFieldError(evaluadoInput, '');
+    }
+
+    if (!fechaInput.value) {
+      setFieldError(fechaInput, 'Selecciona la fecha de la sesión.');
+      problems.push('fecha de la sesión');
+      firstTarget = firstTarget || fechaInput;
+    } else {
+      setFieldError(fechaInput, '');
+    }
+
+    let missingVotes = 0;
+    ROLES.forEach(role => {
+      const card = memberCard(role.key);
+      const hasVote = Boolean(memberVote(role.key));
+      if (card) card.classList.toggle('missing', !hasVote);
+      if (!hasVote) {
+        missingVotes += 1;
+        if (!firstTarget && card) firstTarget = card.querySelector('input[data-vote]');
+      }
+    });
+
+    if (missingVotes > 0) {
+      problems.push(missingVotes === 1 ? 'voto de 1 integrante' : 'votos de ' + missingVotes + ' integrantes');
+    }
+
+    if (problems.length > 0) {
+      showToast('Completa: ' + problems.join(' · ') + '.');
+      if (firstTarget) {
+        firstTarget.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        window.setTimeout(() => {
+          try { firstTarget.focus({ preventScroll: true }); }
+          catch (error) { firstTarget.focus(); }
+        }, 400);
+      }
+      return false;
+    }
+
+    return true;
+  }
+
+  function resetForm() {
+    evaluadoInput.value = '';
+    cargoInput.value = '';
+    procesoInput.value = '';
+    obsInput.value = '';
+    updateCharCount();
+
+    ROLES.forEach(role => {
+      const card = memberCard(role.key);
+      if (!card) return;
+      const nameInput = card.querySelector('[data-name]');
+      if (nameInput) nameInput.value = '';
+      card.querySelectorAll('input[data-vote]').forEach(input => { input.checked = false; });
+      card.classList.remove('missing');
+      syncMemberCard(role.key);
+    });
+
+    setFieldError(evaluadoInput, '');
+    setFieldError(fechaInput, '');
+    renderSummary();
+  }
+
+  function showToast(message) {
+    window.clearTimeout(toastTimer);
+    toastEl.textContent = message;
+    toastEl.classList.add('show');
+    toastTimer = window.setTimeout(() => toastEl.classList.remove('show'), 4200);
+  }
+
+  function buildActa(record, saved) {
+    const counts = countVotes(record.integrantes);
+    const complete = counts.total > 0 && counts.emitidos === counts.total;
+    const result = complete ? getResult(counts) : null;
+    const folio = saved ? record.folio : peekFolio();
+    const resultText = complete ? result.label : (counts.emitidos > 0 ? 'Votación en curso' : 'Sin votos registrados');
+    const resultKey = complete ? result.key : 'pending';
+    const countsLine = complete ? countsText(counts) : counts.emitidos + ' de ' + counts.total + ' votos registrados';
+
+    const rows = record.integrantes.map((member, index) => {
+      const voteText = member.voto ? VOTOS[member.voto] : 'Pendiente';
+      const voteClass = member.voto || 'pending';
+      return '<tr>' +
+        '<td class="num">' + (index + 1) + '</td>' +
+        '<td><span class="acta-role">' + escapeHtml(member.rol) + '</span>' +
+          (member.rol === 'Presidenta' ? '<span class="preside-note">Preside la junta</span>' : '') + '</td>' +
+        '<td>' + (member.nombre ? escapeHtml(member.nombre) : '<span class="muted">—</span>') + '</td>' +
+        '<td><span class="acta-vote ' + voteClass + '">' + voteText + '</span></td>' +
+        '</tr>';
+    }).join('');
+
+    const signatures = record.integrantes.map(member =>
+      '<div class="signature">' +
+        '<span class="signature-line"></span>' +
+        '<strong>' + escapeHtml(member.nombre || member.rol) + '</strong>' +
+        '<span>' + escapeHtml(member.rol) + '</span>' +
+      '</div>'
+    ).join('');
+
+    const observaciones = record.observaciones && record.observaciones.trim()
+      ? '<p class="acta-obs">' + escapeHtml(record.observaciones.trim()) + '</p>'
+      : '<p class="acta-obs empty">Sin observaciones registradas.</p>';
+
+    return '<article class="acta" aria-label="Acta de votación de la Junta Calificadora">' +
+      '<header class="acta-head">' +
+        '<div class="acta-seal" aria-hidden="true">' + SEAL_SVG + '</div>' +
+        '<div class="acta-head-copy">' +
+          '<p class="acta-eyebrow">Acta de votación</p>' +
+          '<h2>Junta Calificadora<span>Registro de la sesión</span></h2>' +
+        '</div>' +
+        '<div class="acta-folio">' +
+          '<strong>N.º ' + pad3(folio) + '</strong>' +
+          '<span>' + (saved ? 'Registro guardado' : 'Borrador sin guardar') + '</span>' +
+        '</div>' +
+      '</header>' +
+
+      '<p class="acta-intro">La Junta Calificadora, integrada por las personas que se señalan más adelante, deja constancia de la votación registrada respecto de la persona evaluada que se identifica a continuación.</p>' +
+
+      '<dl class="acta-meta">' +
+        '<div><dt>Persona evaluada</dt><dd>' + escapeHtml(record.evaluado || 'Sin nombre registrado') + '</dd></div>' +
+        '<div><dt>Fecha de la sesión</dt><dd>' + escapeHtml(formatFecha(record.fecha, true)) + '</dd></div>' +
+        '<div><dt>Cargo o función</dt><dd>' + escapeHtml(record.cargo || 'No especificado') + '</dd></div>' +
+        '<div><dt>Proceso o motivo</dt><dd>' + escapeHtml(record.proceso || 'No especificado') + '</dd></div>' +
+      '</dl>' +
+
+      '<h3>Composición de la junta y votación</h3>' +
+      '<table class="acta-table">' +
+        '<colgroup><col class="col-num"><col class="col-role"><col><col class="col-vote"></colgroup>' +
+        '<thead><tr><th scope="col">#</th><th scope="col">Rol</th><th scope="col">Nombre del integrante</th><th scope="col">Voto</th></tr></thead>' +
+        '<tbody>' + rows + '</tbody>' +
+      '</table>' +
+
+      '<div class="acta-result">' +
+        '<div>' +
+          '<span class="acta-result-kicker">Resultado de la votación</span>' +
+          '<strong class="' + resultKey + '">' + resultText + '</strong>' +
+        '</div>' +
+        '<div class="acta-result-counts">' + escapeHtml(countsLine) +
+          '<span class="acta-result-note">' + counts.emitidos + ' de ' + counts.total + ' integrantes registrados</span>' +
+        '</div>' +
+      '</div>' +
+
+      '<h3>Observaciones</h3>' +
+      observaciones +
+
+      '<h3>Firmas de la junta</h3>' +
+      '<div class="acta-signatures">' + signatures + '</div>' +
+
+      '<p class="acta-foot">Documento generado el ' + escapeHtml(formatStamp(record.createdAt)) +
+        ' desde el registro local de votaciones de la Junta Calificadora.<br>' +
+        (saved
+          ? 'Acta N.º ' + pad3(folio) + ' · ' + escapeHtml(record.evaluado)
+          : 'Borrador sin guardar · Los datos pueden cambiar antes de guardar el acta.') +
+      '</p>' +
+    '</article>';
+  }
+
+  function openActa(record, saved, storageFailed) {
+    lastFocus = document.activeElement;
+    modalChip.textContent = saved
+      ? 'Acta N.º ' + pad3(record.folio) + (storageFailed ? ' · Sin guardar' : ' · Guardada')
+      : 'Borrador';
+    modalChip.classList.toggle('saved', Boolean(saved) && !storageFailed);
+    modalChip.classList.toggle('warn', Boolean(storageFailed));
+    actaDoc.innerHTML = buildActa(record, Boolean(saved));
+    modalOverlay.hidden = false;
+    document.body.classList.add('modal-open');
+    try { modal.focus({ preventScroll: true }); }
+    catch (error) { modal.focus(); }
+  }
+
+  function closeActa() {
+    if (modalOverlay.hidden) return;
+    modalOverlay.hidden = true;
+    document.body.classList.remove('modal-open');
+    if (lastFocus && typeof lastFocus.focus === 'function') {
+      try { lastFocus.focus({ preventScroll: true }); }
+      catch (error) { lastFocus.focus(); }
+    }
+  }
+
+  function handleSave() {
+    if (!validateForm()) return;
+
+    const data = getFormData();
+    const folio = nextFolio();
+    const record = {
+      id: uid(),
+      folio,
+      evaluado: data.evaluado,
+      cargo: data.cargo,
+      fecha: data.fecha,
+      proceso: data.proceso,
+      observaciones: data.observaciones,
+      integrantes: data.integrantes,
+      createdAt: new Date().toISOString()
+    };
+
+    registros.push(record);
+    registros.sort((a, b) => (b.folio - a.folio) || (new Date(b.createdAt) - new Date(a.createdAt)));
+
+    const stored = saveStorage(STORE_KEY, registros);
+    lastSavedId = record.id;
+    renderHistory();
+    resetForm();
+
+    if (!stored) {
+      showToast('El acta no se pudo guardar en este navegador. Descarga un respaldo JSON antes de cerrar.');
+    }
+
+    openActa(record, true, !stored);
+  }
+
+  function deleteRecord(record) {
+    const confirmed = window.confirm(
+      '¿Eliminar el acta N.º ' + pad3(record.folio) + ' de "' + (record.evaluado || 'sin nombre') + '"?\n\nEsta acción no se puede deshacer.'
+    );
+    if (!confirmed) return;
+
+    registros = registros.filter(item => item.id !== record.id);
+    saveStorage(STORE_KEY, registros);
+    if (lastSavedId === record.id) lastSavedId = null;
+    renderHistory();
+    showToast('Acta eliminada.');
+  }
+
+  function buildIconButton(action, label, icon) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'icon-btn';
+    button.dataset.action = action;
+    button.innerHTML = icon;
+    const text = document.createElement('span');
+    text.textContent = label;
+    button.appendChild(text);
+    return button;
+  }
+
+  function renderHistory() {
+    historyCount.textContent = String(registros.length);
+    const hasRecords = registros.length > 0;
+    emptyState.hidden = hasRecords;
+    tableWrap.hidden = !hasRecords;
+    exportCsvBtn.disabled = !hasRecords;
+    exportJsonBtn.disabled = !hasRecords;
+
+    historyBody.innerHTML = '';
+
+    registros.forEach(record => {
+      const counts = countVotes(record.integrantes);
+      const complete = counts.emitidos === counts.total;
+      const result = complete ? getResult(counts) : { key: 'pending', label: 'Incompleta' };
+
+      const row = document.createElement('tr');
+      row.dataset.id = record.id;
+      if (record.id === lastSavedId) row.classList.add('new-row');
+
+      const folioCell = document.createElement('td');
+      folioCell.className = 'folio-cell';
+      folioCell.textContent = pad3(record.folio);
+
+      const dateCell = document.createElement('td');
+      dateCell.className = 'date-cell';
+      dateCell.textContent = formatFecha(record.fecha);
+
+      const subjectCell = document.createElement('td');
+      const subjectName = document.createElement('strong');
+      subjectName.className = 'subject-name';
+      subjectName.textContent = record.evaluado || 'Sin nombre';
+      subjectCell.appendChild(subjectName);
+      const subline = [record.cargo, record.proceso].filter(Boolean).join(' · ');
+      if (subline) {
+        const sub = document.createElement('span');
+        sub.className = 'cell-sub';
+        sub.textContent = subline;
+        subjectCell.appendChild(sub);
+      }
+
+      const votesCell = document.createElement('td');
+      const chips = document.createElement('div');
+      chips.className = 'vote-summary';
+      if (counts.favor > 0) chips.appendChild(miniChip('favor', counts.favor + ' a favor'));
+      if (counts.contra > 0) chips.appendChild(miniChip('contra', counts.contra + ' en contra'));
+      if (counts.abstencion > 0) chips.appendChild(miniChip('abstencion', counts.abstencion + ' ' + plural(counts.abstencion, 'abstención', 'abstenciones')));
+      if (counts.emitidos === 0) chips.appendChild(miniChip('pending', 'Sin votos'));
+      votesCell.appendChild(chips);
+
+      const resultCell = document.createElement('td');
+      const badge = document.createElement('span');
+      badge.className = 'badge ' + result.key;
+      badge.textContent = result.label;
+      resultCell.appendChild(badge);
+
+      const actionsCell = document.createElement('td');
+      const actions = document.createElement('div');
+      actions.className = 'row-actions';
+      actions.appendChild(buildIconButton('view', 'Ver acta', ICON_EYE));
+      const deleteButton = buildIconButton('delete', 'Eliminar', ICON_TRASH);
+      deleteButton.classList.add('danger');
+      actions.appendChild(deleteButton);
+      actionsCell.appendChild(actions);
+
+      row.appendChild(folioCell);
+      row.appendChild(dateCell);
+      row.appendChild(subjectCell);
+      row.appendChild(votesCell);
+      row.appendChild(resultCell);
+      row.appendChild(actionsCell);
+      historyBody.appendChild(row);
+    });
+  }
+
+  function miniChip(key, text) {
+    const chip = document.createElement('span');
+    chip.className = 'mini-chip ' + key;
+    chip.textContent = text;
+    return chip;
+  }
+
+  function csvCell(value) {
+    return '"' + String(value == null ? '' : value).replace(/"/g, '""') + '"';
+  }
+
+  function downloadFile(filename, content, type) {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+  }
+
+  function exportCsv() {
+    if (registros.length === 0) return;
+
+    const header = [
+      'N.º', 'Fecha', 'Persona evaluada', 'Cargo o función', 'Proceso o motivo',
+      ...ROLES.flatMap(role => ['Nombre ' + role.nombre, 'Voto ' + role.nombre]),
+      'Resultado', 'Votos a favor', 'Votos en contra', 'Abstenciones', 'Observaciones'
+    ];
+
+    const rows = registros.map(record => {
+      const counts = countVotes(record.integrantes);
+      const result = counts.emitidos === counts.total ? getResult(counts).label : 'Incompleta';
+      const members = ROLES.map(role => record.integrantes.find(member => member.rol === role.nombre) || { nombre: '', voto: null });
+      return [
+        pad3(record.folio), record.fecha, record.evaluado, record.cargo, record.proceso,
+        ...members.flatMap(member => [member.nombre, member.voto ? VOTOS[member.voto] : 'Sin voto']),
+        result, counts.favor, counts.contra, counts.abstencion, record.observaciones
+      ];
+    });
+
+    const csv = '\uFEFF' + [header, ...rows].map(row => row.map(csvCell).join(';')).join('\r\n');
+    downloadFile('junta-calificadora-' + todayISO() + '.csv', csv, 'text/csv;charset=utf-8');
+    showToast('CSV exportado con ' + registros.length + ' ' + plural(registros.length, 'acta', 'actas') + '.');
+  }
+
+  function exportJson() {
+    if (registros.length === 0) return;
+    const payload = {
+      exportadoEl: new Date().toISOString(),
+      total: registros.length,
+      registros
+    };
+    downloadFile(
+      'junta-calificadora-respaldo-' + todayISO() + '.json',
+      JSON.stringify(payload, null, 2),
+      'application/json;charset=utf-8'
+    );
+    showToast('Respaldo JSON descargado.');
+  }
+
+  [evaluadoInput, cargoInput, fechaInput, procesoInput, obsInput].forEach(input => {
+    input.addEventListener('input', () => {
+      if (input === evaluadoInput) setFieldError(evaluadoInput, '');
+      if (input === fechaInput) setFieldError(fechaInput, '');
+      if (input === obsInput) updateCharCount();
+      renderSummary();
+    });
+  });
+
+  $$('.member [data-name]').forEach(input => {
+    input.addEventListener('input', renderSummary);
+  });
+
+  $$('.member input[data-vote]').forEach(input => {
+    input.addEventListener('change', () => {
+      const card = input.closest('.member');
+      if (card) syncMemberCard(card.dataset.member);
+      renderSummary();
+    });
+  });
+
+  saveBtn.addEventListener('click', handleSave);
+
+  previewBtn.addEventListener('click', () => {
+    if (!evaluadoInput.value.trim()) {
+      setFieldError(evaluadoInput, 'Ingresa el nombre de la persona evaluada.');
+      evaluadoInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      try { evaluadoInput.focus({ preventScroll: true }); }
+      catch (error) { evaluadoInput.focus(); }
+      showToast('Ingresa el nombre de la persona evaluada para ver el acta.');
+      return;
+    }
+    const data = getFormData();
+    openActa({
+      id: 'borrador',
+      folio: peekFolio(),
+      evaluado: data.evaluado,
+      cargo: data.cargo,
+      fecha: data.fecha,
+      proceso: data.proceso,
+      observaciones: data.observaciones,
+      integrantes: data.integrantes,
+      createdAt: new Date().toISOString()
+    }, false);
+  });
+
+  historyBody.addEventListener('click', event => {
+    const button = event.target.closest('button[data-action]');
+    if (!button) return;
+    const row = button.closest('tr[data-id]');
+    if (!row) return;
+    const record = registros.find(item => item.id === row.dataset.id);
+    if (!record) return;
+
+    if (button.dataset.action === 'view') openActa(record, true);
+    if (button.dataset.action === 'delete') deleteRecord(record);
+  });
+
+  exportCsvBtn.addEventListener('click', exportCsv);
+  exportJsonBtn.addEventListener('click', exportJson);
+
+  modalClose.addEventListener('click', closeActa);
+
+  modalOverlay.addEventListener('click', event => {
+    if (event.target === modalOverlay) closeActa();
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !modalOverlay.hidden) closeActa();
+  });
+
+  modal.addEventListener('keydown', event => {
+    if (event.key !== 'Tab') return;
+    const focusables = $$('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])', modal)
+      .filter(element => element.offsetParent !== null);
+    if (focusables.length === 0) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+
+    if (event.shiftKey && (document.activeElement === first || document.activeElement === modal)) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  });
+
+  modalPrint.addEventListener('click', () => {
+    window.print();
+  });
+
+  function init() {
+    fechaInput.value = todayISO();
+    registros = loadRecords();
+    updateCharCount();
+    renderHistory();
+    renderSummary();
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
