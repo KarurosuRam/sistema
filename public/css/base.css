@@ -355,6 +355,14 @@ h4 {
   transform: translateY(0);
 }
 
+.btn[disabled],
+.btn.is-loading {
+  opacity: 0.6;
+  cursor: progress;
+  transform: none;
+  box-shadow: none;
+}
+
 .btn svg {
   width: 16px;
   height: 16px;
@@ -578,14 +586,6 @@ h4 {
 .header-actions .btn {
   padding: 0.7em 1.25em;
   font-size: 0.72rem;
-}
-
-.header-login {
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  text-decoration: none;
 }
 
 .header-credit {
@@ -1277,10 +1277,6 @@ h4 {
 
   .nav-toggle {
     display: inline-flex;
-  }
-
-  .header-login {
-    display: none;
   }
 
   .footer-top {

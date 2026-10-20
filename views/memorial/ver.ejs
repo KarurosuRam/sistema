@@ -287,13 +287,17 @@
         </div>
       <% } %>
 
-      <form class="mem-candles__form" action="/m/<%= memorial.slug %>/vela" method="post" data-candle-form>
-        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-        <label class="visually-hidden" for="candle-name">Tu nombre (opcional)</label>
-        <input class="input" type="text" id="candle-name" name="name" maxlength="60" placeholder="Tu nombre (opcional)">
-        <button class="btn" type="submit"><%- icon('flame', 15) %> Encender una vela</button>
-      </form>
-      <p class="tiny" style="margin-top: 16px;">Enciende una vela virtual en memoria de <%= memorial.full_name %>.</p>
+      <% if (memorial.allow_guestbook) { %>
+        <form class="mem-candles__form" action="/m/<%= memorial.slug %>/vela" method="post" data-candle-form>
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <label class="visually-hidden" for="candle-name">Tu nombre (opcional)</label>
+          <input class="input" type="text" id="candle-name" name="name" maxlength="60" placeholder="Tu nombre (opcional)">
+          <button class="btn" type="submit"><%- icon('flame', 15) %> Encender una vela</button>
+        </form>
+        <p class="tiny" style="margin-top: 16px;">Enciende una vela virtual en memoria de <%= memorial.full_name %>.</p>
+      <% } else { %>
+        <p class="tiny" style="margin-top: 16px;">La familia cerró las velas y el libro de visitas por ahora.</p>
+      <% } %>
     </div>
   </section>
 

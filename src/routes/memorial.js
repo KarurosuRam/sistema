@@ -7,7 +7,7 @@ const { cookieOptions } = require('../security');
 const util = require('../util');
 const { loadPublicMemorial } = require('../auth');
 const { qrBuffer, qrDataUrl } = require('../qr');
-const { createRateLimiter, csrfProtect } = require('../security');
+const { createRateLimiter, csrfProtect, csrfProtectPublic } = require('../security');
 const { validateGuestbook } = require('../validation');
 
 const router = express.Router();
@@ -138,10 +138,23 @@ router.post('/:slug/firma', guestbookLimiter, loadPublicMemorial, csrfProtect, (
   return res.redirect(`/m/${memorial.slug}${suffix}#libro`);
 });
 
-router.post('/:slug/vela', candleLimiter, loadPublicMemorial, csrfProtect, (req, res) => {
+router.post('/:slug/vela', candleLimiter, loadPublicMemorial, csrfProtectPublic, (req, res) => {
   const memorial = req.memorial;
-  const name = String(req.body.name || '').trim().slice(0, 60);
-  store.addCandle(memorial.id, name || null);
+
+  if (!memorial.allow_guestbook) {
+    req.flash('error', 'Las velas de este memorial están cerradas por su familia.');
+    return res.redirect(`/m/${memorial.slug}#velas`);
+  }
+
+  const name = String(req.body?.name || '').trim().slice(0, 60);
+  try {
+    store.addCandle(memorial.id, name || null);
+  } catch (error) {
+    console.error('[vela]', memorial.slug, error);
+    req.flash('error', 'No pudimos encender la vela en este momento. Inténtalo otra vez en un rato.');
+    return res.redirect(`/m/${memorial.slug}#velas`);
+  }
+
   req.flash('success', 'Una luz más para su memoria. Gracias por encender esta vela.');
   res.redirect(`/m/${memorial.slug}#velas`);
 });

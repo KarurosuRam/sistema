@@ -81,6 +81,29 @@ function csrfCreate(req, res, next) {
  * CSRF de doble envío: el token del formulario debe coincidir con la cookie.
  * En rutas multipart el middleware se aplica después de multer.
  */
+/**
+ * Variante para acciones públicas sin estado de cuenta (encender una vela).
+ * Si el navegador no guarda cookies —vista previa embebida o modo privado
+ * estricto— no hay token que comparar y la acción se rechazaría aunque la
+ * persona la esté pidiendo de verdad. Cuando sí hay token, se exige igual.
+ * El abuso queda acotado por el limitador de intentos de la ruta.
+ */
+function csrfProtectPublic(req, res, next) {
+  // Se mira la cabecera cruda: csrfCreate rellena req.cookies aunque el
+  // navegador no haya enviado nada, y aquí hace falta la verdad.
+  const rawCookie = req.get('cookie') || '';
+  if (!/(?:^|;\s*)jm_csrf=/.test(rawCookie)) return next();
+  const cookieToken = req.cookies?.jm_csrf;
+  const submitted = req.body?._csrf || req.get('x-csrf-token');
+  if (submitted && constantTimeEqual(String(cookieToken), String(submitted))) {
+    return next();
+  }
+  const error = new Error('La sesión del formulario expiró. Recarga la página e inténtalo otra vez.');
+  error.status = 403;
+  error.csrf = true;
+  return next(error);
+}
+
 function csrfProtect(req, res, next) {
   if (req.method !== 'POST') return next();
   const cookieToken = req.cookies?.jm_csrf;
@@ -140,5 +163,6 @@ module.exports = {
   constantTimeEqual,
   csrfCreate,
   csrfProtect,
+  csrfProtectPublic,
   createRateLimiter
 };

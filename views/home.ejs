@@ -32,7 +32,7 @@
           <a class="btn btn--ghost btn--lg" href="/panel">Ir a mi jardín</a>
         <% } else { %>
           <a class="btn btn--lg" href="/registro">Crear un memorial <%- icon('arrow-right', 16) %></a>
-          <a class="btn btn--ghost btn--lg" href="/demo">Visitar un ejemplo</a>
+          <a class="btn btn--ghost btn--lg" href="/demo" data-demo-open>Visitar un ejemplo</a>
         <% } %>
       </div>
       <ul class="hero__trust">
@@ -165,7 +165,7 @@
         <li><%- icon('check-circle', 20) %><span><strong>Su galería y su video:</strong> hasta 10 fotos y un video de 60 segundos.</span></li>
         <li><%- icon('check-circle', 20) %><span><strong>La voz de los demás:</strong> un libro de visitas moderado por ti.</span></li>
       </ul>
-      <a class="btn btn--ghost" href="/demo">Recorrer un memorial <%- icon('arrow-right', 16) %></a>
+      <a class="btn btn--ghost" href="/demo" data-demo-open>Recorrer un memorial <%- icon('arrow-right', 16) %></a>
     </div>
   </div>
 </section>
@@ -359,8 +359,35 @@
       </div>
       <div class="cta-final__actions">
         <a class="btn btn--light btn--block" href="/registro">Crear mi cuenta</a>
-        <a class="btn btn--ghost btn--block" href="/demo">Ver un memorial de ejemplo</a>
+        <a class="btn btn--ghost btn--block" href="/demo" data-demo-open>Ver un memorial de ejemplo</a>
       </div>
     </div>
   </div>
 </section>
+
+<dialog class="demo-viewer" data-demo-viewer aria-labelledby="demo-viewer-title">
+  <div class="demo-viewer__head">
+    <div class="demo-viewer__title">
+      <span class="demo-viewer__eyebrow">Memorial de ejemplo</span>
+      <strong id="demo-viewer-title"><%= demoName %></strong>
+    </div>
+    <div class="demo-viewer__tools">
+      <a class="demo-viewer__link" href="/m/<%= demoSlug %>" target="_blank" rel="noopener">
+        Abrir completo <%- icon('arrow-right', 12) %>
+      </a>
+      <button type="button" class="demo-viewer__close" data-demo-close aria-label="Cerrar la vista de ejemplo">
+        <%- icon('close', 16) %>
+      </button>
+    </div>
+  </div>
+  <div class="demo-viewer__body">
+    <iframe
+      class="demo-viewer__frame"
+      data-demo-frame
+      data-src="/m/<%= demoSlug %>"
+      title="Memorial de ejemplo: <%= demoName %>"
+      loading="lazy"
+    ></iframe>
+  </div>
+  <p class="demo-viewer__hint">Vista de ejemplo · desplázate dentro para recorrer el memorial, encender una vela o dejar un mensaje.</p>
+</dialog>

@@ -13,6 +13,8 @@ const router = express.Router();
 router.get('/', (req, res) => {
   const stats = store.siteStats();
   const featured = store.listPublicMemorials({ limit: 3 });
+  // El memorial del visor de demo es el mismo al que lleva /demo.
+  const demoMemorial = store.findMemorialBySlug('rosa-elena-munoz') || featured[0] || null;
   res.render('home', {
     pageTitle: null,
     metaDescription:
@@ -21,7 +23,8 @@ router.get('/', (req, res) => {
     activeNav: 'inicio',
     stats,
     featured,
-    demoSlug: featured[0]?.slug || 'rosa-elena-munoz',
+    demoSlug: demoMemorial?.slug || 'rosa-elena-munoz',
+    demoName: demoMemorial?.full_name || 'Rosa Elena Muñoz',
     plans: config.prices
   });
 });

@@ -303,13 +303,32 @@
   var candleForm = $('[data-candle-form]');
   if (candleForm) {
     candleForm.addEventListener('submit', function () {
+      // Si el memorial todavía no tiene velas no existe la fila: se crea para
+      // que la vela aparezca al instante en lugar de no pasar nada.
       var row = $('.candle-row');
-      if (!row) return;
-      var candle = document.createElement('div');
+      if (!row) {
+        row = document.createElement('div');
+        row.className = 'candle-row';
+        row.setAttribute('aria-hidden', 'true');
+        var form = candleForm;
+        if (form.parentNode) form.parentNode.insertBefore(row, form);
+        else return;
+      }
+
+      var candle = document.createElement('span');
       candle.className = 'candle';
       candle.innerHTML = '<span class="candle__flame"></span><span class="candle__stick"></span>';
       row.appendChild(candle);
       while (row.children.length > 36) row.removeChild(row.firstElementChild);
+
+      // Evita envíos dobles mientras el navegador navega al memorial.
+      var button = $('button[type="submit"]', candleForm);
+      if (button) {
+        window.setTimeout(function () {
+          button.disabled = true;
+          button.classList.add('is-loading');
+        }, 0);
+      }
     });
   }
 
