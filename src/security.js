@@ -2,6 +2,8 @@
 
 const crypto = require('crypto');
 
+const config = require('./config');
+
 const SCRYPT_KEYLEN = 64;
 
 /**
@@ -89,10 +91,7 @@ function csrfCreate(req, res, next) {
  * El abuso queda acotado por el limitador de intentos de la ruta.
  */
 function csrfProtectPublic(req, res, next) {
-  // Se mira la cabecera cruda: csrfCreate rellena req.cookies aunque el
-  // navegador no haya enviado nada, y aquí hace falta la verdad.
-  const rawCookie = req.get('cookie') || '';
-  if (!/(?:^|;\s*)jm_csrf=/.test(rawCookie)) return next();
+  if (!hasCsrfCookie(req)) return next();
   const cookieToken = req.cookies?.jm_csrf;
   const submitted = req.body?._csrf || req.get('x-csrf-token');
   if (submitted && constantTimeEqual(String(cookieToken), String(submitted))) {
@@ -104,14 +103,68 @@ function csrfProtectPublic(req, res, next) {
   return next(error);
 }
 
+/**
+ * ¿La cabecera cruda trae la cookie CSRF? `req.cookies` no sirve: csrfCreate
+ * la rellena aunque el navegador no haya enviado nada.
+ */
+function hasCsrfCookie(req) {
+  return /(?:^|;\s*)jm_csrf=/.test(req.get('cookie') || '');
+}
+
+/**
+ * Comprueba desde dónde llega un POST. `true` = mismo sitio, `false` = otro
+ * sitio y `null` = el navegador no lo declara (por ejemplo, un iframe con
+ * origen opaco), caso en el que se decide con el resto de las señales.
+ */
+function sameOriginSignal(req) {
+  const origin = req.get('origin');
+  if (origin) {
+    if (origin === 'null') return null;
+    try {
+      const host = new URL(origin).host;
+      return host === req.get('host') || host === req.hostname;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  const site = req.get('sec-fetch-site');
+  if (site) return site === 'same-origin' || site === 'same-site';
+
+  const referer = req.get('referer');
+  if (referer) {
+    try {
+      return new URL(referer).host === req.get('host');
+    } catch (_) {
+      return false;
+    }
+  }
+
+  return null;
+}
+
 function csrfProtect(req, res, next) {
   if (req.method !== 'POST') return next();
   const cookieToken = req.cookies?.jm_csrf;
   const submitted = req.body?._csrf || req.get('x-csrf-token');
+
   if (cookieToken && submitted && constantTimeEqual(String(cookieToken), String(submitted))) {
     return next();
   }
-  const message = cookieToken
+
+  /*
+   * Vista previa embebida sin cookies: no hay doble envío que comparar. El
+   * token del formulario es la única prueba disponible; se acepta cuando la
+   * petición no se declara desde otro sitio. En producción sin EMBED_ORIGINS
+   * esta rama no existe.
+   */
+  if (config.embedMode && !hasCsrfCookie(req) && submitted) {
+    if (sameOriginSignal(req) !== false) return next();
+  }
+
+  // Dentro de la vista previa no se habla de cookies: ahí pueden estar
+  // bloqueadas a propósito y el mensaje solo confundiría.
+  const message = cookieToken || config.embedMode
     ? 'La sesión del formulario expiró. Recarga la página e inténtalo otra vez.'
     : 'Tu navegador no está guardando las cookies de sesión. Revisa que las acepte y vuelve a intentarlo.';
   const error = new Error(message);

@@ -6,7 +6,7 @@ const store = require('../store');
 const util = require('../util');
 const { qrSvg, qrDataUrl } = require('../qr');
 const { createRateLimiter } = require('../security');
-const { startSession } = require('../auth');
+const { startSession, afterLogin } = require('../auth');
 
 const router = express.Router();
 
@@ -160,13 +160,13 @@ router.get('/probar', demoLimiter, (req, res, next) => {
       req.flash('error', 'La cuenta de demostración no está disponible en esta instalación.');
       return res.redirect('/probar');
     }
-    startSession(req, res, demo.id);
+    const token = startSession(req, res, demo.id);
     demoLimiter.reset(req);
     req.flash(
       'success',
       'Ya estás dentro de la cuenta de demostración. Pulsa “Mi jardín” para ver el panel con memoriales de ejemplo.'
     );
-    return res.redirect('/');
+    return afterLogin(req, res, token, '/');
   }
 
   const demoUrl = util.baseUrl(req);

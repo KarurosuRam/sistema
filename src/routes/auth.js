@@ -3,7 +3,7 @@
 const express = require('express');
 const store = require('../store');
 const { hashPassword, verifyPassword, createRateLimiter, csrfProtect } = require('../security');
-const { startSession, endSession, requireGuest, requireAuth } = require('../auth');
+const { startSession, endSession, afterLogin, requireGuest, requireAuth } = require('../auth');
 const { safeNextPath } = require('../util');
 const { validateRegistration, validateLogin, validateProfile, validatePasswordChange } = require('../validation');
 
@@ -60,10 +60,10 @@ router.post('/registro', registerLimiter, requireGuest, csrfProtect, (req, res, 
       email: values.email,
       passwordHash: hashPassword(values.password)
     });
-    startSession(req, res, user.id);
+    const token = startSession(req, res, user.id);
     registerLimiter.reset(req);
     req.flash('success', `Te damos la bienvenida, ${user.name.split(' ')[0]}. Tu cuenta está lista: cuando quieras puedes crear tu primer memorial.`);
-    return res.redirect(nextPath || '/');
+    return afterLogin(req, res, token, nextPath || '/');
   } catch (error) {
     return next(error);
   }
@@ -110,10 +110,10 @@ router.post('/ingresar', loginLimiter, requireGuest, csrfProtect, (req, res) => 
     });
   }
 
-  startSession(req, res, user.id);
+  const token = startSession(req, res, user.id);
   loginLimiter.reset(req);
   req.flash('success', `Hola de nuevo, ${user.name.split(' ')[0]}. Ya estás dentro de tu cuenta.`);
-  return res.redirect(nextPath);
+  return afterLogin(req, res, token, nextPath);
 });
 
 router.post('/salir', requireAuth, csrfProtect, (req, res) => {

@@ -88,6 +88,24 @@ política vuelve a ser estricta (`SAMEORIGIN` + `frame-ancestors 'self'`).
 `DEBUG_REQUESTS=1 npm start` registra host, protocolo reenviado y referer de cada petición. Sirve
 para confirmar por qué dominio entra el navegador cuando se depura un proxy o una vista previa.
 
+### Ingreso en la vista previa (sesión sin cookies)
+
+Algunos navegadores bloquean por completo las cookies de terceros dentro del iframe de la
+vista previa. Para que ingresar, administrar y crear memoriales funcione igual, el sitio tiene
+un respaldo: la sesión viaja como `?s=<token>` en los enlaces y formularios internos, y el
+servidor la reconoce aunque no reciba cookies.
+
+- Solo se activa en modo embebido (`EMBED_ORIGINS`) y cuando la petición no trae cookies.
+- Los enlaces externos y los archivos estáticos nunca reciben el token.
+- Las páginas con token se sirven con `Cache-Control: no-store`, `Referrer-Policy: same-origin`
+  y `X-Robots-Tag: noindex`.
+- En los POST sin cookie CSRF se acepta el token del formulario solo si la petición no declara
+  un origen ajeno; la sesión se valida siempre contra la base de datos.
+- El CSP de la vista previa incluye los orígenes embebidos en `frame-ancestors` y en
+  `form-action`, para que los formularios funcionen incluso dentro de un iframe con sandbox.
+- En producción sin `EMBED_ORIGINS` esta ruta no existe: todo sigue con cookies y CSRF de
+  doble envío.
+
 ### Enlace fijo de prueba
 
 En modo demostración existe **`/probar`**: muestra la URL pública de la instalación con su código
@@ -146,6 +164,8 @@ scripts/                  seed-demo.js y generate_music.py (melodía ambiente)
 - Contraseñas con **scrypt** + salt; comparación en tiempo constante.
 - Sesiones con token aleatorio en cookie `HttpOnly`, `SameSite=Lax` y expiración de 30 días.
 - **CSRF de doble envío** en todos los POST (también en multipart, validado después de Multer).
+  En la vista previa embebida sin cookies se acepta el token del formulario con validación de
+  origen (ver «Ingreso en la vista previa»).
 - **Rate limiting** por IP en ingreso, registro, compras, firmas y velas.
 - Cabeceras CSP, `nosniff`, `Referrer-Policy`, `X-Frame-Options` y `Permissions-Policy`.
 - Autorización estricta: un memorial solo lo administra su titular (403 en caso contrario) y los
@@ -253,7 +273,7 @@ que se cierra con la ✕, con Escape o tocando fuera.
 - **Caché**: `src/assets.js` calcula una huella de `public/css` y `public/js`; la vista la
   expone como `?v=...`, así el navegador descarta el CSS antiguo en cada despliegue.
 - **Vista previa embebida**: en hosts de `EMBED_ORIGINS` las cookies se emiten con
-  `SameSite=None; Secure; Partitioned` (CHIPS), de modo que la sesión funciona dentro
-  del iframe aunque el navegador bloquee cookies de terceros.
+  `SameSite=None; Secure; Partitioned` (CHIPS). Si el navegador bloquea incluso esas cookies,
+  `src/embed-session.js` mantiene la sesión por enlace (`?s=`) sin abrir pestañas.
 
 Hecho con cuidado en Chile 🍃

@@ -9,6 +9,7 @@ const config = require('./config');
 const store = require('./store');
 const util = require('./util');
 const { sessionLoader, flashMiddleware, COOKIE } = require('./auth');
+const { install: installEmbedSession } = require('./embed-session');
 const { csrfCreate } = require('./security');
 const assets = require('./assets');
 const media = require('./media');
@@ -53,8 +54,9 @@ app.use(
 // Diagnóstico opcional de la vista previa: registra host, protocolo y referer.
 if (process.env.DEBUG_REQUESTS === '1') {
   app.use((req, res, next) => {
+    const safeUrl = req.originalUrl.replace(/([?&])s=[^&]*/g, '$1s=…');
     console.log(
-      `[req] ${req.method} ${req.originalUrl} host=${req.get('host') || '-'} ` +
+      `[req] ${req.method} ${safeUrl} host=${req.get('host') || '-'} ` +
         `xfp=${req.get('x-forwarded-proto') || '-'} xfh=${req.get('x-forwarded-host') || '-'} ` +
         `ref=${req.get('referer') || '-'}`
     );
@@ -67,7 +69,9 @@ if (process.env.DEBUG_REQUESTS === '1') {
 app.use((req, res, next) => {
   res.on('finish', () => {
     if (res.statusCode >= 400) {
-      console.log(`[${res.statusCode}] ${req.method} ${req.originalUrl}`);
+      // El token de sesión de la vista previa viaja en `s`: no se registra.
+      const safeUrl = req.originalUrl.replace(/([?&])s=[^&]*/g, '$1s=…');
+      console.log(`[${res.statusCode}] ${req.method} ${safeUrl}`);
     }
   });
   next();
@@ -99,7 +103,9 @@ app.use((req, res, next) => {
       "connect-src 'self'",
       `frame-ancestors 'self'${config.embedOrigins.length ? ' ' + config.embedOrigins.join(' ') : ''}`,
       "base-uri 'self'",
-      "form-action 'self'"
+      // En la vista previa el formulario debe poder apuntar al host embebido
+      // aunque el documento tenga un origen opaco (iframe con sandbox).
+      `form-action 'self'${config.embedOrigins.length ? ' ' + config.embedOrigins.join(' ') : ''}`
     ].join('; ')
   );
   next();
@@ -108,6 +114,8 @@ app.use((req, res, next) => {
 app.use(flashMiddleware);
 app.use(sessionLoader);
 app.use(csrfCreate);
+// Propaga la sesión por enlace cuando el navegador bloquea cookies en el iframe.
+installEmbedSession(app);
 
 app.use((req, res, next) => {
   res.locals.csrfToken = req.cookies.jm_csrf || '';
