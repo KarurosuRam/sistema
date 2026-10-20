@@ -48,6 +48,18 @@ app.use(
   })
 );
 
+// Diagnóstico opcional de la vista previa: registra host, protocolo y referer.
+if (process.env.DEBUG_REQUESTS === '1') {
+  app.use((req, res, next) => {
+    console.log(
+      `[req] ${req.method} ${req.originalUrl} host=${req.get('host') || '-'} ` +
+        `xfp=${req.get('x-forwarded-proto') || '-'} xfh=${req.get('x-forwarded-host') || '-'} ` +
+        `ref=${req.get('referer') || '-'}`
+    );
+    next();
+  });
+}
+
 app.use(express.urlencoded({ extended: true, limit: '200kb' }));
 app.use(express.json({ limit: '200kb' }));
 app.use(cookieParser());

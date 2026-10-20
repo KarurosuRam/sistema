@@ -6,7 +6,7 @@ const store = require('../store');
 const util = require('../util');
 const { loadPublicMemorial } = require('../auth');
 const { qrBuffer, qrDataUrl } = require('../qr');
-const { createRateLimiter } = require('../security');
+const { createRateLimiter, csrfProtect } = require('../security');
 const { validateGuestbook } = require('../validation');
 
 const router = express.Router();
@@ -111,7 +111,7 @@ router.get('/:slug', loadPublicMemorial, asyncHandler(async (req, res, next) => 
   }
 }));
 
-router.post('/:slug/firma', guestbookLimiter, loadPublicMemorial, (req, res) => {
+router.post('/:slug/firma', guestbookLimiter, loadPublicMemorial, csrfProtect, (req, res) => {
   const memorial = req.memorial;
   const wantsCandle = req.body.candle === 'on' || req.body.candle === '1';
 
@@ -139,7 +139,7 @@ router.post('/:slug/firma', guestbookLimiter, loadPublicMemorial, (req, res) => 
   return res.redirect(`/m/${memorial.slug}${suffix}#libro`);
 });
 
-router.post('/:slug/vela', candleLimiter, loadPublicMemorial, (req, res) => {
+router.post('/:slug/vela', candleLimiter, loadPublicMemorial, csrfProtect, (req, res) => {
   const memorial = req.memorial;
   const name = String(req.body.name || '').trim().slice(0, 60);
   store.addCandle(memorial.id, name || null);

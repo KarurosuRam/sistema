@@ -70,9 +70,15 @@ Copia `.env.example` (todas son opcionales): `PORT`, `BASE_URL`, `DATA_DIR`, `PA
 
 `EMBED_ORIGINS` autoriza orígenes externos a mostrar el sitio en un iframe (por ejemplo, una
 vista previa alojada en otro dominio). En desarrollo se habilitan automáticamente los hosts de
-previsualización (`*.e2b.app`, `*.arena.ai`) y las cookies pasan a `SameSite=None; Secure` para
-que la sesión funcione dentro del marco. Con `NODE_ENV=production` y sin `EMBED_ORIGINS` la
+previsualización (`*.e2b.app`, `*.arena.ai`): esos hosts se tratan como HTTPS aunque el proxy no
+envíe `X-Forwarded-Proto` —así los enlaces, QR y `canonical` no salen como `http://`— y las
+cookies pasan a `SameSite=None; Secure` para que la sesión funcione dentro del marco. Con `NODE_ENV=production` y sin `EMBED_ORIGINS` la
 política vuelve a ser estricta (`SAMEORIGIN` + `frame-ancestors 'self'`).
+
+### Diagnóstico de la vista previa
+
+`DEBUG_REQUESTS=1 npm start` registra host, protocolo reenviado y referer de cada petición. Sirve
+para confirmar por qué dominio entra el navegador cuando se depura un proxy o una vista previa.
 
 ### Enlace fijo de prueba
 

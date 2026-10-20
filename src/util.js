@@ -183,13 +183,32 @@ function safeNextPath(value) {
   return value;
 }
 
+/**
+ * Hosts de vista previa declarados en EMBED_ORIGINS. El proxy no siempre
+ * envía X-Forwarded-Proto, pero esas URLs siempre se sirven por HTTPS.
+ */
+function isEmbedHost(hostname) {
+  const config = require('./config');
+  const host = String(hostname || '').toLowerCase();
+  if (!host) return false;
+  return config.embedOrigins.some((origin) => {
+    const match = /^https:\/\/(\*\.)?(.+)$/.exec(origin);
+    if (!match) return false;
+    const [, wildcard, domain] = match;
+    return wildcard ? host === domain || host.endsWith(`.${domain}`) : host === domain;
+  });
+}
+
 function baseUrl(req) {
   const configured = (process.env.BASE_URL || '').trim().replace(/\/+$/, '');
   if (configured) return configured;
   if (req) {
-    const proto = req.protocol || 'http';
     const host = req.get('host');
-    if (host) return `${proto}://${host}`;
+    if (host) {
+      let proto = req.protocol || 'http';
+      if (proto !== 'https' && isEmbedHost(req.hostname)) proto = 'https';
+      return `${proto}://${host}`;
+    }
   }
   return 'https://www.jardinmemorial.cl';
 }
@@ -205,6 +224,7 @@ function ipHash(req) {
 }
 
 module.exports = {
+  isEmbedHost,
   MONTHS,
   slugify,
   randomCode,

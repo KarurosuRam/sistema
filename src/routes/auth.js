@@ -2,7 +2,7 @@
 
 const express = require('express');
 const store = require('../store');
-const { hashPassword, verifyPassword, createRateLimiter } = require('../security');
+const { hashPassword, verifyPassword, createRateLimiter, csrfProtect } = require('../security');
 const { startSession, endSession, requireGuest, requireAuth } = require('../auth');
 const { safeNextPath } = require('../util');
 const { validateRegistration, validateLogin, validateProfile, validatePasswordChange } = require('../validation');
@@ -34,7 +34,7 @@ router.get('/registro', requireGuest, (req, res) => {
   });
 });
 
-router.post('/registro', registerLimiter, requireGuest, (req, res, next) => {
+router.post('/registro', registerLimiter, requireGuest, csrfProtect, (req, res, next) => {
   const { errors, values } = validateRegistration(req.body);
   const nextPath = safeNextPath(req.body.next) || '';
 
@@ -80,7 +80,7 @@ router.get('/ingresar', requireGuest, (req, res) => {
   });
 });
 
-router.post('/ingresar', loginLimiter, requireGuest, (req, res) => {
+router.post('/ingresar', loginLimiter, requireGuest, csrfProtect, (req, res) => {
   const { errors, values } = validateLogin(req.body);
   const nextPath = safeNextPath(req.body.next) || '/panel';
 
@@ -114,7 +114,7 @@ router.post('/ingresar', loginLimiter, requireGuest, (req, res) => {
   return res.redirect(nextPath);
 });
 
-router.post('/salir', requireAuth, (req, res) => {
+router.post('/salir', requireAuth, csrfProtect, (req, res) => {
   endSession(req, res);
   req.flash('info', 'Tu sesión se cerró correctamente. Te esperamos pronto.');
   res.redirect('/');
@@ -134,7 +134,7 @@ router.get('/cuenta', requireAuth, (req, res) => {
   });
 });
 
-router.post('/cuenta', requireAuth, (req, res) => {
+router.post('/cuenta', requireAuth, csrfProtect, (req, res) => {
   const { errors, values } = validateProfile(req.body);
   if (errors.length) {
     return res.status(422).render('cuenta', {
@@ -154,7 +154,7 @@ router.post('/cuenta', requireAuth, (req, res) => {
   res.redirect('/cuenta');
 });
 
-router.post('/cuenta/contrasena', requireAuth, (req, res) => {
+router.post('/cuenta/contrasena', requireAuth, csrfProtect, (req, res) => {
   const { errors, values } = validatePasswordChange(req.body);
   if (!errors.length && !verifyPassword(values.current, req.user.password_hash)) {
     errors.push('La contraseña actual no es correcta.');

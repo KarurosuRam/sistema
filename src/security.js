@@ -11,10 +11,21 @@ const SCRYPT_KEYLEN = 64;
  */
 function cookieOptions(req, extra = {}) {
   const config = require('./config');
-  const embedded = config.embedMode && req.secure;
+  const host = String(req.hostname || '').toLowerCase();
+  // El proxy de la vista previa no siempre declara X-Forwarded-Proto, pero el
+  // navegador entra por HTTPS. Solo se asume HTTPS en los hosts declarados en
+  // EMBED_ORIGINS, para no forzar cookies Secure en una red local por HTTP.
+  const isEmbedHost = config.embedOrigins.some((origin) => {
+    const match = /^https:\/\/(\*\.)?(.+)$/.exec(origin);
+    if (!match) return false;
+    const [, wildcard, domain] = match;
+    return wildcard ? host === domain || host.endsWith(`.${domain}`) : host === domain;
+  });
+  const https = req.secure || (config.embedMode && isEmbedHost);
+  const embedded = config.embedMode && https;
   return {
     sameSite: embedded ? 'none' : 'lax',
-    secure: req.secure,
+    secure: https,
     ...extra
   };
 }
