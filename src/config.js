@@ -38,6 +38,16 @@ const config = {
   // (Webpay Plus / Mercado Pago) y se define PAYMENTS_MODE=live.
   paymentsMode: process.env.PAYMENTS_MODE === 'live' ? 'live' : 'demo',
   sessionDays: 30,
+  // En la vista previa (demostración) el sitio se muestra dentro de un iframe
+  // en otro origen. EMBED_MODE habilita los orígenes permitidos y las cookies
+  // SameSite=None que ese contexto necesita. En producción queda desactivado
+  // salvo que se declare EMBED_ORIGINS explícitamente.
+  embedOrigins: (() => {
+    const raw = (process.env.EMBED_ORIGINS || '').trim();
+    if (raw) return raw.split(/[\s,]+/).filter(Boolean);
+    if (process.env.NODE_ENV === 'production') return [];
+    return ['https://*.e2b.app', 'https://*.arena.ai', 'https://arena.ai'];
+  })(),
   demoAccount: {
     name: 'María José Contreras',
     email: 'demo@jardinmemorial.cl',
@@ -57,6 +67,7 @@ const config = {
   }
 };
 
+config.embedMode = config.embedOrigins.length > 0;
 config.uploadsDir = path.join(config.dataDir, 'uploads');
 config.tmpDir = path.join(config.dataDir, 'tmp');
 

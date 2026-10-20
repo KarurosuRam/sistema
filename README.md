@@ -65,8 +65,14 @@ SEED_DEMO=false npm start
 ### Variables de entorno
 
 Copia `.env.example` (todas son opcionales): `PORT`, `BASE_URL`, `DATA_DIR`, `PAYMENTS_MODE`
-(`demo`/`live`), `SEED_DEMO`. Los datos viven en `./data` — base `jardin.sqlite` (WAL) y
-`data/uploads/{img,audio,video}` — y están excluidos de Git.
+(`demo`/`live`), `SEED_DEMO`, `EMBED_ORIGINS`. Los datos viven en `./data` — base
+`jardin.sqlite` (WAL) y `data/uploads/{img,audio,video}` — y están excluidos de Git.
+
+`EMBED_ORIGINS` autoriza orígenes externos a mostrar el sitio en un iframe (por ejemplo, una
+vista previa alojada en otro dominio). En desarrollo se habilitan automáticamente los hosts de
+previsualización (`*.e2b.app`, `*.arena.ai`) y las cookies pasan a `SameSite=None; Secure` para
+que la sesión funcione dentro del marco. Con `NODE_ENV=production` y sin `EMBED_ORIGINS` la
+política vuelve a ser estricta (`SAMEORIGIN` + `frame-ancestors 'self'`).
 
 ## 🧭 Recorrido del producto
 

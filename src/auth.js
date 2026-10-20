@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const config = require('./config');
 const store = require('./store');
 const { nowIso, safeNextPath } = require('./util');
+const { cookieOptions } = require('./security');
 
 const COOKIE = 'jm_session';
 
@@ -13,13 +14,11 @@ function startSession(req, res, userId) {
   store.createSession({ token, userId, expiresAt: expires.toISOString() });
   const previous = req.cookies[COOKIE];
   if (previous) store.deleteSession(previous);
-  res.cookie(COOKIE, token, {
+  res.cookie(COOKIE, token, cookieOptions(req, {
     httpOnly: true,
-    sameSite: 'lax',
-    secure: req.secure,
     expires,
     path: '/'
-  });
+  }));
 }
 
 function endSession(req, res) {
@@ -121,13 +120,11 @@ function flashMiddleware(req, res, next) {
   }
   req.flash = (type, message) => {
     const payload = Buffer.from(JSON.stringify({ type, message, at: nowIso() }), 'utf8').toString('base64url');
-    res.cookie('jm_flash', payload, {
+    res.cookie('jm_flash', payload, cookieOptions(req, {
       httpOnly: true,
-      sameSite: 'lax',
-      secure: req.secure,
       maxAge: 120000,
       path: '/'
-    });
+    }));
     res.locals.flash = { type, message };
   };
   next();

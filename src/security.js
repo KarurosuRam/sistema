@@ -4,6 +4,21 @@ const crypto = require('crypto');
 
 const SCRYPT_KEYLEN = 64;
 
+/**
+ * En un iframe de otro origen (vista previa) las cookies SameSite=Lax no se
+ * envían, así que se usa SameSite=None; Secure. Fuera de ese contexto se
+ * mantiene Lax, que es la opción segura por defecto.
+ */
+function cookieOptions(req, extra = {}) {
+  const config = require('./config');
+  const embedded = config.embedMode && req.secure;
+  return {
+    sameSite: embedded ? 'none' : 'lax',
+    secure: req.secure,
+    ...extra
+  };
+}
+
 function hashPassword(password) {
   const salt = crypto.randomBytes(16).toString('hex');
   const hash = crypto.scryptSync(password, salt, SCRYPT_KEYLEN).toString('hex');
@@ -38,13 +53,11 @@ function constantTimeEqual(a, b) {
 function csrfCreate(req, res, next) {
   if (!req.cookies.jm_csrf) {
     const token = newToken();
-    res.cookie('jm_csrf', token, {
+    res.cookie('jm_csrf', token, cookieOptions(req, {
       httpOnly: false,
-      sameSite: 'lax',
-      secure: req.secure,
       maxAge: 1000 * 60 * 60 * 24 * 7,
       path: '/'
-    });
+    }));
     req.cookies.jm_csrf = token;
   }
   next();
@@ -96,6 +109,7 @@ function createRateLimiter({ windowMs, max, message, keyPrefix = '' }) {
 }
 
 module.exports = {
+  cookieOptions,
   hashPassword,
   verifyPassword,
   newToken,

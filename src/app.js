@@ -57,7 +57,7 @@ app.set('layout', 'layout');
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  if (!config.embedMode) res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader(
     'Permissions-Policy',
     'camera=(), microphone=(), geolocation=(), payment=(self)'
@@ -72,7 +72,7 @@ app.use((req, res, next) => {
       "script-src 'self'",
       "font-src 'self'",
       "connect-src 'self'",
-      "frame-ancestors 'self'",
+      `frame-ancestors 'self'${config.embedOrigins.length ? ' ' + config.embedOrigins.join(' ') : ''}`,
       "base-uri 'self'",
       "form-action 'self'"
     ].join('; ')
