@@ -357,8 +357,10 @@ router.post('/memoriales/:id', loadMemorialOwned, (req, res) => {
 });
 
 router.post('/memoriales/:id/enlace', loadMemorialOwned, (req, res) => {
-  const requested = String(req.body.slug || '').trim().toLowerCase();
-  const slug = util.slugify(requested);
+  // Sin texto no se toca el enlace: `slugify('')` devuelve «memorial» y
+  // borraría la dirección actual del memorial.
+  const requested = String(req.body.slug || '').trim();
+  const slug = requested ? util.slugify(requested) : '';
   if (slug.length < 3) {
     req.flash('error', 'El enlace debe tener al menos 3 caracteres (letras, números o guiones).');
     return res.redirect(`/panel/memoriales/${req.memorial.id}#compartir`);
