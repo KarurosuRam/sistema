@@ -88,19 +88,20 @@
 
   /* ------------------------------------------------ cookies en vista previa */
   (function () {
-    try {
-      document.cookie = 'jm_probe=1; path=/; SameSite=Lax';
-      var stored = document.cookie.indexOf('jm_probe=1') !== -1;
-      document.cookie = 'jm_probe=1; path=/; max-age=0';
-      if (stored || window.self === window.top) return;
+    // Solo tiene sentido dentro de un marco (la vista previa). Fuera de él las
+    // cookies son de primera parte y no hay nada que avisar.
+    var embedded = window.self !== window.top;
+    if (!embedded || typeof window.fetch !== 'function') return;
+
+    var showBar = function (message) {
+      if (document.querySelector('.cookie-warning')) return;
 
       var bar = document.createElement('div');
       bar.className = 'cookie-warning';
       bar.setAttribute('role', 'alert');
 
       var text = document.createElement('span');
-      text.textContent =
-        'Tu navegador está bloqueando las cookies dentro de esta vista previa, por eso no se puede iniciar sesión.';
+      text.textContent = message;
 
       var action = document.createElement('a');
       action.href = window.location.href;
@@ -111,8 +112,39 @@
       bar.appendChild(text);
       bar.appendChild(action);
       document.body.insertBefore(bar, document.body.firstChild);
+    };
+
+    // Se pregunta al servidor qué cookies recibió: es la comprobación real,
+    // no una suposición a partir de document.cookie.
+    window
+      .fetch('/api/sonda', { credentials: 'include', cache: 'no-store' })
+      .then(function (response) {
+        return response.ok ? response.json() : null;
+      })
+      .then(function (data) {
+        if (data && !data.cookies) {
+          showBar(
+            'Esta vista previa bloquea las cookies de sesión, así que los formularios no pueden guardar tu cuenta. Ábrela en una pestaña nueva para ingresar, crear la cuenta o probar la demo.'
+          );
+        }
+      })
+      .catch(function () {
+        /* si la sonda falla no se muestra nada */
+      });
+  })();
+
+  /* ------------------------------------------------- errores de formulario */
+  (function () {
+    var errors = $('.form-errors');
+    if (!errors) return;
+    // Si el envío falló, el aviso debe quedar a la vista aunque la página
+    // vuelva a cargar con el formulario desplazado.
+    try {
+      errors.setAttribute('tabindex', '-1');
+      errors.focus({ preventScroll: true });
+      errors.scrollIntoView({ block: 'center', behavior: 'smooth' });
     } catch (_) {
-      /* sin acceso a cookies: no se muestra nada */
+      /* navegador antiguo: sin desplazamiento */
     }
   })();
 

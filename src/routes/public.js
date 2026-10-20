@@ -152,7 +152,8 @@ const demoLimiter = createRateLimiter({
  * un acceso de un clic a la cuenta de demostración. Solo existe en modo demo.
  */
 router.get('/probar', demoLimiter, (req, res, next) => {
-  if (!config.demoAccess) return next();
+  // Si la demo está apagada no se muestra un 404: se lleva al memorial de ejemplo.
+  if (!config.demoAccess) return res.redirect('/demo');
   const demo = store.findUserByEmail(config.demoAccount.email);
 
   if (req.query.entrar === '1') {
@@ -161,8 +162,12 @@ router.get('/probar', demoLimiter, (req, res, next) => {
       return res.redirect('/probar');
     }
     startSession(req, res, demo.id);
-    req.flash('success', 'Estás en la demo de Jardín Memorial. Puedes recorrer todo con datos de ejemplo.');
-    return res.redirect('/panel');
+    demoLimiter.reset(req);
+    req.flash(
+      'success',
+      'Ya estás dentro de la cuenta de demostración. Pulsa “Mi jardín” para ver el panel con memoriales de ejemplo.'
+    );
+    return res.redirect('/');
   }
 
   const demoUrl = util.baseUrl(req);

@@ -35,6 +35,13 @@
         <a href="/probar?entrar=1">Entrar al panel de demo <%- icon('arrow-right', 14) %></a>
       </div>
     </div>
+  <% } else if (demoAccess && user && config.demoAccount && user.email === config.demoAccount.email) { %>
+    <div class="demo-ribbon">
+      <div class="container demo-ribbon__inner">
+        <span><strong>Cuenta de demostración</strong><i>·</i>estás probando con datos de ejemplo</span>
+        <a href="/panel">Ir al panel de la demo <%- icon('arrow-right', 14) %></a>
+      </div>
+    </div>
   <% } %>
   <%- include('partials/header') %>
   <%- include('partials/flash') %>

@@ -61,8 +61,9 @@ router.post('/registro', registerLimiter, requireGuest, csrfProtect, (req, res, 
       passwordHash: hashPassword(values.password)
     });
     startSession(req, res, user.id);
-    req.flash('success', `Te damos la bienvenida, ${user.name.split(' ')[0]}. Tu cuenta está lista para crear un memorial.`);
-    return res.redirect(nextPath || '/panel?bienvenida=1');
+    registerLimiter.reset(req);
+    req.flash('success', `Te damos la bienvenida, ${user.name.split(' ')[0]}. Tu cuenta está lista: cuando quieras puedes crear tu primer memorial.`);
+    return res.redirect(nextPath || '/');
   } catch (error) {
     return next(error);
   }
@@ -82,7 +83,7 @@ router.get('/ingresar', requireGuest, (req, res) => {
 
 router.post('/ingresar', loginLimiter, requireGuest, csrfProtect, (req, res) => {
   const { errors, values } = validateLogin(req.body);
-  const nextPath = safeNextPath(req.body.next) || '/panel';
+  const nextPath = safeNextPath(req.body.next) || '/';
 
   if (errors.length) {
     return res.status(422).render('auth/ingresar', {
@@ -92,7 +93,7 @@ router.post('/ingresar', loginLimiter, requireGuest, csrfProtect, (req, res) => 
       activeNav: 'ingresar',
       errors,
       values: { email: values.email },
-      next: nextPath === '/panel' ? '' : nextPath
+      next: nextPath === '/' ? '' : nextPath
     });
   }
 
@@ -105,12 +106,13 @@ router.post('/ingresar', loginLimiter, requireGuest, csrfProtect, (req, res) => 
       activeNav: 'ingresar',
       errors: ['El correo o la contraseña no son correctos.'],
       values: { email: values.email },
-      next: nextPath === '/panel' ? '' : nextPath
+      next: nextPath === '/' ? '' : nextPath
     });
   }
 
   startSession(req, res, user.id);
-  req.flash('success', `Hola de nuevo, ${user.name.split(' ')[0]}.`);
+  loginLimiter.reset(req);
+  req.flash('success', `Hola de nuevo, ${user.name.split(' ')[0]}. Ya estás dentro de tu cuenta.`);
   return res.redirect(nextPath);
 });
 

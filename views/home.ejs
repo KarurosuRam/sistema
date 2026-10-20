@@ -1,3 +1,22 @@
+<% if (user) { %>
+  <div class="home-session">
+    <div class="container home-session__inner">
+      <span class="home-session__text">
+        <%- icon('leaf', 15) %>
+        Hola, <strong><%= user.name.split(' ')[0] %></strong>. Tienes
+        <strong><%= user.credits %> <%= user.credits === 1 ? 'memorial disponible' : 'memoriales disponibles' %></strong>.
+      </span>
+      <span class="home-session__actions">
+        <a class="home-session__link" href="/panel">Mi jardín <%- icon('arrow-right', 13) %></a>
+        <form action="/salir" method="post">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="home-session__logout">Cerrar sesión</button>
+        </form>
+      </span>
+    </div>
+  </div>
+<% } %>
+
 <section class="hero">
   <div class="container hero__inner">
     <div class="hero__copy">
@@ -8,8 +27,13 @@
         su música y las palabras de quienes lo amaron en un espacio que puedes visitar cuando quieras.
       </p>
       <div class="hero__actions">
-        <a class="btn btn--lg" href="/registro">Crear un memorial <%- icon('arrow-right', 16) %></a>
-        <a class="btn btn--ghost btn--lg" href="/demo">Visitar un ejemplo</a>
+        <% if (user) { %>
+          <a class="btn btn--lg" href="/panel/nuevo">Crear otro memorial <%- icon('arrow-right', 16) %></a>
+          <a class="btn btn--ghost btn--lg" href="/panel">Ir a mi jardín</a>
+        <% } else { %>
+          <a class="btn btn--lg" href="/registro">Crear un memorial <%- icon('arrow-right', 16) %></a>
+          <a class="btn btn--ghost btn--lg" href="/demo">Visitar un ejemplo</a>
+        <% } %>
       </div>
       <ul class="hero__trust">
         <li><%- icon('link', 17) %> Enlace único y QR</li>

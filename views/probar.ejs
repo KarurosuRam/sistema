@@ -25,14 +25,15 @@
 
       <div class="probar-card reveal">
         <p class="eyebrow">La cuenta de demostración</p>
-        <h2 style="font-size: clamp(1.5rem, 3vw, 2rem);">Entra directo al panel</h2>
+        <h2 style="font-size: clamp(1.5rem, 3vw, 2rem);">Entra sin crear cuenta</h2>
         <p>
           Un clic y quedas dentro de <strong><%= demoUser ? demoUser.name : 'la cuenta de ejemplo' %></strong>,
-          con memoriales para administrar y créditos para crear uno nuevo sin pagar.
+          sin salir de la página principal. Desde ahí ves tus memoriales de ejemplo en “Mi jardín”
+          y tienes créditos para crear uno nuevo sin pagar.
         </p>
 
         <div class="probar-actions">
-          <a class="btn btn--lg btn--block" href="/probar?entrar=1"><%- icon('arrow-right', 16) %> Entrar al panel de demo</a>
+          <a class="btn btn--lg btn--block" href="/probar?entrar=1"><%- icon('arrow-right', 16) %> Entrar a la demo</a>
           <a class="btn btn--ghost btn--block" href="/demo"><%- icon('book', 16) %> Ver un memorial de ejemplo</a>
         </div>
 

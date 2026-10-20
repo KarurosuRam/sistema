@@ -32,6 +32,10 @@
           <%= user.credits %> <%= user.credits === 1 ? 'memorial' : 'memoriales' %>
         </a>
         <a class="btn btn--ghost" href="/panel">Mi jardín</a>
+        <form action="/salir" method="post" class="header-logout">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="header-logout__btn">Salir</button>
+        </form>
       <% } else { %>
         <a class="header-login" href="/ingresar">Ingresar</a>
         <a class="btn" href="/registro">Crear cuenta</a>

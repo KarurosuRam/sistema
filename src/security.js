@@ -99,8 +99,10 @@ function csrfProtect(req, res, next) {
 
 function createRateLimiter({ windowMs, max, message, keyPrefix = '' }) {
   const hits = new Map();
-  const keyFor = (req) => `${keyPrefix}:${req.ip}`;
-  return function rateLimiter(req, res, next) {
+  // Se combina la IP con el navegador: detrás de un proxy (vista previa) todos
+  // los visitantes comparten IP y un límite solo por IP bloqueaba a cualquiera.
+  const keyFor = (req) => `${keyPrefix}:${req.ip}:${req.get('user-agent') || '-'}`;
+  function rateLimiter(req, res, next) {
     const now = Date.now();
     const key = keyFor(req);
     const entry = hits.get(key);
@@ -123,6 +125,11 @@ function createRateLimiter({ windowMs, max, message, keyPrefix = '' }) {
     }
     return next();
   };
+
+  // Un ingreso correcto no debe acercar el bloqueo: se limpia el contador.
+  rateLimiter.reset = (req) => hits.delete(keyFor(req));
+
+  return rateLimiter;
 }
 
 module.exports = {

@@ -58,8 +58,19 @@ function requireAuth(req, res, next) {
   return res.redirect(`/ingresar?next=${encodeURIComponent(nextPath)}`);
 }
 
+/**
+ * Si ya hay una sesión abierta no tiene sentido volver a mostrar el ingreso:
+ * se devuelve a la persona a la página principal (donde ve su cuenta activa)
+ * en vez de mandarla al panel, que era lo que resultaba desconcertante.
+ */
 function requireGuest(req, res, next) {
-  if (req.user) return res.redirect('/panel');
+  if (req.user) {
+    req.flash(
+      'info',
+      `Ya iniciaste sesión como ${req.user.name.split(' ')[0]}. Si quieres entrar con otra cuenta, cierra sesión primero.`
+    );
+    return res.redirect('/');
+  }
   return next();
 }
 

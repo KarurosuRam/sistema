@@ -2031,3 +2031,80 @@
   color: var(--ink);
   font-weight: 600;
 }
+
+/* ==========================================================================
+   Barra de sesión en la portada
+   ========================================================================== */
+
+.home-session {
+  background: var(--jade-soft);
+  border-bottom: 1px solid rgba(var(--jade-rgb), 0.25);
+  color: var(--ink);
+}
+
+.home-session__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  padding-top: 9px;
+  padding-bottom: 9px;
+  font-size: 0.85rem;
+}
+
+.home-session__text {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  color: var(--ink);
+}
+
+.home-session__text svg {
+  color: var(--jade-deep);
+}
+
+.home-session__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.home-session__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.home-session__link:hover {
+  border-bottom-color: var(--ink);
+}
+
+.home-session__logout {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-size: 0.82rem;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.home-session__logout:hover {
+  color: var(--ink);
+}
+
+@media (max-width: 620px) {
+  .home-session__inner {
+    justify-content: center;
+    text-align: center;
+  }
+}

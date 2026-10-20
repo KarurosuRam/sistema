@@ -24,7 +24,7 @@ function validateRegistration(body) {
   if (!isEmail(email)) errors.push('Ingresa un correo electrónico válido.');
   if (password.length < 8) errors.push('La contraseña debe tener al menos 8 caracteres.');
   if (password !== confirm) errors.push('Las contraseñas no coinciden.');
-  if (String(body.website || '').trim()) errors.push('No pudimos validar el formulario.');
+  if (String(body.jm_hp || body.website || '').trim()) errors.push('No pudimos validar el formulario.');
 
   return { errors, values: { name, email, password } };
 }
@@ -112,7 +112,7 @@ function validateGuestbook(body) {
   if (name.length < 2) errors.push('Escribe tu nombre.');
   if (message.length < 3) errors.push('Escribe unas palabras para el memorial.');
   if (message.length > 1200) errors.push('El mensaje no puede superar los 1200 caracteres.');
-  if (String(body.website || '').trim()) errors.push('No pudimos validar el formulario.');
+  if (String(body.jm_hp || body.website || '').trim()) errors.push('No pudimos validar el formulario.');
   return { errors, values: { name, city, message, candle } };
 }
 

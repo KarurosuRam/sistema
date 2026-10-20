@@ -1735,3 +1735,32 @@ svg {
     letter-spacing: 0.02em;
   }
 }
+
+/* Salir desde el encabezado (en móvil vive dentro del menú) */
+.header-logout {
+  display: inline-flex;
+}
+
+.header-logout__btn {
+  background: none;
+  border: 0;
+  padding: 6px 2px;
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.header-logout__btn:hover {
+  color: var(--ink);
+}
+
+@media (max-width: 960px) {
+  .header-logout {
+    display: none;
+  }
+}

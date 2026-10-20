@@ -201,6 +201,21 @@ scripts/                  seed-demo.js y generate_music.py (melodía ambiente)
 - Melodía ambiente generada con síntesis propia (`scripts/generate_music.py`, 128 kbps).
 - Fotografía de demostración generada para este proyecto.
 
+## 🔑 Ingreso, demo y creación de cuenta
+
+- Al ingresar (o crear una cuenta) se vuelve a la **página principal**, no al panel:
+  la portada muestra una barra con el nombre, los memoriales disponibles, «Mi jardín»
+  y «Cerrar sesión». El panel queda a un clic.
+- La demo (`/probar?entrar=1`) hace lo mismo: deja la sesión de ejemplo activa en la
+  portada y muestra la cinta «Cuenta de demostración».
+- Si ya hay una sesión abierta, `/ingresar` y `/registro` no rebotan al panel: vuelven
+  a la portada con un aviso que invita a cerrar sesión primero.
+- Los formularios con error llevan el foco al aviso de validación.
+- El campo trampa se llama `jm_hp` (antes `website`) para que el autocompletado del
+  navegador no lo rellene y bloquee el registro por error.
+- Los límites de intentos se cuentan por IP **y** navegador, y se reinician al acertar,
+  así una vista previa compartida no bloquea a quien intenta registrarse.
+
 ## 🧩 Diseño, accesibilidad y caché
 
 - **Diseño fluido**: `body { overflow-x: clip }`, contenedores con `padding` adaptable
