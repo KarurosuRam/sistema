@@ -812,6 +812,35 @@
 
 /* ------------------------------------------------------------------ video */
 
+.mem-btn--slideshow {
+  padding: 7px 14px;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  background: rgba(251, 248, 241, 0.08);
+  border-color: rgba(251, 248, 241, 0.24);
+}
+
+.gb-more {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(251, 248, 241, 0.12);
+}
+
+.gb-more .mem-btn {
+  padding: 9px 18px;
+}
+
+.gb-more__count {
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(251, 248, 241, 0.4);
+}
+
 .mem-video__frame {
   position: relative;
   max-width: 860px;
@@ -1428,10 +1457,77 @@
   text-align: center;
 }
 
+.lightbox__bar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 .lightbox__counter {
   color: rgba(251, 248, 241, 0.4);
   font-size: 0.68rem;
   letter-spacing: 0.14em;
+}
+
+.lightbox__play {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(251, 248, 241, 0.22);
+  background: rgba(20, 32, 26, 0.4);
+  color: rgba(251, 248, 241, 0.72);
+  font-family: var(--sans);
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.lightbox__play:hover {
+  background: rgba(251, 248, 241, 0.14);
+  border-color: rgba(251, 248, 241, 0.45);
+  color: var(--cream);
+}
+
+.lightbox__play-icon {
+  display: inline-flex;
+}
+
+.lightbox__play-icon svg {
+  width: 13px;
+  height: 13px;
+}
+
+.lightbox__play-icon--pause {
+  display: none;
+}
+
+.lightbox__play.is-playing .lightbox__play-icon {
+  display: none;
+}
+
+.lightbox__play.is-playing .lightbox__play-icon--pause {
+  display: inline-flex;
+}
+
+.lightbox.is-slideshow .lightbox__img {
+  animation: slide-in 0.9s var(--ease) both;
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0.25;
+    transform: scale(1.015);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .lightbox__btn {
@@ -1683,6 +1779,14 @@
   .lightbox__btn {
     width: 38px;
     height: 38px;
+  }
+
+  .lightbox__bar {
+    gap: 12px;
+  }
+
+  .lightbox__play-label {
+    font-size: 0.58rem;
   }
 
   .mem-top {

@@ -130,9 +130,16 @@
             <p class="mem-eyebrow">Momentos</p>
             <h2 class="mem-heading" style="margin-bottom: 0;">Su vida en <em>imágenes</em></h2>
           </div>
-          <span class="limit-pill" style="background: rgba(251,248,241,.06); border-color: rgba(251,248,241,.18); color: rgba(251,248,241,.65);">
-            <%- icon('image', 13) %> <%= allPhotos.length %> <%= allPhotos.length === 1 ? 'foto' : 'fotos' %>
-          </span>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <span class="limit-pill" style="background: rgba(251,248,241,.06); border-color: rgba(251,248,241,.18); color: rgba(251,248,241,.65);">
+              <%- icon('image', 13) %> <%= allPhotos.length %> <%= allPhotos.length === 1 ? 'foto' : 'fotos' %>
+            </span>
+            <% if (allPhotos.length > 1) { %>
+              <button class="mem-btn mem-btn--slideshow" type="button" data-slideshow>
+                <%- icon('play', 14) %> Reproducir recuerdos
+              </button>
+            <% } %>
+          </div>
         </div>
 
         <div class="mem-gallery__grid <%= allPhotos.length === 1 ? 'mem-gallery__grid--single' : allPhotos.length === 2 ? 'mem-gallery__grid--pair' : 'mem-gallery__grid--mosaic' %>">
@@ -188,6 +195,7 @@
         <% if (memorial.allow_guestbook) { %>
           <form class="gb-form" action="/m/<%= memorial.slug %>/firma" method="post" style="margin-top: 24px;">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <input type="hidden" name="mensajes" value="<%= guestbook.length %>">
             <div class="honeypot" aria-hidden="true">
               <label for="website">Sitio web</label>
               <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
@@ -252,6 +260,14 @@
               </article>
             <% }); %>
           </div>
+          <% if (moreMessages) { %>
+            <div class="gb-more">
+              <a class="mem-btn" href="?mensajes=<%= nextGuestbookLimit %>#libro">
+                Ver más mensajes <%- icon('chevron-down', 14) %>
+              </a>
+              <span class="gb-more__count">Mostrando <%= guestbook.length %> de <%= messageCount %></span>
+            </div>
+          <% } %>
         <% } %>
       </div>
     </div>
@@ -369,7 +385,14 @@
   <figure class="lightbox__figure">
     <img class="lightbox__img" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
     <figcaption class="lightbox__caption"></figcaption>
-    <span class="lightbox__counter"></span>
+    <div class="lightbox__bar">
+      <span class="lightbox__counter"></span>
+      <button class="lightbox__play" type="button" data-lightbox-play aria-label="Reproducir presentación de recuerdos">
+        <span class="lightbox__play-icon"><%- icon('play', 13) %></span>
+        <span class="lightbox__play-icon lightbox__play-icon--pause"><%- icon('pause', 13) %></span>
+        <span class="lightbox__play-label">Reproducir recuerdos</span>
+      </button>
+    </div>
   </figure>
   <button class="lightbox__btn lightbox__btn--next" type="button" data-lightbox-next aria-label="Foto siguiente"><%- icon('chevron-right', 20) %></button>
 </div>

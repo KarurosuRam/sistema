@@ -105,6 +105,38 @@
     var counter = $('.lightbox__counter', lightbox);
     var index = 0;
     var lastFocus = null;
+    var slideshowTimer = null;
+    var slideshowActive = false;
+    var playBtn = $('[data-lightbox-play]', lightbox);
+    var playLabel = playBtn ? $('.lightbox__play-label', playBtn) : null;
+    var SLIDESHOW_MS = 5000;
+
+    var stopSlideshow = function () {
+      slideshowActive = false;
+      window.clearInterval(slideshowTimer);
+      slideshowTimer = null;
+      lightbox.classList.remove('is-slideshow');
+      if (playBtn) {
+        playBtn.classList.remove('is-playing');
+        playBtn.setAttribute('aria-label', 'Reproducir presentación de recuerdos');
+      }
+      if (playLabel) playLabel.textContent = 'Reproducir recuerdos';
+    };
+
+    var startSlideshow = function () {
+      if (photos.length < 2) return;
+      slideshowActive = true;
+      lightbox.classList.add('is-slideshow');
+      if (playBtn) {
+        playBtn.classList.add('is-playing');
+        playBtn.setAttribute('aria-label', 'Pausar presentación de recuerdos');
+      }
+      if (playLabel) playLabel.textContent = 'Pausar presentación';
+      window.clearInterval(slideshowTimer);
+      slideshowTimer = window.setInterval(function () {
+        render(index + 1);
+      }, SLIDESHOW_MS);
+    };
 
     var render = function (i) {
       index = (i + photos.length) % photos.length;
@@ -116,6 +148,12 @@
       caption.textContent = text;
       caption.style.display = text ? 'block' : 'none';
       counter.textContent = index + 1 + ' / ' + photos.length;
+      if (slideshowActive) {
+        window.clearInterval(slideshowTimer);
+        slideshowTimer = window.setInterval(function () {
+          render(index + 1);
+        }, SLIDESHOW_MS);
+      }
     };
 
     var open = function (i, trigger) {
@@ -128,10 +166,18 @@
     };
 
     var close = function () {
+      stopSlideshow();
       lightbox.classList.remove('is-open');
       document.body.style.overflow = '';
       if (lastFocus && lastFocus.focus) lastFocus.focus();
     };
+
+    if (playBtn) {
+      playBtn.addEventListener('click', function () {
+        if (slideshowActive) stopSlideshow();
+        else startSlideshow();
+      });
+    }
 
     photos.forEach(function (figure, i) {
       figure.addEventListener('click', function () {
@@ -156,6 +202,11 @@
       if (event.key === 'Escape') close();
       if (event.key === 'ArrowLeft') render(index - 1);
       if (event.key === 'ArrowRight') render(index + 1);
+      if (event.key === ' ' && event.target === document.body) {
+        event.preventDefault();
+        if (slideshowActive) stopSlideshow();
+        else startSlideshow();
+      }
     });
 
     // Gestos en móvil
@@ -169,6 +220,17 @@
       if (Math.abs(delta) > 50) render(index + (delta < 0 ? 1 : -1));
       touchX = null;
     }, { passive: true });
+  }
+
+  var slideshowTrigger = document.querySelector('[data-slideshow]');
+  if (slideshowTrigger && lightbox) {
+    slideshowTrigger.addEventListener('click', function () {
+      var first = document.querySelector('[data-lightbox]');
+      if (!first) return;
+      first.click();
+      var play = document.querySelector('[data-lightbox-play]');
+      if (play && !play.classList.contains('is-playing')) play.click();
+    });
   }
 
   /* ---------------------------------------------------------- share sheet */

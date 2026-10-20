@@ -219,6 +219,24 @@
               </div>
               <div class="photo-tile__body">
                 <div class="photo-tile__actions">
+                  <% if (index > 0) { %>
+                    <form action="/panel/memoriales/<%= memorial.id %>/fotos/<%= photo.id %>/mover" method="post">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <input type="hidden" name="direction" value="up">
+                      <button class="icon-btn" type="submit" title="Mover antes" aria-label="Mover la foto hacia arriba"><%- icon('chevron-up', 14) %></button>
+                    </form>
+                  <% } else { %>
+                    <button class="icon-btn" type="button" disabled title="Ya es la primera" aria-label="Ya es la primera"><%- icon('chevron-up', 14) %></button>
+                  <% } %>
+                  <% if (index < photos.length - 1) { %>
+                    <form action="/panel/memoriales/<%= memorial.id %>/fotos/<%= photo.id %>/mover" method="post">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <input type="hidden" name="direction" value="down">
+                      <button class="icon-btn" type="submit" title="Mover después" aria-label="Mover la foto hacia abajo"><%- icon('chevron-down', 14) %></button>
+                    </form>
+                  <% } else { %>
+                    <button class="icon-btn" type="button" disabled title="Ya es la última" aria-label="Ya es la última"><%- icon('chevron-down', 14) %></button>
+                  <% } %>
                   <% if (photo.filename !== memorial.main_photo) { %>
                     <form action="/panel/memoriales/<%= memorial.id %>/fotos/<%= photo.id %>/principal" method="post">
                       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
@@ -477,6 +495,15 @@
               <span><%= memorial.certificate_code %> · descárgalo en PDF</span>
             </div>
             <a class="btn btn--ghost btn--sm" href="/panel/memoriales/<%= memorial.id %>/certificado"><%- icon('download', 14) %> PDF</a>
+          </div>
+
+          <div class="cert-preview" style="background: linear-gradient(135deg, var(--sage-wash), var(--paper));">
+            <span class="cert-preview__seal" style="border-color: var(--sage); color: var(--sage-deep); background: var(--sage-soft);"><%- icon('qr', 24) %></span>
+            <div style="flex: 1;">
+              <strong>Tarjeta conmemorativa</strong>
+              <span>A5 lista para imprimir, con su retrato y el QR del memorial.</span>
+            </div>
+            <a class="btn btn--ghost btn--sm" href="/panel/memoriales/<%= memorial.id %>/tarjeta"><%- icon('download', 14) %> PDF</a>
           </div>
 
           <div class="form-card" style="box-shadow: none;">

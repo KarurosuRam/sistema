@@ -17,6 +17,7 @@
         <h3>Su código QR</h3>
         <p>Imprímelo en tarjetas, recordatorios o una placa. Lleva directo al memorial.</p>
         <a class="btn btn--block" href="/panel/memoriales/<%= memorial.id %>/qr.png"><%- icon('download', 15) %> Descargar QR en PNG</a>
+        <a class="btn btn--ghost btn--block" href="/panel/memoriales/<%= memorial.id %>/tarjeta" style="margin-top: 8px;"><%- icon('qr', 15) %> Tarjeta con QR (PDF)</a>
         <a class="btn btn--ghost btn--block" href="/panel/memoriales/<%= memorial.id %>/certificado" style="margin-top: 8px;"><%- icon('award', 15) %> Descargar certificado</a>
       </div>
 
@@ -34,6 +35,15 @@
           <a class="share-btn" href="mailto:?subject=<%= encodeURIComponent('Memorial de ' + memorial.full_name) %>&body=<%= encodeURIComponent('Quiero compartir contigo el memorial de ' + memorial.full_name + ':\n' + publicUrl) %>"><%- icon('mail', 17) %> Enviar por correo</a>
           <a class="share-btn" href="/m/<%= memorial.slug %>" target="_blank" rel="noopener"><%- icon('external-link', 17) %> Abrir el memorial</a>
           <a class="share-btn" href="/certificado/<%= memorial.certificate_code %>" target="_blank" rel="noopener"><%- icon('award', 17) %> Verificar certificado</a>
+        </div>
+
+        <div class="cert-preview" style="background: linear-gradient(135deg, var(--sage-wash), var(--paper));">
+          <span class="cert-preview__seal" style="border-color: var(--sage); color: var(--sage-deep); background: var(--sage-soft);"><%- icon('qr', 24) %></span>
+          <div style="flex: 1;">
+            <strong>Tarjeta conmemorativa</strong>
+            <span>A5 horizontal con su retrato y el QR, ideal para la ceremonia.</span>
+          </div>
+          <a class="btn btn--ghost btn--sm" href="/panel/memoriales/<%= memorial.id %>/tarjeta">Descargar</a>
         </div>
 
         <div class="cert-preview">

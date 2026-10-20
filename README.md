@@ -22,10 +22,12 @@ segundos, música MP3 y un libro de visitas con velas virtuales.
 | Hasta 10 fotos | Carga múltiple, miniaturas optimizadas, descripciones y control estricto del límite |
 | Video de máx. 60 s | MP4/MOV hasta 120 MB; se inspecciona la duración real del contenedor y se rechaza si excede |
 | Música MP3 al abrir | MP3 hasta 20 MB, reproducción automática con respaldo amable si el navegador la bloquea |
-| Libro de visitas | Mensajes moderables (ocultar/eliminar), velas virtuales y protección anti-spam |
+| Libro de visitas | Mensajes moderables (ocultar/eliminar), velas virtuales, paginación y protección anti-spam |
 
-Extras: diseño editorial responsive, memoriales públicos o privados, sitemap/SEO, página de
-demo, centro de ayuda, términos, privacidad y comprobantes de compra.
+Extras: **tarjeta conmemorativa A5 imprimible** con retrato y QR, **presentación de recuerdos**
+(slideshow del lightbox), reordenamiento de la galería, diseño editorial responsive, memoriales
+públicos o privados, sitemap/SEO, página de demo, centro de ayuda, términos, privacidad y
+comprobantes de compra.
 
 ## 🚀 Puesta en marcha
 
@@ -72,8 +74,9 @@ Copia `.env.example` (todas son opcionales): `PORT`, `BASE_URL`, `DATA_DIR`, `PA
    créditos se acreditan al instante (idempotente por referencia).
 3. **Creación** → `/panel/nuevo` con vista previa en vivo; descuenta 1 crédito y genera slug, QR y
    certificado. Si algo falla, el crédito se devuelve.
-4. **Administración** → `/panel/memoriales/:id`: detalles, fotos, video, música, libro de visitas,
-   compartir/QR, certificado y eliminación con confirmación por nombre.
+4. **Administración** → `/panel/memoriales/:id`: detalles, fotos (principal, orden y descripciones),
+   video, música, libro de visitas, compartir/QR, tarjeta conmemorativa, certificado y eliminación
+   con confirmación por nombre.
 5. **Memorial público** → `/m/:slug`: portada con retrato, historia, galería con lightbox, video,
    libro de visitas, velas, QR y acceso al certificado.
 6. **Verificación** → `/certificado` y `/certificado/JM-AAAA-XXXXX`.
@@ -91,6 +94,7 @@ src/
   security.js             scrypt, CSRF doble envío, rate limiting
   media.js                sharp (fotos), duración MP3, validación MP4/MOV
   qr.js / certificate.js  QR y certificado PDF (PDFKit + tipografías de marca)
+  poster.js               tarjeta conmemorativa A5 con retrato y QR
   icons.js                set de iconos y logotipo
   routes/                 public · auth · panel · memorial
 views/                    layout general + layout propio del memorial
@@ -144,6 +148,9 @@ scripts/                  seed-demo.js y generate_music.py (melodía ambiente)
 - Firmar el libro de visitas, encender velas y superar el límite de intentos.
 - Cambiar el memorial a privado: terceros reciben 404, el titular lo ve.
 - Descargar el certificado PDF y verificarlo en `/certificado`.
+- Descargar la tarjeta conmemorativa y escanear su QR con el celular.
+- Reordenar fotos y reproducir la presentación de recuerdos desde el lightbox.
+- Con más de 30 mensajes, usar “Ver más mensajes” y confirmar que el contador avanza.
 
 ## 🎨 Créditos
 

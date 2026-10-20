@@ -14,6 +14,7 @@ const { photoSingle, photoArray, audioSingle, videoSingle } = require('../upload
 const { validateMemorial } = require('../validation');
 const { qrBuffer, qrDataUrl } = require('../qr');
 const { generateCertificate } = require('../certificate');
+const { generatePoster } = require('../poster');
 
 const router = express.Router();
 
@@ -394,6 +395,24 @@ router.post('/memoriales/:id/fotos', loadMemorialOwned, photoArray, csrfProtect,
   })().catch(next);
 }));
 
+router.post('/memoriales/:id/fotos/:photoId/mover', loadMemorialOwned, (req, res) => {
+  const photo = store.findPhoto(Number(req.params.photoId));
+  if (!photo || photo.memorial_id !== req.memorial.id) {
+    req.flash('error', 'La foto no existe.');
+    return res.redirect(`/panel/memoriales/${req.memorial.id}#fotos`);
+  }
+  const direction = req.body.direction === 'up' ? -1 : 1;
+  const order = store.listPhotos(req.memorial.id).map((item) => item.id);
+  const index = order.indexOf(photo.id);
+  const target = index + direction;
+  if (index >= 0 && target >= 0 && target < order.length) {
+    [order[index], order[target]] = [order[target], order[index]];
+    store.reorderPhotos(req.memorial.id, order);
+    req.flash('success', 'Cambiamos el orden de la galería.');
+  }
+  res.redirect(`/panel/memoriales/${req.memorial.id}#fotos`);
+});
+
 router.post('/memoriales/:id/fotos/:photoId/principal', loadMemorialOwned, (req, res) => {
   const photo = store.findPhoto(Number(req.params.photoId));
   if (!photo || photo.memorial_id !== req.memorial.id) {
@@ -564,6 +583,20 @@ router.get('/memoriales/:id/qr.png', loadMemorialOwned, asyncHandler(async (req,
     const buffer = await qrBuffer(url, { width: 1200, margin: 2 });
     res.setHeader('Content-Type', 'image/png');
     res.setHeader('Content-Disposition', `attachment; filename="qr-${safeFileName(req.memorial.full_name)}.png"`);
+    res.send(buffer);
+  } catch (error) {
+    next(error);
+  }
+}));
+
+router.get('/memoriales/:id/tarjeta', loadMemorialOwned, asyncHandler(async (req, res, next) => {
+  try {
+    const buffer = await generatePoster({ memorial: req.memorial, siteUrl: util.baseUrl(req) });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="tarjeta-${safeFileName(req.memorial.full_name)}.pdf"`
+    );
     res.send(buffer);
   } catch (error) {
     next(error);

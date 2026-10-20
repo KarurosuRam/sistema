@@ -38,9 +38,13 @@ router.get('/:slug', loadPublicMemorial, asyncHandler(async (req, res, next) => 
   try {
     const memorial = req.memorial;
     const photos = store.listPhotos(memorial.id);
-    const guestbook = store.listGuestbook(memorial.id, { limit: 50 });
-    const candleCount = store.countCandles(memorial.id);
     const messageCount = store.countGuestbook(memorial.id);
+    const requestedLimit = Number.parseInt(req.query.mensajes, 10);
+    const guestbookLimit = [30, 60, 120].includes(requestedLimit) ? requestedLimit : 30;
+    const guestbook = store.listGuestbook(memorial.id, { limit: guestbookLimit });
+    const moreMessages = guestbook.length < messageCount;
+    const nextGuestbookLimit = guestbookLimit >= 120 ? 120 : guestbookLimit + 30;
+    const candleCount = store.countCandles(memorial.id);
 
     const cookieKey = viewCookieKey(memorial);
     if (!req.cookies[cookieKey]) {
@@ -85,6 +89,8 @@ router.get('/:slug', loadPublicMemorial, asyncHandler(async (req, res, next) => 
       guestbook,
       candleCount,
       messageCount,
+      moreMessages,
+      nextGuestbookLimit,
       publicUrl,
       qrInline,
       related,
@@ -128,7 +134,9 @@ router.post('/:slug/firma', guestbookLimiter, loadPublicMemorial, (req, res) => 
       ? 'Gracias por tu mensaje. Encendimos una vela junto a tu recuerdo.'
       : 'Gracias por dejar unas palabras en este memorial.'
   );
-  return res.redirect(`/m/${memorial.slug}#libro`);
+  const limit = String(req.body.mensajes || '');
+  const suffix = ['30', '60', '120'].includes(limit) ? `?mensajes=${limit}` : '';
+  return res.redirect(`/m/${memorial.slug}${suffix}#libro`);
 });
 
 router.post('/:slug/vela', candleLimiter, loadPublicMemorial, (req, res) => {
