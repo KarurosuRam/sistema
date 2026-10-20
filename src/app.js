@@ -145,25 +145,6 @@ app.get('/healthz', (req, res) => {
   res.json({ ok: true, service: 'jardin-memorial', time: new Date().toISOString() });
 });
 
-/**
- * Sonda para el navegador: confirma si las cookies de sesión viajan de verdad.
- * La usa main.js para avisar (y ofrecer abrir en pestaña nueva) cuando una
- * vista previa embebida las bloquea.
- */
-app.get('/api/sonda', (req, res) => {
-  res.setHeader('Cache-Control', 'no-store');
-  // Se mira la cabecera cruda: csrfCreate rellena req.cookies aunque el
-  // navegador no haya enviado nada, y aquí hace falta la verdad.
-  const rawCookie = req.get('cookie') || '';
-  res.json({
-    ok: true,
-    cookies: /(?:^|;\s*)jm_csrf=/.test(rawCookie),
-    session: Boolean(req.user),
-    https: req.secure,
-    embedded: req.get('sec-fetch-site') === 'cross-site'
-  });
-});
-
 app.use('/', demoRoutes);
 app.use('/', publicRoutes);
 app.use('/', authRoutes);

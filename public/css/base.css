@@ -1645,30 +1645,6 @@ svg {
   color: var(--cream);
 }
 
-/* Aviso cuando el navegador bloquea cookies dentro de una vista previa */
-.cookie-warning {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 8px 14px;
-  padding: 12px 20px;
-  background: var(--marigold-soft);
-  border-bottom: 1px solid rgba(var(--marigold-rgb), 0.45);
-  color: var(--ink);
-  font-family: var(--sans);
-  font-size: 0.85rem;
-  line-height: 1.45;
-  text-align: center;
-}
-
-.cookie-warning a {
-  color: var(--ink);
-  font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  white-space: nowrap;
-}
 
 /* ==========================================================================
    Encabezado y aviso de demo en pantallas pequeñas
@@ -1759,23 +1735,4 @@ svg {
   .header-logout {
     display: none;
   }
-}
-
-.cookie-warning__retry {
-  background: none;
-  border: 1px solid rgba(var(--ink-rgb), 0.28);
-  border-radius: var(--radius-pill);
-  padding: 4px 12px;
-  font: inherit;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--ink);
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.cookie-warning__retry:hover {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--cream);
 }

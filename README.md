@@ -223,9 +223,9 @@ que se cierra con la ✕, con Escape o tocando fuera.
 
 ## 🔑 Ingreso, demo y creación de cuenta
 
-- No se abren pestañas nuevas: los enlaces internos (memorial, certificado, compartir) y el
-  aviso de cookies se resuelven en la misma pantalla. Los enlaces externos (WhatsApp,
-  Instagram) también se abren en la misma pestaña.
+- No se abren pestañas nuevas: los enlaces internos (memorial, certificado, compartir) se
+  resuelven en la misma pantalla. Los enlaces externos (WhatsApp, Instagram) también se abren
+  en la misma pestaña.
 - Al ingresar (o crear una cuenta) se vuelve a la **página principal**, no al panel:
   la portada muestra una barra con el nombre, los memoriales disponibles, «Mi jardín»
   y «Cerrar sesión». El panel queda a un clic.

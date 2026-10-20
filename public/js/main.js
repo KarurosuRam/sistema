@@ -86,57 +86,6 @@
   });
 
 
-  /* ------------------------------------------------ cookies en vista previa */
-  (function () {
-    // Solo tiene sentido dentro de un marco (la vista previa). Fuera de él las
-    // cookies son de primera parte y no hay nada que avisar.
-    var embedded = window.self !== window.top;
-    if (!embedded || typeof window.fetch !== 'function') return;
-    // La demo no usa cookies: no tiene sentido taparla con este aviso.
-    if (document.body.classList.contains('page-demo')) return;
-
-    var showBar = function (message) {
-      if (document.querySelector('.cookie-warning')) return;
-
-      var bar = document.createElement('div');
-      bar.className = 'cookie-warning';
-      bar.setAttribute('role', 'alert');
-
-      var text = document.createElement('span');
-      text.textContent = message;
-
-      var action = document.createElement('button');
-      action.type = 'button';
-      action.className = 'cookie-warning__retry';
-      action.textContent = 'Volver a comprobar';
-      action.addEventListener('click', function () {
-        window.location.reload();
-      });
-
-      bar.appendChild(text);
-      bar.appendChild(action);
-      document.body.insertBefore(bar, document.body.firstChild);
-    };
-
-    // Se pregunta al servidor qué cookies recibió: es la comprobación real,
-    // no una suposición a partir de document.cookie.
-    window
-      .fetch('/api/sonda', { credentials: 'include', cache: 'no-store' })
-      .then(function (response) {
-        return response.ok ? response.json() : null;
-      })
-      .then(function (data) {
-        if (data && !data.cookies) {
-          showBar(
-            'Tu navegador está bloqueando las cookies de sesión en esta vista previa. La demo y las velas funcionan igual; para ingresar con una cuenta, permite las cookies o abre el sitio directamente.'
-          );
-        }
-      })
-      .catch(function () {
-        /* si la sonda falla no se muestra nada */
-      });
-  })();
-
   /* ------------------------------------------------- errores de formulario */
   (function () {
     var errors = $('.form-errors');

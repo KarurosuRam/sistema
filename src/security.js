@@ -113,7 +113,7 @@ function csrfProtect(req, res, next) {
   }
   const message = cookieToken
     ? 'La sesión del formulario expiró. Recarga la página e inténtalo otra vez.'
-    : 'Tu navegador no está guardando las cookies de sesión. Abre el sitio en una pestaña nueva y vuelve a intentarlo.';
+    : 'Tu navegador no está guardando las cookies de sesión. Revisa que las acepte y vuelve a intentarlo.';
   const error = new Error(message);
   error.status = 403;
   error.csrf = true;
