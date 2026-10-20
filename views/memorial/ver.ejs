@@ -326,35 +326,6 @@
     </div>
   </section>
 
-  <% if (related && related.length) { %>
-    <section class="mem-section mem-section--deep">
-      <div class="mem-wrap">
-        <div class="mem-gallery__head">
-          <div>
-            <p class="mem-eyebrow">Otras historias</p>
-            <h2 class="mem-heading" style="margin-bottom: 0;">Jardines que también <em>florecen</em></h2>
-          </div>
-          <a class="link-arrow" href="/memoriales">Ver todos <%- icon('arrow-right', 15) %></a>
-        </div>
-        <div class="mem-related__grid">
-          <% related.forEach(function (item) { %>
-            <a class="mem-related-card" href="/m/<%= item.slug %>">
-              <% if (item.main_thumb || item.main_photo) { %>
-                <img src="/uploads/<%= item.main_thumb || item.main_photo %>" alt="Memorial de <%= item.full_name %>" loading="lazy">
-              <% } else { %>
-                <img src="/img/hero-garden.jpg" alt="" loading="lazy">
-              <% } %>
-              <span class="mem-related-card__overlay">
-                <strong><%= item.full_name %></strong>
-                <span><%= helpers.yearsLabel(item) %></span>
-              </span>
-            </a>
-          <% }); %>
-        </div>
-      </div>
-    </section>
-  <% } %>
-
   <footer class="mem-footer">
     <div class="mem-wrap">
       <a class="mem-footer__brand" href="/">

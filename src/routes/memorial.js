@@ -61,11 +61,6 @@ router.get('/:slug', loadPublicMemorial, asyncHandler(async (req, res, next) => 
     const publicUrl = `${util.baseUrl(req)}/m/${memorial.slug}`;
     const qrInline = await qrDataUrl(publicUrl, { margin: 0, width: 480 });
 
-    const related = store
-      .listPublicMemorials({ limit: 4 })
-      .filter((item) => item.id !== memorial.id)
-      .slice(0, 3);
-
     const mainPhotoUrl = memorial.main_photo ? `/uploads/${memorial.main_photo}` : '/img/hero-garden.jpg';
     res.locals.ogImage = mainPhotoUrl;
     res.locals.ogType = 'profile';
@@ -92,7 +87,6 @@ router.get('/:slug', loadPublicMemorial, asyncHandler(async (req, res, next) => 
       nextGuestbookLimit,
       publicUrl,
       qrInline,
-      related,
       musicSrc: memorial.music_path ? `/uploads/${memorial.music_path}` : config.defaultMusic,
       hasCustomMusic: !!memorial.music_path,
       span,
