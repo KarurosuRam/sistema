@@ -74,6 +74,13 @@ previsualización (`*.e2b.app`, `*.arena.ai`) y las cookies pasan a `SameSite=No
 que la sesión funcione dentro del marco. Con `NODE_ENV=production` y sin `EMBED_ORIGINS` la
 política vuelve a ser estricta (`SAMEORIGIN` + `frame-ancestors 'self'`).
 
+### Enlace fijo de prueba
+
+En modo demostración existe **`/probar`**: muestra la URL pública de la instalación con su código
+QR y permite entrar al panel de demo con un clic (`/probar?entrar=1`). Es la forma más rápida de
+probar la plataforma en el computador o en el teléfono sin escribir credenciales. La ruta se
+desactiva sola con `PAYMENTS_MODE=live` (o con `DEMO_ACCESS=off`) y responde 404 en producción.
+
 ## 🧭 Recorrido del producto
 
 1. **Registro** → cuenta gratis con 0 créditos.

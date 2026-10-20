@@ -42,6 +42,9 @@
         </div>
       <% } %>
 
+      <% if (demoAccess) { %>
+        <p class="auth__alt"><a href="/probar?entrar=1">Entrar directo a la demo</a> sin escribir la contraseña</p>
+      <% } %>
       <p class="auth__alt">¿Aún no tienes cuenta? <a href="/registro">Crea tu cuenta gratis</a></p>
 
       <div class="auth__trust">

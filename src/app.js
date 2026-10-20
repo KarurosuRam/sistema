@@ -109,6 +109,7 @@ app.use((req, res, next) => {
   res.locals.icon = icon;
   res.locals.brandMark = brandMark;
   res.locals.config = config;
+  res.locals.demoAccess = config.demoAccess;
   res.locals.activeNav = '';
   res.locals.hideFooter = false;
   next();
