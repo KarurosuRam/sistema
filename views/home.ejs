@@ -24,24 +24,6 @@
         <figcaption class="hero__frame-caption">“Lo que amamos no se pierde: se transforma en memoria.”</figcaption>
       </figure>
 
-      <% if (featured && featured.length) { %>
-        <a class="hero__card" href="/m/<%= featured[0].slug %>" aria-label="Visitar el memorial de <%= featured[0].full_name %>">
-          <span class="qr-thumb"><img src="/m/<%= featured[0].slug %>/qr.png" alt="Código QR del memorial de <%= featured[0].full_name %>" loading="lazy"></span>
-          <span>
-            <strong><%= featured[0].full_name %></strong>
-            <span>Un memorial para visitar</span>
-          </span>
-        </a>
-      <% } else { %>
-        <div class="hero__card">
-          <span class="qr-thumb"><%- icon('qr', 42) %></span>
-          <span>
-            <strong>Cada memorial tiene su QR</strong>
-            <span>Listo para compartir</span>
-          </span>
-        </div>
-      <% } %>
-
       <div class="hero__seal" aria-hidden="true">
         <div>
           <%- icon('certificate', 26) %>
@@ -347,7 +329,7 @@
   <div class="container">
     <div class="cta-final reveal">
       <div>
-        <p class="eyebrow eyebrow--plain" style="color: var(--sage-soft);">Su memoria merece un lugar</p>
+        <p class="eyebrow eyebrow--plain">Su memoria merece un lugar</p>
         <h2>Empieza hoy su jardín de recuerdos</h2>
         <p>Crea tu cuenta gratis, elige tu plan y arma un memorial que tu familia va a visitar por años. Nosotros nos encargamos del resto.</p>
       </div>

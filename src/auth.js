@@ -24,7 +24,7 @@ function startSession(req, res, userId) {
 function endSession(req, res) {
   const token = req.cookies[COOKIE];
   if (token) store.deleteSession(token);
-  res.clearCookie(COOKIE, { path: '/' });
+  res.clearCookie(COOKIE, cookieOptions(req, { path: '/' }));
 }
 
 function sessionLoader(req, res, next) {
@@ -32,12 +32,12 @@ function sessionLoader(req, res, next) {
   if (!token) return next();
   const session = store.findSession(token);
   if (!session) {
-    res.clearCookie(COOKIE, { path: '/' });
+    res.clearCookie(COOKIE, cookieOptions(req, { path: '/' }));
     return next();
   }
   if (new Date(session.expires_at).getTime() < Date.now()) {
     store.deleteSession(token);
-    res.clearCookie(COOKIE, { path: '/' });
+    res.clearCookie(COOKIE, cookieOptions(req, { path: '/' }));
     return next();
   }
   const user = store.findUserById(session.user_id);
@@ -116,7 +116,7 @@ function flashMiddleware(req, res, next) {
     } catch (_) {
       res.locals.flash = { type: 'info', message: decodeURIComponent(raw) };
     }
-    res.clearCookie('jm_flash', { path: '/' });
+    res.clearCookie('jm_flash', cookieOptions(req, { path: '/' }));
   }
   req.flash = (type, message) => {
     const payload = Buffer.from(JSON.stringify({ type, message, at: nowIso() }), 'utf8').toString('base64url');

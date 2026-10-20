@@ -2004,3 +2004,205 @@
     width: 100%;
   }
 }
+
+/* ==========================================================================
+   Panel en pantallas pequeñas
+   ========================================================================== */
+
+@media (max-width: 900px) {
+  .stat-grid,
+  .edit-grid,
+  .create-layout,
+  .checkout-layout,
+  .pm-grid,
+  .cert-preview,
+  .share-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .edit-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .edit-head__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .subnav {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 700px) {
+  .panel-shell,
+  .page-panel {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .form-card,
+  .edit-section {
+    padding: 20px 18px;
+    border-radius: var(--radius);
+  }
+
+  .stat-card {
+    padding: 16px;
+  }
+
+  .stat-grid {
+    gap: 10px;
+  }
+
+  .photo-manager,
+  .pm-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+
+  .msg-row {
+    grid-template-columns: 36px 1fr;
+    gap: 10px;
+  }
+
+  .msg-row__body {
+    min-width: 0;
+  }
+
+  .msg-row__text {
+    overflow-wrap: anywhere;
+  }
+
+  .GB-row__actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+
+  .order-row,
+  .info-tile {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .copy-field,
+  .probar-url {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .photo-tile {
+    min-width: 0;
+  }
+}
+
+/* ==========================================================================
+   Superficies claras del panel: las tarjetas oscuras pasan a papel para que
+   el texto negro sea siempre legible.
+   ========================================================================== */
+
+.balance {
+  background: var(--cream-deep);
+  color: var(--ink);
+  border: 1px solid var(--line-strong);
+  box-shadow: none;
+}
+
+.balance__label {
+  color: var(--jade-deep);
+}
+
+.balance__value {
+  color: var(--ink);
+}
+
+.balance__hint {
+  color: var(--ink-soft);
+}
+
+.memorial-preview {
+  background: var(--paper);
+  border-color: var(--paper);
+}
+
+.memorial-preview__media {
+  background: linear-gradient(150deg, var(--jade-soft), var(--cream-deep));
+}
+
+.memorial-preview__placeholder {
+  color: var(--muted);
+}
+
+.memorial-preview__name {
+  color: var(--ink);
+}
+
+.memorial-preview__dates {
+  color: var(--muted);
+}
+
+.memorial-preview__epitaph {
+  color: var(--ink-soft);
+  border-top-color: var(--line-strong);
+}
+
+.memorial-preview__foot {
+  background: var(--cream-deep);
+  border-top-color: var(--line);
+  color: var(--muted);
+}
+
+.card-demo {
+  background: var(--cream-deep);
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.card-demo__row,
+.card-demo__number {
+  color: var(--ink);
+}
+
+.card-demo__foot {
+  color: var(--muted);
+}
+
+/* El marco de video se mantiene oscuro (es un reproductor), así que su
+   estado vacío conserva texto claro. */
+.media-frame__empty {
+  color: rgba(var(--cream-rgb), 0.82);
+}
+
+.media-frame__empty p,
+.media-frame__empty span {
+  color: inherit;
+}
+
+@media (max-width: 900px) {
+  /* En una sola columna ya no hace falta fijar columnas laterales */
+  .preview-sticky,
+  .order-card {
+    position: static;
+  }
+
+  .subnav {
+    margin-left: -1px;
+    margin-right: -1px;
+  }
+
+  .subnav__inner {
+    display: flex;
+    gap: 8px;
+    padding-bottom: 2px;
+  }
+
+  .subnav__inner a {
+    flex: none;
+    white-space: nowrap;
+  }
+}

@@ -27,10 +27,10 @@
 
     <div class="header-actions">
       <% if (user) { %>
-        <span class="header-credit" title="Memoriales disponibles en tu cuenta">
+        <a class="header-credit" href="/panel" title="Memoriales disponibles en tu cuenta">
           <%- icon('leaf', 14) %>
           <%= user.credits %> <%= user.credits === 1 ? 'memorial' : 'memoriales' %>
-        </span>
+        </a>
         <a class="btn btn--ghost" href="/panel">Mi jardín</a>
       <% } else { %>
         <a class="header-login" href="/ingresar">Ingresar</a>

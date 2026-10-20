@@ -131,7 +131,7 @@
             <h2 class="mem-heading" style="margin-bottom: 0;">Su vida en <em>imágenes</em></h2>
           </div>
           <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <span class="limit-pill" style="background: rgba(251,248,241,.06); border-color: rgba(251,248,241,.18); color: rgba(251,248,241,.65);">
+            <span class="limit-pill">
               <%- icon('image', 13) %> <%= allPhotos.length %> <%= allPhotos.length === 1 ? 'foto' : 'fotos' %>
             </span>
             <% if (allPhotos.length > 1) { %>
@@ -293,7 +293,7 @@
         <input class="input" type="text" id="candle-name" name="name" maxlength="60" placeholder="Tu nombre (opcional)">
         <button class="btn" type="submit"><%- icon('flame', 15) %> Encender una vela</button>
       </form>
-      <p class="tiny" style="color: rgba(251,248,241,.38); margin-top: 16px;">Enciende una vela virtual en memoria de <%= memorial.full_name %>.</p>
+      <p class="tiny" style="margin-top: 16px;">Enciende una vela virtual en memoria de <%= memorial.full_name %>.</p>
     </div>
   </section>
 
@@ -330,7 +330,7 @@
             <p class="mem-eyebrow">Otras historias</p>
             <h2 class="mem-heading" style="margin-bottom: 0;">Jardines que también <em>florecen</em></h2>
           </div>
-          <a class="link-arrow" href="/memoriales" style="color: rgba(251,248,241,.7);">Ver todos <%- icon('arrow-right', 15) %></a>
+          <a class="link-arrow" href="/memoriales">Ver todos <%- icon('arrow-right', 15) %></a>
         </div>
         <div class="mem-related__grid">
           <% related.forEach(function (item) { %>
@@ -372,7 +372,7 @@
           <a href="/registro">Crea el memorial de tu ser querido</a>
         <% } %>
       </div>
-      <p class="tiny" style="color: rgba(251,248,241,.24); margin-top: 24px; font-family: var(--sans); font-style: normal;">
+      <p class="tiny" style="margin-top: 24px; font-family: var(--sans); font-style: normal;">
         Memorial creado y administrado por su familia en Jardín Memorial · Contenido alojado por www.jardinmemorial.cl
       </p>
     </div>

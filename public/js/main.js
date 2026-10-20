@@ -85,6 +85,37 @@
     window.setTimeout(hide, 6200 + index * 600);
   });
 
+
+  /* ------------------------------------------------ cookies en vista previa */
+  (function () {
+    try {
+      document.cookie = 'jm_probe=1; path=/; SameSite=Lax';
+      var stored = document.cookie.indexOf('jm_probe=1') !== -1;
+      document.cookie = 'jm_probe=1; path=/; max-age=0';
+      if (stored || window.self === window.top) return;
+
+      var bar = document.createElement('div');
+      bar.className = 'cookie-warning';
+      bar.setAttribute('role', 'alert');
+
+      var text = document.createElement('span');
+      text.textContent =
+        'Tu navegador está bloqueando las cookies dentro de esta vista previa, por eso no se puede iniciar sesión.';
+
+      var action = document.createElement('a');
+      action.href = window.location.href;
+      action.target = '_blank';
+      action.rel = 'noopener';
+      action.textContent = 'Abrir en una pestaña nueva';
+
+      bar.appendChild(text);
+      bar.appendChild(action);
+      document.body.insertBefore(bar, document.body.firstChild);
+    } catch (_) {
+      /* sin acceso a cookies: no se muestra nada */
+    }
+  })();
+
   /* ------------------------------------------------------------ confirm */
   $$('form[data-confirm]').forEach(function (form) {
     form.addEventListener('submit', function (event) {

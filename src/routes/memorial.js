@@ -3,6 +3,7 @@
 const express = require('express');
 const config = require('../config');
 const store = require('../store');
+const { cookieOptions } = require('../security');
 const util = require('../util');
 const { loadPublicMemorial } = require('../auth');
 const { qrBuffer, qrDataUrl } = require('../qr');
@@ -49,13 +50,11 @@ router.get('/:slug', loadPublicMemorial, asyncHandler(async (req, res, next) => 
     const cookieKey = viewCookieKey(memorial);
     if (!req.cookies[cookieKey]) {
       store.registerView(memorial.id);
-      res.cookie(cookieKey, '1', {
+      res.cookie(cookieKey, '1', cookieOptions(req, {
         maxAge: 1000 * 60 * 60 * 12,
         httpOnly: true,
-        sameSite: 'lax',
-        secure: req.secure,
         path: '/'
-      });
+      }));
       memorial.views += 1;
     }
 

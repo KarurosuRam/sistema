@@ -195,8 +195,27 @@ scripts/                  seed-demo.js y generate_music.py (melodía ambiente)
 
 ## 🎨 Créditos
 
-- Tipografías: **Cormorant Garamond** y **Jost** (SIL Open Font License, empaquetadas localmente).
+- Tipografías: pilas del sistema (**Georgia / Iowan Old Style / Palatino** para títulos y
+  **system-ui / Segoe UI / Roboto** para texto). No se descargan fuentes: la página carga
+  más rápido y se lee nítida en cualquier dispositivo y tamaño de pantalla.
 - Melodía ambiente generada con síntesis propia (`scripts/generate_music.py`, 128 kbps).
 - Fotografía de demostración generada para este proyecto.
+
+## 🧩 Diseño, accesibilidad y caché
+
+- **Diseño fluido**: `body { overflow-x: clip }`, contenedores con `padding` adaptable
+  (`clamp()` + `env(safe-area-inset-*)`), imágenes `max-width: 100%` y tipografía con
+  `clamp()`. Los paneles y tablas se reordenan a una columna en pantallas pequeñas y
+  las tablas anchas viven dentro de `.table-scroll` para no desbordar.
+- **Contraste**: el texto principal es negro (`--ink #0a0a0a`) sobre fondos crema.
+  Solo los botones rellenos y el héroe fotográfico del memorial conservan texto claro,
+  porque su fondo es oscuro y así se mantiene la legibilidad AA.
+- **Objetivos táctiles** de 44 px y campos de 16 px como mínimo (evita el zoom automático
+  de iOS al enfocar un formulario).
+- **Caché**: `src/assets.js` calcula una huella de `public/css` y `public/js`; la vista la
+  expone como `?v=...`, así el navegador descarta el CSS antiguo en cada despliegue.
+- **Vista previa embebida**: en hosts de `EMBED_ORIGINS` las cookies se emiten con
+  `SameSite=None; Secure; Partitioned` (CHIPS), de modo que la sesión funciona dentro
+  del iframe aunque el navegador bloquee cookies de terceros.
 
 Hecho con cuidado en Chile 🍃

@@ -26,6 +26,9 @@ function cookieOptions(req, extra = {}) {
   return {
     sameSite: embedded ? 'none' : 'lax',
     secure: https,
+    // Cookies particionadas (CHIPS): Chrome bloquea las cookies de terceros
+    // dentro de un iframe, y sin esto la sesión no viaja en la vista previa.
+    ...(embedded ? { partitioned: true } : {}),
     ...extra
   };
 }
@@ -85,7 +88,10 @@ function csrfProtect(req, res, next) {
   if (cookieToken && submitted && constantTimeEqual(String(cookieToken), String(submitted))) {
     return next();
   }
-  const error = new Error('La sesión del formulario expiró. Recarga la página e inténtalo otra vez.');
+  const message = cookieToken
+    ? 'La sesión del formulario expiró. Recarga la página e inténtalo otra vez.'
+    : 'Tu navegador no está guardando las cookies de sesión. Abre el sitio en una pestaña nueva y vuelve a intentarlo.';
+  const error = new Error(message);
   error.status = 403;
   error.csrf = true;
   return next(error);

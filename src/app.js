@@ -10,6 +10,7 @@ const store = require('./store');
 const util = require('./util');
 const { sessionLoader, flashMiddleware, COOKIE } = require('./auth');
 const { csrfCreate } = require('./security');
+const assets = require('./assets');
 const media = require('./media');
 const { icon, brandMark } = require('./icons');
 
@@ -121,6 +122,7 @@ app.use((req, res, next) => {
   res.locals.icon = icon;
   res.locals.brandMark = brandMark;
   res.locals.config = config;
+  res.locals.assetVersion = assets.version;
   res.locals.demoAccess = config.demoAccess;
   res.locals.activeNav = '';
   res.locals.hideFooter = false;

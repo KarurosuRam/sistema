@@ -66,7 +66,9 @@
       <h2>Qué incluye cada memorial</h2>
     </div>
     <div class="table-wrap reveal" style="margin-top: 36px; max-width: 860px; margin-left: auto; margin-right: auto;">
-      <table class="table">
+      <div class="table-scroll">
+
+        <table class="table">
         <thead>
           <tr>
             <th>Característica</th>
@@ -87,6 +89,8 @@
           <tr><td>Precio</td><td><strong><%= helpers.formatCLP(plans.single.amount) %></strong></td><td><strong><%= helpers.formatCLP(plans.pack4.amount) %></strong></td></tr>
         </tbody>
       </table>
+
+      </div>
     </div>
     <p class="price-note">Todos los precios están en pesos chilenos e incluyen impuestos. No hay cargos mensuales ni renovaciones automáticas.</p>
   </div>

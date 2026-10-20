@@ -1797,3 +1797,246 @@
     display: none;
   }
 }
+
+/* ==========================================================================
+   Memorial en claro: texto negro y legible sobre fondos cálidos
+   El héroe conserva la fotografía a sangre; el resto del memorial usa la
+   misma base clara del sitio para que todo el texto se lea con comodidad.
+   ========================================================================== */
+
+.page-memorial.theme-jardin { --mem-accent-strong: #0a6b62; }
+.page-memorial.theme-amanecer { --mem-accent-strong: #b04326; }
+.page-memorial.theme-cielo { --mem-accent-strong: #1a5f7d; }
+.page-memorial.theme-noche { --mem-accent-strong: #4a3fa3; }
+
+.page-memorial {
+  background: var(--cream);
+  color: var(--ink);
+}
+
+.page-memorial .mem-section,
+.page-memorial .mem-section--paper {
+  background: #fff9f2;
+  color: var(--ink);
+}
+
+.page-memorial .mem-section--deep {
+  background: var(--cream-deep);
+  color: var(--ink);
+}
+
+/* ---- títulos y textos ---- */
+.page-memorial .mem-heading,
+.page-memorial .mem-section--paper .mem-heading {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.page-memorial .mem-heading em,
+.page-memorial .mem-section--paper .mem-heading em {
+  color: var(--mem-accent-strong);
+}
+
+.page-memorial .mem-eyebrow,
+.page-memorial .mem-section--paper .mem-eyebrow {
+  color: var(--mem-accent-strong);
+}
+
+.page-memorial .mem-date span {
+  color: var(--mem-accent-strong);
+}
+
+.page-memorial .mem-date strong,
+.page-memorial .mem-section--paper .mem-date strong {
+  color: var(--ink);
+}
+
+.page-memorial .mem-story__text,
+.page-memorial .mem-section--paper .mem-story__text {
+  color: var(--ink);
+}
+
+.page-memorial .mem-years small,
+.page-memorial .mem-video__caption,
+.page-memorial .gb-more__count,
+.page-memorial .gb-empty {
+  color: var(--muted);
+}
+
+.page-memorial .mem-story__dates,
+.page-memorial .gb-more {
+  border-color: var(--line-strong);
+}
+
+.page-memorial .mem-video__frame {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow);
+}
+
+/* ---- libro de visitas ---- */
+.page-memorial .gb-entry__head strong {
+  color: var(--ink);
+}
+
+.page-memorial .gb-entry__head span {
+  color: var(--muted);
+}
+
+.page-memorial .gb-entry__text {
+  color: var(--ink);
+}
+
+.page-memorial .gb-entry__candle,
+.page-memorial .mem-candles__count {
+  color: var(--mem-accent-strong);
+}
+
+.page-memorial .gb-entry {
+  border-color: var(--line);
+}
+
+/* ---- velas ---- */
+.page-memorial .mem-candles__label {
+  color: var(--ink);
+}
+
+.page-memorial .mem-candles__form .input {
+  background: var(--paper);
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.page-memorial .mem-candles__form .input::placeholder {
+  color: var(--muted-light);
+}
+
+.page-memorial .mem-candles__form .btn {
+  --btn-bg: var(--mem-accent-strong);
+  --btn-fg: #ffffff;
+  --btn-border: var(--mem-accent-strong);
+}
+
+.page-memorial .mem-candles__form .btn:hover {
+  --btn-bg: var(--ink);
+  --btn-border: var(--ink);
+  --btn-fg: var(--cream);
+}
+
+/* ---- botones ---- */
+.page-memorial .mem-btn {
+  border-color: var(--line-strong);
+  background: var(--paper);
+  color: var(--ink);
+  backdrop-filter: none;
+  font-weight: 500;
+}
+
+.page-memorial .mem-btn:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--cream);
+}
+
+.page-memorial .mem-btn--solid {
+  background: var(--mem-accent-strong);
+  border-color: var(--mem-accent-strong);
+  color: #ffffff;
+}
+
+.page-memorial .mem-btn--solid:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--cream);
+}
+
+/* ---- compartir ---- */
+.page-memorial .mem-share__text p {
+  color: var(--ink);
+}
+
+.page-memorial .mem-share__cert {
+  color: var(--ink);
+  border-color: var(--line-strong);
+  background: var(--paper);
+}
+
+/* ---- pie del memorial ---- */
+.mem-footer {
+  background: var(--cream-deep);
+  border-top-color: var(--line);
+  color: var(--ink);
+}
+
+.mem-footer__brand,
+.mem-footer p,
+.mem-footer__meta,
+.mem-footer__meta a,
+.mem-footer__staff a {
+  color: var(--ink);
+}
+
+.mem-footer__meta {
+  opacity: 0.8;
+}
+
+.mem-footer__staff a:hover {
+  border-color: var(--ink);
+}
+
+.mem-related-card__overlay span {
+  color: var(--mem-accent-strong);
+}
+
+/* ==========================================================================
+   Legibilidad del héroe en pantallas pequeñas
+   ========================================================================== */
+
+.mem-hero__inner {
+  width: 100%;
+  max-width: 1100px;
+}
+
+.mem-hero h1 {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.mem-hero__epitaph,
+.mem-hero__dates {
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.45);
+}
+
+@media (max-width: 620px) {
+  .mem-hero h1 {
+    font-size: clamp(2.15rem, 10.5vw, 3rem);
+    line-height: 1.06;
+  }
+
+  .mem-hero__epitaph {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  .mem-section {
+    padding-top: clamp(38px, 9vw, 64px);
+    padding-bottom: clamp(38px, 9vw, 64px);
+  }
+}
+
+@media (max-width: 380px) {
+  .mem-hero h1 {
+    font-size: 2rem;
+  }
+}
+
+/* Píldora de conteo sobre secciones claras */
+.page-memorial .limit-pill {
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.page-memorial .mem-candles .tiny {
+  color: var(--muted);
+}
