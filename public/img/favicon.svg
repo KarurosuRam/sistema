@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-  <rect width="48" height="48" rx="11" fill="#1f2b25"/>
-  <path d="M24 39V19" stroke="#dfe6d8" stroke-width="1.6" stroke-linecap="round"/>
-  <path d="M24 27c-5.5.2-8.6-2.4-9-7.6 5.3-.4 8.5 2.2 9 7.6Z" fill="none" stroke="#dfe6d8" stroke-width="1.6" stroke-linejoin="round"/>
-  <path d="M24 21c.3-5.6 3.2-8.6 8.4-9.2.6 5.4-2.4 8.7-8.4 9.2Z" fill="none" stroke="#dfe6d8" stroke-width="1.6" stroke-linejoin="round"/>
-  <path d="M24 33c4.6.1 7.2-2 7.7-6.3-4.5-.3-7.2 1.9-7.7 6.3Z" fill="none" stroke="#dfe6d8" stroke-width="1.6" stroke-linejoin="round"/>
-  <circle cx="24" cy="12" r="1.6" fill="#8ba184"/>
+  <rect width="48" height="48" rx="11" fill="#16211f"/>
+  <path d="M24 39V19" stroke="#c9efe8" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M24 27c-5.5.2-8.6-2.4-9-7.6 5.3-.4 8.5 2.2 9 7.6Z" fill="none" stroke="#c9efe8" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M24 21c.3-5.6 3.2-8.6 8.4-9.2.6 5.4-2.4 8.7-8.4 9.2Z" fill="none" stroke="#c9efe8" stroke-width="1.6" stroke-linejoin="round"/>
+  <path d="M24 33c4.6.1 7.2-2 7.7-6.3-4.5-.3-7.2 1.9-7.7 6.3Z" fill="none" stroke="#c9efe8" stroke-width="1.6" stroke-linejoin="round"/>
+  <circle cx="24" cy="12" r="1.6" fill="#0e9184"/>
 </svg>

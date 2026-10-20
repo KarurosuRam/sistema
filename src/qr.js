@@ -3,9 +3,9 @@
 const QRCode = require('qrcode');
 
 const COLORS = {
-  ink: '#22302A',
-  sage: '#7d9479',
-  cream: '#fffdf8'
+  ink: '#16211f',
+  sage: '#0e9184',
+  cream: '#fff8f0'
 };
 
 async function qrBuffer(text, { width = 640, margin = 2, dark = COLORS.ink, light = COLORS.cream } = {}) {

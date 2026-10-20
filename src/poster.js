@@ -17,12 +17,12 @@ const FONTS = {
 };
 
 const C = {
-  ink: '#1f2b25',
-  soft: '#5c6a62',
-  sage: '#7d9479',
-  sageLight: '#a9bba2',
-  cream: '#fbf8f0',
-  line: '#d8d2c2'
+  ink: '#16211f',
+  soft: '#5b6b66',
+  sage: '#0e9184',
+  sageLight: '#7fd8c9',
+  cream: '#fff8f0',
+  line: '#e2c9b2'
 };
 
 function sprig(doc, x, y, scale, rotation) {
@@ -93,7 +93,7 @@ async function generatePoster({ memorial, siteUrl: requestedUrl }) {
     doc.restore();
     doc.circle(cx, cy, radius).lineWidth(2).strokeColor('#ffffff').stroke();
   } else {
-    doc.circle(cx, cy, radius).fillAndStroke('#eef2ea', C.sageLight);
+    doc.circle(cx, cy, radius).fillAndStroke('#e6f7f3', C.sageLight);
     const initials = String(memorial.full_name || '')
       .split(/\s+/)
       .filter(Boolean)

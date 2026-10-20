@@ -1,5 +1,13 @@
 # 🌿 Jardín Memorial — www.jardinmemorial.cl
 
+### Identidad visual
+
+Paleta **moderna, luminosa y respetuosa**: crema cálida de base, **jade** como acento principal,
+**coral** para la calidez, **marigold** para la celebración y **lilac** como contrapunto sereno.
+Los cuatro temas de memorial (`jardín`, `amanecer`, `cielo`, `noche`) usan acentos luminosos
+sobre fondo verde profundo. Todo el color vive en variables CSS en `public/css/base.css`, con
+pares texto/fondo verificados para contraste AA.
+
 Plataforma chilena para crear **memoriales digitales** de personas y mascotas. Cada memorial genera
 automáticamente un **enlace único**, un **código QR** y un **certificado de propiedad** asociado a la
 cuenta de su titular, además de alojar foto principal, galería de 10 fotos, un video de hasta 60

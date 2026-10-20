@@ -18,13 +18,13 @@ const FONTS = {
 };
 
 const C = {
-  ink: '#1f2b25',
-  soft: '#5c6a62',
-  sage: '#7d9479',
-  sageLight: '#a9bba2',
-  cream: '#fbf8f0',
-  gold: '#b79b6c',
-  line: '#d8d2c2'
+  ink: '#16211f',
+  soft: '#5b6b66',
+  sage: '#0e9184',
+  sageLight: '#7fd8c9',
+  cream: '#fff8f0',
+  gold: '#d99a2b',
+  line: '#e2c9b2'
 };
 
 function registerFonts(doc) {
@@ -186,7 +186,7 @@ async function generateCertificate({ memorial, owner, siteUrl: requestedUrl }) {
   const boxH = 84;
   doc
     .roundedRect(left, boxY, contentWidth + 72, boxH, 6)
-    .fillAndStroke('#fffdf9', C.line);
+    .fillAndStroke('#fffcf7', C.line);
 
   const col1 = left + 18;
   const col2 = left + 250;

@@ -60,10 +60,10 @@ const config = {
   maxVideoSeconds: 60,
   defaultMusic: '/audio/jardin-ambiente.mp3',
   themes: {
-    jardin: { name: 'Jardín', accent: '#8ba184' },
-    amanecer: { name: 'Amanecer', accent: '#c48a63' },
-    cielo: { name: 'Cielo sereno', accent: '#8ca3b4' },
-    noche: { name: 'Noche serena', accent: '#9d8fb0' }
+    jardin: { name: 'Jardín', accent: '#4fd1b8' },
+    amanecer: { name: 'Amanecer', accent: '#ff8a5b' },
+    cielo: { name: 'Cielo sereno', accent: '#6fc5e8' },
+    noche: { name: 'Noche serena', accent: '#a99bf5' }
   }
 };
 
