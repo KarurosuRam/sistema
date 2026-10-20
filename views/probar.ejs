@@ -27,14 +27,14 @@
         <p class="eyebrow">La cuenta de demostración</p>
         <h2 style="font-size: clamp(1.5rem, 3vw, 2rem);">Entra sin crear cuenta</h2>
         <p>
-          Un clic y quedas dentro de <strong><%= demoUser ? demoUser.name : 'la cuenta de ejemplo' %></strong>,
-          sin salir de la página principal. Desde ahí ves tus memoriales de ejemplo en “Mi jardín”
-          y tienes créditos para crear uno nuevo sin pagar.
+          La demo funciona sin crear cuenta y sin salir de la pantalla: enciende velas, deja mensajes,
+          cambia el tema o crea un memorial de prueba. También puedes entrar como
+          <strong><%= demoUser ? demoUser.name : 'la cuenta de ejemplo' %></strong> para ver el panel completo.
         </p>
 
         <div class="probar-actions">
-          <a class="btn btn--lg btn--block" href="/probar?entrar=1"><%- icon('arrow-right', 16) %> Entrar a la demo</a>
-          <a class="btn btn--ghost btn--block" href="/demo"><%- icon('book', 16) %> Ver un memorial de ejemplo</a>
+          <a class="btn btn--lg btn--block" href="/demo"><%- icon('play', 16) %> Probar la demo aquí mismo</a>
+          <a class="btn btn--ghost btn--block" href="/probar?entrar=1"><%- icon('user', 16) %> Entrar con la cuenta de ejemplo</a>
         </div>
 
         <div class="probar-creds">

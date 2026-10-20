@@ -48,7 +48,7 @@
   <main id="main">
     <%- body %>
   </main>
-  <%- include('partials/footer') %>
+  <% if (typeof hideFooter === 'undefined' || !hideFooter) { %><%- include('partials/footer') %><% } %>
   <script src="/js/main.js?v=<%= assetVersion %>" defer></script>
   <% if (typeof extraJs !== 'undefined' && extraJs) { %><script src="<%= extraJs %>?v=<%= assetVersion %>" defer></script><% } %>
 </body>

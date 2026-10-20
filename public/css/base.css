@@ -1760,3 +1760,22 @@ svg {
     display: none;
   }
 }
+
+.cookie-warning__retry {
+  background: none;
+  border: 1px solid rgba(var(--ink-rgb), 0.28);
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.cookie-warning__retry:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--cream);
+}

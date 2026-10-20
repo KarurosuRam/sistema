@@ -10,7 +10,7 @@
             <div class="share-grid" style="margin-top: 16px;">
               <a class="share-btn" href="/panel/memoriales/<%= memorial.id %>/compartir"><%- icon('qr', 17) %> Ver QR y enlace</a>
               <a class="share-btn" href="/panel/memoriales/<%= memorial.id %>/certificado"><%- icon('download', 17) %> Descargar certificado</a>
-              <a class="share-btn" href="/m/<%= memorial.slug %>" target="_blank" rel="noopener"><%- icon('external-link', 17) %> Visitar memorial</a>
+              <a class="share-btn" href="/m/<%= memorial.slug %>"><%- icon('external-link', 17) %> Visitar memorial</a>
             </div>
           </div>
           <div class="qr-card__image" style="margin: 0;">
@@ -41,7 +41,7 @@
         </div>
       </div>
       <div class="edit-head__actions">
-        <a class="btn btn--ghost btn--sm" href="/m/<%= memorial.slug %>" target="_blank" rel="noopener"><%- icon('eye', 15) %> Ver memorial</a>
+        <a class="btn btn--ghost btn--sm" href="/m/<%= memorial.slug %>"><%- icon('eye', 15) %> Ver memorial</a>
         <a class="btn btn--ghost btn--sm" href="/panel/memoriales/<%= memorial.id %>/compartir"><%- icon('share', 15) %> Compartir</a>
         <a class="btn btn--sm" href="/panel/memoriales/<%= memorial.id %>/certificado"><%- icon('download', 15) %> Certificado</a>
       </div>
@@ -191,7 +191,7 @@
           <div class="info-tile">
             <h4>Así lo ve tu familia</h4>
             <p>Los cambios se publican al instante. Puedes revisar el memorial público cuando quieras.</p>
-            <a class="btn btn--ghost btn--sm" href="/m/<%= memorial.slug %>" target="_blank" rel="noopener" style="margin-top: 10px;"><%- icon('external-link', 14) %> Abrir memorial</a>
+            <a class="btn btn--ghost btn--sm" href="/m/<%= memorial.slug %>" style="margin-top: 10px;"><%- icon('external-link', 14) %> Abrir memorial</a>
           </div>
         </div>
       </div>
@@ -482,10 +482,10 @@
           </div>
 
           <div class="share-grid">
-            <a class="share-btn" href="https://wa.me/?text=<%= encodeURIComponent('Te comparto el memorial de ' + memorial.full_name + ': ' + publicUrl) %>" target="_blank" rel="noopener"><%- icon('whatsapp', 17) %> WhatsApp</a>
+            <a class="share-btn" href="https://wa.me/?text=<%= encodeURIComponent('Te comparto el memorial de ' + memorial.full_name + ': ' + publicUrl) %>"><%- icon('whatsapp', 17) %> WhatsApp</a>
             <a class="share-btn" href="mailto:?subject=<%= encodeURIComponent('Memorial de ' + memorial.full_name) %>&body=<%= encodeURIComponent('Quiero compartir contigo el memorial de ' + memorial.full_name + ':\n' + publicUrl) %>"><%- icon('mail', 17) %> Correo</a>
-            <a class="share-btn" href="/m/<%= memorial.slug %>" target="_blank" rel="noopener"><%- icon('external-link', 17) %> Abrir memorial</a>
-            <a class="share-btn" href="/certificado/<%= memorial.certificate_code %>" target="_blank" rel="noopener"><%- icon('award', 17) %> Ver certificado</a>
+            <a class="share-btn" href="/m/<%= memorial.slug %>"><%- icon('external-link', 17) %> Abrir memorial</a>
+            <a class="share-btn" href="/certificado/<%= memorial.certificate_code %>"><%- icon('award', 17) %> Ver certificado</a>
           </div>
 
           <div class="cert-preview">

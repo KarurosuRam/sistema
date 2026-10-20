@@ -13,8 +13,6 @@ const router = express.Router();
 router.get('/', (req, res) => {
   const stats = store.siteStats();
   const featured = store.listPublicMemorials({ limit: 3 });
-  // El memorial del visor de demo es el mismo al que lleva /demo.
-  const demoMemorial = store.findMemorialBySlug('rosa-elena-munoz') || featured[0] || null;
   res.render('home', {
     pageTitle: null,
     metaDescription:
@@ -23,8 +21,6 @@ router.get('/', (req, res) => {
     activeNav: 'inicio',
     stats,
     featured,
-    demoSlug: demoMemorial?.slug || 'rosa-elena-munoz',
-    demoName: demoMemorial?.full_name || 'Rosa Elena Muñoz',
     plans: config.prices
   });
 });
@@ -155,8 +151,8 @@ const demoLimiter = createRateLimiter({
  * un acceso de un clic a la cuenta de demostración. Solo existe en modo demo.
  */
 router.get('/probar', demoLimiter, (req, res, next) => {
-  // Si la demo está apagada no se muestra un 404: se lleva al memorial de ejemplo.
-  if (!config.demoAccess) return res.redirect('/demo');
+  // Si la demo está apagada no se muestra un 404: se lleva a los memoriales.
+  if (!config.demoAccess) return res.redirect('/memoriales');
   const demo = store.findUserByEmail(config.demoAccount.email);
 
   if (req.query.entrar === '1') {
@@ -189,12 +185,6 @@ router.get('/probar', demoLimiter, (req, res, next) => {
       });
     })
     .catch(next);
-});
-
-router.get('/demo', (req, res) => {
-  const demo = store.findMemorialBySlug('rosa-elena-munoz') || store.listPublicMemorials({ limit: 1 })[0];
-  if (demo) return res.redirect(`/m/${demo.slug}`);
-  return res.redirect('/planes');
 });
 
 router.get('/terminos', (req, res) => {

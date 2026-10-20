@@ -14,6 +14,7 @@ const assets = require('./assets');
 const media = require('./media');
 const { icon, brandMark } = require('./icons');
 
+const demoRoutes = require('./routes/demo');
 const publicRoutes = require('./routes/public');
 const authRoutes = require('./routes/auth');
 const panelRoutes = require('./routes/panel');
@@ -163,6 +164,7 @@ app.get('/api/sonda', (req, res) => {
   });
 });
 
+app.use('/', demoRoutes);
 app.use('/', publicRoutes);
 app.use('/', authRoutes);
 app.use('/panel', panelRoutes);

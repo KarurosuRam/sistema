@@ -411,7 +411,7 @@
     <div class="share-sheet__url"><%= publicUrl %></div>
     <div class="share-sheet__actions">
       <button class="btn btn--ghost btn--sm" type="button" data-copy="#public-link"><%- icon('copy', 14) %> Copiar</button>
-      <a class="btn btn--sm" href="https://wa.me/?text=<%= encodeURIComponent('Te comparto el memorial de ' + memorial.full_name + ': ' + publicUrl) %>" target="_blank" rel="noopener"><%- icon('whatsapp', 14) %> WhatsApp</a>
+      <a class="btn btn--sm" href="https://wa.me/?text=<%= encodeURIComponent('Te comparto el memorial de ' + memorial.full_name + ': ' + publicUrl) %>"><%- icon('whatsapp', 14) %> WhatsApp</a>
     </div>
     <button class="btn btn--ghost btn--sm" type="button" data-share-close style="margin-top: 10px;">Cerrar</button>
   </div>

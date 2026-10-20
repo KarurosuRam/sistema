@@ -201,8 +201,31 @@ scripts/                  seed-demo.js y generate_music.py (melodía ambiente)
 - Melodía ambiente generada con síntesis propia (`scripts/generate_music.py`, 128 kbps).
 - Fotografía de demostración generada para este proyecto.
 
+## 🎮 Demo interactiva (`/demo`)
+
+La demo no depende de una cuenta ni de cookies, porque el sitio se muestra dentro de una
+vista previa embebida donde el navegador puede bloquearlas. Todo ocurre en la misma pantalla:
+
+- elegir cualquiera de los memoriales de ejemplo;
+- encender una vela y dejar un mensaje en el libro de visitas;
+- cambiar el tema, la visibilidad y el estado del libro de visitas;
+- crear un memorial de prueba, que nace privado como en el panel real, y quitarlo
+  cuando ya lo probaste (hasta 8 memoriales en la cuenta de ejemplo).
+
+Los formularios de la demo envían a `/demo/*` y vuelven a `/demo`, sin abrir pestañas ni
+depender de la sesión. Los enlaces que salen de la demo (inicio, memorial completo, registro)
+se resuelven en la misma pantalla, sin abrir pestañas. Los POST comprueban el origen y están
+limitados por IP y navegador. Cuando el sitio pasa a producción (`DEMO_ACCESS=off`) todo `/demo` redirige a `/memoriales`.
+
+La portada abre esta demo en un visor dentro de la misma página: los botones «Visitar un
+ejemplo», «Recorrer un memorial» y «Ver un memorial de ejemplo» cargan `/demo` en el visor,
+que se cierra con la ✕, con Escape o tocando fuera.
+
 ## 🔑 Ingreso, demo y creación de cuenta
 
+- No se abren pestañas nuevas: los enlaces internos (memorial, certificado, compartir) y el
+  aviso de cookies se resuelven en la misma pantalla. Los enlaces externos (WhatsApp,
+  Instagram) también se abren en la misma pestaña.
 - Al ingresar (o crear una cuenta) se vuelve a la **página principal**, no al panel:
   la portada muestra una barra con el nombre, los memoriales disponibles, «Mi jardín»
   y «Cerrar sesión». El panel queda a un clic.

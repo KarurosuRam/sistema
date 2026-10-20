@@ -31,10 +31,10 @@
         </div>
 
         <div class="share-grid">
-          <a class="share-btn" href="https://wa.me/?text=<%= encodeURIComponent('Te comparto el memorial de ' + memorial.full_name + ': ' + publicUrl) %>" target="_blank" rel="noopener"><%- icon('whatsapp', 17) %> Compartir por WhatsApp</a>
+          <a class="share-btn" href="https://wa.me/?text=<%= encodeURIComponent('Te comparto el memorial de ' + memorial.full_name + ': ' + publicUrl) %>"><%- icon('whatsapp', 17) %> Compartir por WhatsApp</a>
           <a class="share-btn" href="mailto:?subject=<%= encodeURIComponent('Memorial de ' + memorial.full_name) %>&body=<%= encodeURIComponent('Quiero compartir contigo el memorial de ' + memorial.full_name + ':\n' + publicUrl) %>"><%- icon('mail', 17) %> Enviar por correo</a>
-          <a class="share-btn" href="/m/<%= memorial.slug %>" target="_blank" rel="noopener"><%- icon('external-link', 17) %> Abrir el memorial</a>
-          <a class="share-btn" href="/certificado/<%= memorial.certificate_code %>" target="_blank" rel="noopener"><%- icon('award', 17) %> Verificar certificado</a>
+          <a class="share-btn" href="/m/<%= memorial.slug %>"><%- icon('external-link', 17) %> Abrir el memorial</a>
+          <a class="share-btn" href="/certificado/<%= memorial.certificate_code %>"><%- icon('award', 17) %> Verificar certificado</a>
         </div>
 
         <div class="cert-preview" style="background: linear-gradient(135deg, var(--sage-wash), var(--paper));">

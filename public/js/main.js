@@ -92,6 +92,8 @@
     // cookies son de primera parte y no hay nada que avisar.
     var embedded = window.self !== window.top;
     if (!embedded || typeof window.fetch !== 'function') return;
+    // La demo no usa cookies: no tiene sentido taparla con este aviso.
+    if (document.body.classList.contains('page-demo')) return;
 
     var showBar = function (message) {
       if (document.querySelector('.cookie-warning')) return;
@@ -103,11 +105,13 @@
       var text = document.createElement('span');
       text.textContent = message;
 
-      var action = document.createElement('a');
-      action.href = window.location.href;
-      action.target = '_blank';
-      action.rel = 'noopener';
-      action.textContent = 'Abrir en una pestaña nueva';
+      var action = document.createElement('button');
+      action.type = 'button';
+      action.className = 'cookie-warning__retry';
+      action.textContent = 'Volver a comprobar';
+      action.addEventListener('click', function () {
+        window.location.reload();
+      });
 
       bar.appendChild(text);
       bar.appendChild(action);
@@ -124,7 +128,7 @@
       .then(function (data) {
         if (data && !data.cookies) {
           showBar(
-            'Esta vista previa bloquea las cookies de sesión, así que los formularios no pueden guardar tu cuenta. Ábrela en una pestaña nueva para ingresar, crear la cuenta o probar la demo.'
+            'Tu navegador está bloqueando las cookies de sesión en esta vista previa. La demo y las velas funcionan igual; para ingresar con una cuenta, permite las cookies o abre el sitio directamente.'
           );
         }
       })
@@ -160,12 +164,12 @@
     var open = function (event) {
       if (event) event.preventDefault();
       if (viewer.open) return;
-      // El iframe se carga solo la primera vez para no pedir el memorial
-      // sin que nadie lo haya abierto.
+      viewer.showModal();
+      // El iframe se carga recién al abrir el visor: así no se pide la demo
+      // sin que nadie la haya abierto y el navegador no la difiere por estar oculta.
       if (frame && !frame.getAttribute('src')) {
         frame.setAttribute('src', frame.getAttribute('data-src'));
       }
-      viewer.showModal();
       document.body.classList.add('demo-open');
       if (closeBtn) closeBtn.focus();
     };

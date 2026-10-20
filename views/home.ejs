@@ -368,14 +368,11 @@
 <dialog class="demo-viewer" data-demo-viewer aria-labelledby="demo-viewer-title">
   <div class="demo-viewer__head">
     <div class="demo-viewer__title">
-      <span class="demo-viewer__eyebrow">Memorial de ejemplo</span>
-      <strong id="demo-viewer-title"><%= demoName %></strong>
+      <span class="demo-viewer__eyebrow">Demo interactiva</span>
+      <strong id="demo-viewer-title">Jardín Memorial</strong>
     </div>
     <div class="demo-viewer__tools">
-      <a class="demo-viewer__link" href="/m/<%= demoSlug %>" target="_blank" rel="noopener">
-        Abrir completo <%- icon('arrow-right', 12) %>
-      </a>
-      <button type="button" class="demo-viewer__close" data-demo-close aria-label="Cerrar la vista de ejemplo">
+      <button type="button" class="demo-viewer__close" data-demo-close aria-label="Cerrar la demo">
         <%- icon('close', 16) %>
       </button>
     </div>
@@ -384,10 +381,9 @@
     <iframe
       class="demo-viewer__frame"
       data-demo-frame
-      data-src="/m/<%= demoSlug %>"
-      title="Memorial de ejemplo: <%= demoName %>"
-      loading="lazy"
+      data-src="/demo"
+      title="Demo interactiva de Jardín Memorial: memoriales de ejemplo"
     ></iframe>
   </div>
-  <p class="demo-viewer__hint">Vista de ejemplo · desplázate dentro para recorrer el memorial, encender una vela o dejar un mensaje.</p>
+  <p class="demo-viewer__hint">Todo ocurre aquí mismo: enciende velas, deja un mensaje o crea un memorial de prueba.</p>
 </dialog>
