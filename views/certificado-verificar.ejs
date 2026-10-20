@@ -1,0 +1,48 @@
+<section class="section">
+  <div class="container container--narrow text-center">
+    <span class="cert-preview__seal" style="margin: 0 auto 20px; width: 72px; height: 72px;"><%- icon('award', 32) %></span>
+    <p class="eyebrow eyebrow--center">Verificación en línea</p>
+    <h1>Verifica un <span class="display-italic">certificado</span></h1>
+    <p class="lede" style="margin: 0 auto 30px;">
+      Ingresa el código que aparece en el certificado de propiedad para confirmar su autenticidad
+      y ver el memorial asociado.
+    </p>
+
+    <% if (notFound) { %>
+      <div class="form-errors" role="alert" style="text-align: left; max-width: 520px; margin: 0 auto 22px;">
+        <%- icon('alert-circle', 18) %>
+        <div>No encontramos ningún certificado con el código <strong><%= code %></strong>. Revisa que esté escrito correctamente e inténtalo otra vez.</div>
+      </div>
+    <% } %>
+
+    <form action="/certificado" method="get" style="max-width: 520px; margin: 0 auto;">
+      <div class="field">
+        <label for="codigo">Código del certificado</label>
+        <div class="copy-field">
+          <input class="input" type="text" id="codigo" name="codigo" placeholder="JM-2026-XXXXX" value="<%= code %>" required autocomplete="off" style="text-transform: uppercase;">
+          <button class="btn" type="submit">Verificar</button>
+        </div>
+        <p class="hint" style="text-align: left;">El código tiene el formato <span class="serif">JM-AAAA-XXXXX</span> y aparece en el certificado PDF.</p>
+      </div>
+    </form>
+
+    <div class="card card--soft" style="margin-top: 38px; text-align: left;">
+      <div style="display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap;">
+        <span class="cert-preview__seal"><%- icon('shield', 24) %></span>
+        <div style="flex: 1; min-width: 220px;">
+          <h3 style="font-size: 1.35rem; margin-bottom: 6px;">¿Qué acredita este certificado?</h3>
+          <p class="small muted" style="margin: 0;">
+            Que el memorial fue creado en Jardín Memorial y pertenece a la cuenta de su titular.
+            El documento incluye el nombre del titular, la fecha de emisión, el enlace del memorial y un código QR.
+            Solo la cuenta titular puede administrar o modificar el memorial.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 28px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+      <a class="btn btn--ghost" href="/memoriales">Explorar memoriales</a>
+      <a class="btn btn--ghost" href="/preguntas-frecuentes">Preguntas frecuentes</a>
+    </div>
+  </div>
+</section>

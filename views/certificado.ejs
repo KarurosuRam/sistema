@@ -1,0 +1,80 @@
+<section class="cert-page">
+  <div class="container">
+    <div class="cert-doc">
+      <div class="cert-doc__head">
+        <span class="cert-doc__brand">
+          <%- brandMark(22) %>
+          Jardín Memorial · www.jardinmemorial.cl
+        </span>
+        <h1>Certificado de propiedad</h1>
+        <p class="cert-doc__sub">Este documento acredita la titularidad del memorial digital</p>
+      </div>
+
+      <div class="cert-doc__body">
+        <div>
+          <p class="cert-doc__intro">Se certifica que el memorial digital de</p>
+          <h2 class="cert-doc__name"><%= memorial.full_name %></h2>
+          <p class="cert-doc__meta">
+            <%= memorial.kind === 'mascota' ? 'Mascota de la familia' : 'En memoria' %>
+            <% if (span) { %> · <%= span %><% } %>
+          </p>
+          <p class="cert-doc__text">
+            fue creado el <strong><%= helpers.formatTimestamp(memorial.created_at) %></strong> y registrado a nombre de
+            <strong><%= ownerName %></strong>, titular de los derechos de administración y resguardo de sus recuerdos.
+            Esta constancia se emite de forma electrónica y puede verificarse en línea con el código indicado.
+          </p>
+        </div>
+
+        <div class="cert-doc__qr">
+          <%- qrSvg %>
+          <span>Escanea para visitar</span>
+        </div>
+      </div>
+
+      <dl class="cert-data">
+        <div>
+          <dt>Código de certificado</dt>
+          <dd><%= memorial.certificate_code %></dd>
+        </div>
+        <div>
+          <dt>Fecha de emisión</dt>
+          <dd><%= issuedLabel %></dd>
+        </div>
+        <div>
+          <dt>Enlace del memorial</dt>
+          <dd>jardinmemorial.cl/m/<%= memorial.slug %></dd>
+        </div>
+      </dl>
+
+      <div class="cert-doc__foot">
+        <div class="cert-sign">
+          <div class="cert-sign__line"></div>
+          <strong>Jardín Memorial</strong>
+          <span>Emisor del certificado</span>
+        </div>
+        <div class="cert-verified">
+          <%- icon('shield', 18) %>
+          Certificado verificado · documento auténtico
+        </div>
+        <div class="cert-sign" style="text-align: right;">
+          <div class="cert-sign__line" style="margin-left: auto;"></div>
+          <strong><%= ownerName %></strong>
+          <span>Titular de la cuenta</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cert-actions">
+      <a class="btn" href="/m/<%= memorial.slug %>">Visitar el memorial <%- icon('arrow-right', 16) %></a>
+      <a class="btn btn--ghost" href="/certificado">Verificar otro certificado</a>
+      <% if (user && user.id === memorial.user_id) { %>
+        <a class="btn btn--ghost" href="/panel/memoriales/<%= memorial.id %>/certificado"><%- icon('download', 15) %> Descargar PDF</a>
+      <% } %>
+    </div>
+
+    <p class="text-center tiny muted" style="margin-top: 22px;">
+      La versión PDF con validez documental puede descargarla únicamente el titular desde su cuenta.
+      Verifica este certificado en <a class="text-link" href="/certificado/<%= memorial.certificate_code %>">jardinmemorial.cl/certificado/<%= memorial.certificate_code %></a>.
+    </p>
+  </div>
+</section>

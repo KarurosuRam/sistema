@@ -1,0 +1,26 @@
+<a class="memorial-card reveal" href="/m/<%= memorial.slug %>">
+  <div class="memorial-card__media">
+    <% if (memorial.main_thumb || memorial.main_photo) { %>
+      <img src="/uploads/<%= memorial.main_thumb || memorial.main_photo %>" alt="Retrato de <%= memorial.full_name %>" loading="lazy">
+    <% } else { %>
+      <span class="memorial-card__placeholder"><%= helpers.initials(memorial.full_name) %></span>
+    <% } %>
+    <span class="memorial-card__kind"><%= memorial.kind === 'mascota' ? 'Mascota' : 'Memorial' %></span>
+  </div>
+  <div class="memorial-card__body">
+    <h3><%= memorial.full_name %></h3>
+    <p class="memorial-card__dates"><%= helpers.yearsLabel(memorial) %></p>
+    <% if (memorial.epitaph) { %>
+      <p class="memorial-card__epitaph">«<%= memorial.epitaph %>»</p>
+    <% } else if (memorial.relationship) { %>
+      <p class="memorial-card__epitaph"><%= memorial.relationship %></p>
+    <% } %>
+    <div class="memorial-card__foot">
+      <span class="link-arrow">Visitar memorial <%- icon('arrow-right', 16) %></span>
+      <span class="memorial-card__meta">
+        <span><%- icon('flame', 13) %> <%= memorial.candle_count || 0 %></span>
+        <span><%- icon('message', 13) %> <%= memorial.message_count || 0 %></span>
+      </span>
+    </div>
+  </div>
+</a>

@@ -1,0 +1,53 @@
+<section class="explore-head">
+  <div class="container">
+    <p class="eyebrow eyebrow--center">Historias que siguen vivas</p>
+    <h1>Memoriales <span class="display-italic">compartidos</span></h1>
+    <p class="lede">Familias de todo Chile han abierto un espacio para recordar. Visita sus memoriales, deja un mensaje o enciende una vela.</p>
+  </div>
+</section>
+
+<section class="section section--tight" style="padding-top: 10px;">
+  <div class="container">
+    <% if (!memorials.length) { %>
+      <div class="empty-state">
+        <%- icon('flower', 42) %>
+        <h3>El jardín está empezando a florecer</h3>
+        <p>Todavía no hay memoriales públicos. Sé de las primeras familias en compartir una historia.</p>
+        <a class="btn" href="/registro">Crear un memorial</a>
+      </div>
+    <% } else { %>
+      <div class="memorial-grid">
+        <% memorials.forEach(function (memorial) { %>
+          <%- include('partials/memorial-card', { memorial: memorial }) %>
+        <% }); %>
+      </div>
+
+      <% if (pages > 1) { %>
+        <nav class="pagination" aria-label="Paginación de memoriales">
+          <% for (var i = 1; i <= pages; i += 1) { %>
+            <% if (i === page) { %>
+              <span class="is-current" aria-current="page"><%= i %></span>
+            <% } else { %>
+              <a href="/memoriales?page=<%= i %>"><%= i %></a>
+            <% } %>
+          <% } %>
+        </nav>
+      <% } %>
+    <% } %>
+  </div>
+</section>
+
+<section class="section section--tight">
+  <div class="container">
+    <div class="cta-final reveal">
+      <div>
+        <h2>La próxima historia puede ser la tuya</h2>
+        <p>Crea un memorial para tu ser querido o mascota. En minutos tendrás un lugar para recordar y compartir.</p>
+      </div>
+      <div class="cta-final__actions">
+        <a class="btn btn--light btn--block" href="/registro">Crear mi memorial</a>
+        <a class="btn btn--ghost btn--block" href="/planes">Ver precios</a>
+      </div>
+    </div>
+  </div>
+</section>

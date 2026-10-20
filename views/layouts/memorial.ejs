@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= pageTitle %> · <%= site.name %></title>
+  <meta name="description" content="<%= metaDescription %>">
+  <meta name="theme-color" content="#14201a">
+  <link rel="canonical" href="<%= site.url %><%= currentPath %>">
+  <meta property="og:site_name" content="<%= site.name %>">
+  <meta property="og:type" content="<%= typeof ogType !== 'undefined' ? ogType : 'website' %>">
+  <meta property="og:title" content="<%= pageTitle %>">
+  <meta property="og:description" content="<%= metaDescription %>">
+  <meta property="og:url" content="<%= site.url %><%= currentPath %>">
+  <meta property="og:image" content="<%= site.url %><%= ogImage %>">
+  <meta property="og:locale" content="es_CL">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="<%= pageTitle %>">
+  <meta name="twitter:description" content="<%= metaDescription %>">
+  <meta name="twitter:image" content="<%= site.url %><%= ogImage %>">
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/fonts/cormorant-garamond-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/jost-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/memorial.css">
+</head>
+<body class="<%= bodyClass %>">
+  <%- body %>
+  <%- include('../partials/flash') %>
+  <script src="/js/main.js" defer></script>
+  <script src="/js/memorial.js" defer></script>
+</body>
+</html>

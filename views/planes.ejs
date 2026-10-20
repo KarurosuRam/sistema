@@ -1,0 +1,131 @@
+<section class="section section--tight">
+  <div class="container text-center">
+    <p class="eyebrow eyebrow--center reveal">Precios claros, sin sorpresas</p>
+    <h1 class="reveal">Un pago único.<br><span class="display-italic">Un recuerdo para siempre.</span></h1>
+    <p class="lede reveal" style="margin: 0 auto;">
+      Elige un memorial individual o el pack familia de cuatro. Todos incluyen enlace, QR,
+      certificado de propiedad, galería, video, música y libro de visitas.
+    </p>
+    <% if (paymentsMode === 'demo') { %>
+      <p class="payment-note reveal" style="margin-top: 22px;"><%- icon('info', 14) %> Entorno de demostración: el pago se simula y el saldo se acredita al instante.</p>
+    <% } %>
+  </div>
+</section>
+
+<section class="section section--tight" style="padding-top: 0;">
+  <div class="container">
+    <div class="pricing-grid">
+      <article class="price-card reveal">
+        <h3><%= plans.single.name %></h3>
+        <p class="price-card__desc"><%= plans.single.description %></p>
+        <div class="price">
+          <span class="price__amount"><%= helpers.formatCLP(plans.single.amount) %></span>
+          <span class="price__currency">CLP</span>
+        </div>
+        <p class="price__meta">Pago único · 1 memorial digital</p>
+        <ul class="price-card__list">
+          <li><%- icon('check', 16) %> Enlace único y código QR</li>
+          <li><%- icon('check', 16) %> Certificado de propiedad en PDF</li>
+          <li><%- icon('check', 16) %> Foto principal + 10 fotos</li>
+          <li><%- icon('check', 16) %> Video de hasta 60 segundos</li>
+          <li><%- icon('check', 16) %> Música MP3 al abrir el memorial</li>
+          <li><%- icon('check', 16) %> Libro de visitas y velas virtuales</li>
+          <li><%- icon('check', 16) %> Memorial público o privado</li>
+        </ul>
+        <a class="btn btn--ghost btn--block" href="/registro">Crear mi cuenta</a>
+      </article>
+
+      <article class="price-card price-card--featured reveal" style="--delay: 90ms">
+        <span class="price-card__badge"><%= plans.pack4.badge %></span>
+        <h3><%= plans.pack4.name %></h3>
+        <p class="price-card__desc"><%= plans.pack4.description %></p>
+        <div class="price">
+          <span class="price__amount"><%= helpers.formatCLP(plans.pack4.amount) %></span>
+          <span class="price__currency">CLP</span>
+        </div>
+        <p class="price__meta">Pago único · 4 memoriales · $2.998 cada uno</p>
+        <ul class="price-card__list">
+          <li><%- icon('check', 16) %> Todo lo del memorial individual</li>
+          <li><%- icon('check', 16) %> 4 memoriales para personas o mascotas</li>
+          <li><%- icon('check', 16) %> Certificado independiente por memorial</li>
+          <li><%- icon('check', 16) %> Enlaces y QR independientes</li>
+          <li><%- icon('check', 16) %> Puedes crearlos cuando quieras</li>
+          <li><%- icon('check', 16) %> Ahorras $15.970</li>
+          <li><%- icon('check', 16) %> Sin fecha de expiración</li>
+        </ul>
+        <a class="btn btn--light btn--block" href="/registro">Quiero el pack familia</a>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section section--cream">
+  <div class="container">
+    <div class="text-center reveal">
+      <p class="eyebrow eyebrow--center">Comparación</p>
+      <h2>Qué incluye cada memorial</h2>
+    </div>
+    <div class="table-wrap reveal" style="margin-top: 36px; max-width: 860px; margin-left: auto; margin-right: auto;">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Característica</th>
+            <th>Un memorial</th>
+            <th>Pack familia (4)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Enlace único <span class="muted">jardinmemorial.cl/m/…</span></td><td><%- icon('check', 16) %></td><td><%- icon('check', 16) %></td></tr>
+          <tr><td>Código QR descargable</td><td><%- icon('check', 16) %></td><td><%- icon('check', 16) %></td></tr>
+          <tr><td>Certificado de propiedad en PDF</td><td><strong>1</strong></td><td><strong>4</strong></td></tr>
+          <tr><td>Foto principal + galería</td><td><strong>10 fotos</strong></td><td><strong>10 por memorial</strong></td></tr>
+          <tr><td>Video de hasta 60 segundos</td><td><%- icon('check', 16) %></td><td><%- icon('check', 16) %></td></tr>
+          <tr><td>Música MP3 al abrir</td><td><%- icon('check', 16) %></td><td><%- icon('check', 16) %></td></tr>
+          <tr><td>Libro de visitas moderado</td><td><%- icon('check', 16) %></td><td><%- icon('check', 16) %></td></tr>
+          <tr><td>Privacidad configurable</td><td><%- icon('check', 16) %></td><td><%- icon('check', 16) %></td></tr>
+          <tr><td>Vigencia del memorial</td><td><strong>Permanente</strong></td><td><strong>Permanente</strong></td></tr>
+          <tr><td>Precio</td><td><strong><%= helpers.formatCLP(plans.single.amount) %></strong></td><td><strong><%= helpers.formatCLP(plans.pack4.amount) %></strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="price-note">Todos los precios están en pesos chilenos e incluyen impuestos. No hay cargos mensuales ni renovaciones automáticas.</p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container container--narrow">
+    <div class="text-center reveal">
+      <p class="eyebrow eyebrow--center">Dudas sobre pagos</p>
+      <h2>Lo que conviene saber</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item" open>
+        <summary>¿Cómo se realiza el pago? <span class="faq-icon" aria-hidden="true"></span></summary>
+        <div class="faq-item__body"><p>Desde tu panel eliges el plan y pagas en línea. En esta versión de demostración el pago es simulado: al confirmar, los memoriales se acreditan de inmediato en tu cuenta para que puedas probar todo el flujo.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>¿Puedo comprar el pack y usarlo más adelante? <span class="faq-icon" aria-hidden="true"></span></summary>
+        <div class="faq-item__body"><p>Sí. Los cuatro memoriales quedan disponibles en tu cuenta sin fecha de vencimiento. Puedes crear uno hoy y guardar los demás para cuando los necesites.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>¿Qué pasa si necesito ayuda con mi memorial? <span class="faq-icon" aria-hidden="true"></span></summary>
+        <div class="faq-item__body"><p>Escríbenos a <a class="text-link" href="mailto:<%= site.email %>"><%= site.email %></a>. Respondemos dentro de 24 horas hábiles y te acompañamos en lo que necesites.</p></div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="section section--tight">
+  <div class="container">
+    <div class="cta-final reveal">
+      <div>
+        <h2>¿Comenzamos por el primero?</h2>
+        <p>Crea tu cuenta, elige tu plan y arma el memorial con calma. Puedes editarlo todas las veces que quieras.</p>
+      </div>
+      <div class="cta-final__actions">
+        <a class="btn btn--light btn--block" href="/registro">Crear mi cuenta</a>
+        <a class="btn btn--ghost btn--block" href="/como-funciona">Cómo funciona</a>
+      </div>
+    </div>
+  </div>
+</section>

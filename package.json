@@ -1,0 +1,27 @@
+{
+  "name": "jardin-memorial",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Jardín Memorial — memoriales digitales con enlace único, código QR, galería, música y certificado de propiedad.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --experimental-sqlite server.js",
+    "dev": "node --experimental-sqlite server.js",
+    "seed": "node --experimental-sqlite scripts/seed-demo.js"
+  },
+  "engines": {
+    "node": ">=22.5"
+  },
+  "dependencies": {
+    "@fontsource/cormorant-garamond": "^5.3.0",
+    "@fontsource/jost": "^5.3.0",
+    "cookie-parser": "^1.4.7",
+    "ejs": "^7.0.2",
+    "express": "^4.22.3",
+    "express-ejs-layouts": "^2.5.1",
+    "multer": "^2.4.0",
+    "pdfkit": "^0.20.2",
+    "qrcode": "^1.5.4",
+    "sharp": "^0.35.5"
+  }
+}

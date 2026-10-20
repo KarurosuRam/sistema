@@ -1,0 +1,48 @@
+<section class="panel-shell">
+  <div class="container">
+    <div class="dash-head" style="justify-content: center; text-align: center; flex-direction: column; align-items: center;">
+      <p class="eyebrow eyebrow--center">Pago confirmado</p>
+      <h1>¡Gracias por confiar en nosotros!</h1>
+      <p>Ya puedes crear <%= purchase.credits === 1 ? 'tu memorial' : 'tus ' + purchase.credits + ' memoriales' %>.</p>
+    </div>
+
+    <div class="receipt">
+      <div class="receipt__head">
+        <div>
+          <span class="receipt__brand"><%- brandMark(30) %> Jardín Memorial</span>
+          <p class="tiny muted" style="margin: 6px 0 0;">www.jardinmemorial.cl</p>
+        </div>
+        <div class="receipt__meta">
+          <strong>Comprobante <%= purchase.reference %></strong><br>
+          <%= helpers.formatDateTime(purchase.created_at) %><br>
+          <span class="badge" style="margin-top: 8px;">Pagado</span>
+        </div>
+      </div>
+
+      <div class="receipt__rows">
+        <div class="order-row"><span>Titular</span><span><%= user.name %></span></div>
+        <div class="order-row"><span>Correo</span><span><%= user.email %></span></div>
+        <div class="order-row"><span>Plan</span><span><%= purchase.plan_name %></span></div>
+        <div class="order-row"><span>Memoriales acreditados</span><span><%= purchase.credits %></span></div>
+        <div class="order-row"><span>Medio de pago</span><span><%= purchase.mode === 'demo' ? 'Demostración (simulado)' : 'Tarjeta' %></span></div>
+        <div class="order-total">
+          <span>Total pagado</span>
+          <strong><%= helpers.formatCLP(purchase.amount) %></strong>
+        </div>
+      </div>
+
+      <div class="receipt__foot">
+        <p style="margin-bottom: 12px;">Este comprobante acredita la compra realizada en Jardín Memorial. Los memoriales no expiran y puedes usarlos cuando quieras.</p>
+        <a class="btn" href="/panel/nuevo" style="margin-bottom: 10px;"><%- icon('plus', 16) %> Crear un memorial</a>
+        <div class="receipt__stamp"><%- icon('shield', 13) %> Compra registrada en tu cuenta</div>
+      </div>
+    </div>
+
+    <div class="cert-actions">
+      <button class="btn btn--ghost" type="button" data-print>Imprimir comprobante</button>
+      <a class="btn btn--ghost" href="/panel/compras">Ver historial</a>
+      <a class="btn btn--ghost" href="/panel">Volver a mi jardín</a>
+    </div>
+  </div>
+</section>
+

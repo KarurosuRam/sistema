@@ -1,0 +1,64 @@
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a class="brand" href="/" aria-label="<%= site.name %>">
+          <%- brandMark(46) %>
+          <span class="brand__text">
+            <span class="brand__name">Jardín Memorial</span>
+            <span class="brand__sub">Recuerdos que florecen</span>
+          </span>
+        </a>
+        <p class="footer-quote">“Recordar es la forma más larga del amor.”</p>
+        <p>Memoriales digitales para personas y mascotas, hechos en Chile con cuidado, respeto y memoria.</p>
+        <div class="footer-social">
+          <a href="<%= site.instagram %>" aria-label="Instagram de Jardín Memorial" rel="noopener" target="_blank"><%- icon('instagram', 16) %></a>
+          <a href="mailto:<%= site.email %>" aria-label="Escríbenos por correo"><%- icon('mail', 16) %></a>
+          <a href="https://wa.me/<%= site.whatsapp %>" aria-label="WhatsApp de Jardín Memorial" rel="noopener" target="_blank"><%- icon('whatsapp', 16) %></a>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <h5>Explorar</h5>
+        <ul>
+          <li><a href="/">Inicio</a></li>
+          <li><a href="/como-funciona">Cómo funciona</a></li>
+          <li><a href="/planes">Precios y planes</a></li>
+          <li><a href="/memoriales">Memoriales públicos</a></li>
+          <li><a href="/demo">Ver un memorial</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Tu cuenta</h5>
+        <ul>
+          <li><a href="/registro">Crear una cuenta</a></li>
+          <li><a href="/ingresar">Ingresar</a></li>
+          <li><a href="/panel">Mi jardín</a></li>
+          <li><a href="/cuenta">Mis datos</a></li>
+          <li><a href="/preguntas-frecuentes">Centro de ayuda</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Contacto</h5>
+        <ul>
+          <li><a href="mailto:<%= site.email %>"><%= site.email %></a></li>
+          <li><a href="https://wa.me/<%= site.whatsapp %>" rel="noopener" target="_blank">WhatsApp +56 9 0000 0000</a></li>
+          <li><span class="muted">Santiago, Chile</span></li>
+          <li><a href="/certificado">Verificar certificado</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span>© <%= currentYear %> <%= site.name %> · <%= site.domain %></span>
+      <div class="footer-bottom__links">
+        <a href="/terminos">Términos y condiciones</a>
+        <a href="/privacidad">Privacidad</a>
+        <a href="/sitemap.xml">Mapa del sitio</a>
+      </div>
+      <span>Hecho con cuidado en Chile 🍃</span>
+    </div>
+  </div>
+</footer>

@@ -1,0 +1,67 @@
+<section class="panel-shell">
+  <div class="container">
+    <div class="dash-head">
+      <div>
+        <p class="eyebrow">Comprar memoriales</p>
+        <h1>Elige tu plan</h1>
+        <p>Pago único. Los memoriales quedan disponibles en tu cuenta sin fecha de vencimiento.</p>
+      </div>
+      <a class="btn btn--ghost" href="/panel">Volver a mi jardín</a>
+    </div>
+
+    <div class="balance">
+      <div>
+        <span class="balance__label">Saldo actual</span>
+        <div class="balance__value"><%= user.credits %> <span>memoriales disponibles</span></div>
+        <p class="balance__hint">Al confirmar una compra, los cupos se suman de inmediato a tu cuenta.</p>
+      </div>
+    </div>
+
+    <% if (paymentsMode === 'demo') { %>
+      <div class="warning-note" style="margin-bottom: 26px;">
+        <%- icon('info', 17) %>
+        <span>Estás en el entorno de demostración: el pago es simulado y no se realizará ningún cobro real. Al confirmar, los memoriales se acreditan al instante.</span>
+      </div>
+    <% } %>
+
+    <div class="pricing-grid">
+      <article class="price-card">
+        <h3><%= plans.single.name %></h3>
+        <p class="price-card__desc"><%= plans.single.description %></p>
+        <div class="price">
+          <span class="price__amount"><%= helpers.formatCLP(plans.single.amount) %></span>
+          <span class="price__currency">CLP</span>
+        </div>
+        <p class="price__meta">Pago único · 1 memorial</p>
+        <ul class="price-card__list">
+          <li><%- icon('check', 16) %> Enlace único y QR</li>
+          <li><%- icon('check', 16) %> Certificado de propiedad</li>
+          <li><%- icon('check', 16) %> Foto principal + 10 fotos</li>
+          <li><%- icon('check', 16) %> Video de 60 segundos</li>
+          <li><%- icon('check', 16) %> Música MP3 y libro de visitas</li>
+        </ul>
+        <a class="btn btn--ghost btn--block" href="/panel/comprar/single">Comprar 1 memorial</a>
+      </article>
+
+      <article class="price-card price-card--featured">
+        <span class="price-card__badge"><%= plans.pack4.badge %></span>
+        <h3><%= plans.pack4.name %></h3>
+        <p class="price-card__desc"><%= plans.pack4.description %></p>
+        <div class="price">
+          <span class="price__amount"><%= helpers.formatCLP(plans.pack4.amount) %></span>
+          <span class="price__currency">CLP</span>
+        </div>
+        <p class="price__meta">Pago único · 4 memoriales · $2.998 cada uno</p>
+        <ul class="price-card__list">
+          <li><%- icon('check', 16) %> Todo lo del memorial individual</li>
+          <li><%- icon('check', 16) %> Cuatro certificados y QR independientes</li>
+          <li><%- icon('check', 16) %> Úsalos ahora o más adelante</li>
+          <li><%- icon('check', 16) %> Ahorras $15.970</li>
+        </ul>
+        <a class="btn btn--light btn--block" href="/panel/comprar/pack4">Comprar pack familia</a>
+      </article>
+    </div>
+
+    <p class="price-note">Precios en pesos chilenos, impuestos incluidos. ¿Tienes dudas? Escríbenos a <a class="text-link" href="mailto:<%= site.email %>"><%= site.email %></a>.</p>
+  </div>
+</section>
