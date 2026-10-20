@@ -29,6 +29,14 @@
 </head>
 <body class="<%= bodyClass %>">
   <a class="skip-link" href="#main">Saltar al contenido</a>
+  <% if (demoAccess && !user) { %>
+    <div class="demo-ribbon">
+      <div class="container demo-ribbon__inner">
+        <span><strong>Modo demostración</strong><i>·</i>datos de ejemplo, pagos simulados</span>
+        <a href="/probar?entrar=1">Entrar al panel de demo <%- icon('arrow-right', 14) %></a>
+      </div>
+    </div>
+  <% } %>
   <%- include('partials/header') %>
   <%- include('partials/flash') %>
   <main id="main">

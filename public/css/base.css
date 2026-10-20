@@ -1364,3 +1364,65 @@ h4 {
     text-align: center;
   }
 }
+
+/* ---------------------------------------------------------- demo ribbon */
+.demo-ribbon {
+  background: var(--sage-dark);
+  color: var(--cream);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  letter-spacing: 0.01em;
+}
+
+.demo-ribbon__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 38px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.demo-ribbon span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  opacity: 0.92;
+}
+
+.demo-ribbon strong {
+  font-weight: 500;
+  color: #fff;
+}
+
+.demo-ribbon i {
+  font-style: normal;
+  opacity: 0.55;
+}
+
+.demo-ribbon a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #fff;
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.45);
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+.demo-ribbon a:hover {
+  text-decoration-color: #fff;
+}
+
+@media (max-width: 640px) {
+  .demo-ribbon__inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding-top: 9px;
+    padding-bottom: 9px;
+  }
+}

@@ -87,6 +87,15 @@ QR y permite entrar al panel de demo con un clic (`/probar?entrar=1`). Es la for
 probar la plataforma en el computador o en el teléfono sin escribir credenciales. La ruta se
 desactiva sola con `PAYMENTS_MODE=live` (o con `DEMO_ACCESS=off`) y responde 404 en producción.
 
+Además, mientras no haya sesión, todas las páginas muestran una franja de **modo demostración** con
+acceso directo al panel.
+
+> **Sobre el enlace en entornos de preview:** si el sitio corre en un sandbox de E2B con tráfico
+> restringido, su URL `*.e2b.app` exige la cabecera `e2b-traffic-access-token`. Ningún navegador
+> puede enviarla al abrir un enlace, así que el sitio solo se ve a través del panel de vista previa
+> de la plataforma (que inyecta el token). Al desplegar en un dominio propio esta restricción
+> desaparece y `/probar` funciona como cualquier URL pública.
+
 ## 🧭 Recorrido del producto
 
 1. **Registro** → cuenta gratis con 0 créditos.
