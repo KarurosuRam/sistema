@@ -135,7 +135,7 @@
           </span>
         </div>
 
-        <div class="mem-gallery__grid">
+        <div class="mem-gallery__grid <%= allPhotos.length === 1 ? 'mem-gallery__grid--single' : allPhotos.length === 2 ? 'mem-gallery__grid--pair' : 'mem-gallery__grid--mosaic' %>">
           <% allPhotos.forEach(function (photo, index) { %>
             <button class="mem-photo" type="button"
               data-lightbox
@@ -367,7 +367,7 @@
   <button class="lightbox__close" type="button" data-lightbox-close aria-label="Cerrar galería"><%- icon('close', 18) %></button>
   <button class="lightbox__btn lightbox__btn--prev" type="button" data-lightbox-prev aria-label="Foto anterior"><%- icon('chevron-left', 20) %></button>
   <figure class="lightbox__figure">
-    <img class="lightbox__img" src="" alt="">
+    <img class="lightbox__img" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
     <figcaption class="lightbox__caption"></figcaption>
     <span class="lightbox__counter"></span>
   </figure>
