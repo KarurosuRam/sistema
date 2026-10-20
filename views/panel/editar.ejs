@@ -544,6 +544,12 @@
           <div class="order-row"><span>Certificado</span><span class="mono"><%= memorial.certificate_code %></span></div>
           <div class="order-row"><span>Creado</span><span><%= helpers.formatTimestamp(memorial.created_at) %></span></div>
           <div class="order-row" style="border-bottom: 0;"><span>Última edición</span><span><%= helpers.formatTimestamp(memorial.updated_at) %></span></div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px;">
+            <a class="btn btn--ghost btn--sm" href="/panel/memoriales/<%= memorial.id %>/exportar"><%- icon('download', 14) %> Respaldar (JSON)</a>
+            <a class="btn btn--ghost btn--sm" href="/panel/memoriales/<%= memorial.id %>/tarjeta"><%- icon('qr', 14) %> Tarjeta con QR</a>
+            <a class="btn btn--ghost btn--sm" href="/panel/memoriales/<%= memorial.id %>/certificado"><%- icon('award', 14) %> Certificado</a>
+          </div>
+          <p class="hint" style="margin-top: 10px;">El respaldo incluye los datos del memorial, las descripciones de las fotos y todos los mensajes recibidos.</p>
         </div>
 
         <div class="danger-zone">

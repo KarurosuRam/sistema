@@ -153,6 +153,63 @@ router.get('/compras', (req, res) => {
   });
 });
 
+/* ----------------------------------------------------------- mensajes */
+
+router.get('/mensajes', (req, res) => {
+  const entries = store.listGuestbookForUser(req.user.id, { limit: 200 });
+  const counters = store.countGuestbookForUser(req.user.id);
+  res.render('panel/mensajes', {
+    pageTitle: 'Mensajes recibidos',
+    metaDescription: 'Modera los mensajes que dejan los visitantes de tus memoriales.',
+    bodyClass: 'page-panel',
+    entries,
+    total: counters.total || 0,
+    hidden: counters.hidden || 0
+  });
+});
+
+router.post('/mensajes/:entryId/ocultar', (req, res) => {
+  const entry = store.findGuestbookEntry(Number(req.params.entryId));
+  if (!entry) {
+    req.flash('error', 'El mensaje no existe.');
+    return res.redirect('/panel/mensajes');
+  }
+  const memorial = store.findMemorialById(entry.memorial_id);
+  if (!memorial || memorial.user_id !== req.user.id) {
+    const error = new Error('No tienes acceso a este mensaje.');
+    error.status = 403;
+    return res.render('errors/403', {
+      pageTitle: 'Acceso restringido',
+      metaDescription: 'No tienes permisos para ver esta página.',
+      bodyClass: 'page-error'
+    });
+  }
+  store.setGuestbookHidden(entry.id, !entry.hidden);
+  req.flash('success', entry.hidden ? 'El mensaje vuelve a estar visible.' : 'El mensaje quedó oculto del memorial.');
+  res.redirect(req.body.back === 'memorial' ? `/panel/memoriales/${memorial.id}#libro` : '/panel/mensajes');
+});
+
+router.post('/mensajes/:entryId/eliminar', (req, res) => {
+  const entry = store.findGuestbookEntry(Number(req.params.entryId));
+  if (!entry) {
+    req.flash('error', 'El mensaje no existe.');
+    return res.redirect('/panel/mensajes');
+  }
+  const memorial = store.findMemorialById(entry.memorial_id);
+  if (!memorial || memorial.user_id !== req.user.id) {
+    const error = new Error('No tienes acceso a este mensaje.');
+    error.status = 403;
+    return res.render('errors/403', {
+      pageTitle: 'Acceso restringido',
+      metaDescription: 'No tienes permisos para ver esta página.',
+      bodyClass: 'page-error'
+    });
+  }
+  store.deleteGuestbookEntry(entry.id);
+  req.flash('success', 'El mensaje se eliminó definitivamente.');
+  res.redirect(req.body.back === 'memorial' ? `/panel/memoriales/${memorial.id}#libro` : '/panel/mensajes');
+});
+
 /* -------------------------------------------------------- crear memorial */
 
 router.get('/nuevo', (req, res) => {
@@ -588,6 +645,55 @@ router.get('/memoriales/:id/qr.png', loadMemorialOwned, asyncHandler(async (req,
     next(error);
   }
 }));
+
+router.get('/memoriales/:id/exportar', loadMemorialOwned, (req, res) => {
+  const data = store.exportMemorialData(req.memorial.id);
+  if (!data) {
+    const error = new Error('Memorial no encontrado');
+    error.status = 404;
+    return res.render('errors/404', {
+      pageTitle: 'Memorial no disponible',
+      metaDescription: 'El memorial que buscas no existe.',
+      bodyClass: 'page-error'
+    });
+  }
+  const payload = {
+    generado_el: new Date().toISOString(),
+    sitio: 'www.jardinmemorial.cl',
+    titular: { nombre: req.user.name, email: req.user.email },
+    memorial: {
+      nombre: data.memorial.full_name,
+      tipo: data.memorial.kind,
+      relacion: data.memorial.relationship,
+      nacimiento: data.memorial.birth_date,
+      partida: data.memorial.death_date,
+      epitafio: data.memorial.epitaph,
+      historia: data.memorial.biography,
+      enlace: `/m/${data.memorial.slug}`,
+      certificado: data.memorial.certificate_code,
+      creado: data.memorial.created_at
+    },
+    fotos: data.photos.map((photo) => ({
+      descripcion: photo.caption,
+      archivo: `/uploads/${photo.filename}`
+    })),
+    libro_de_visitas: data.guestbook.map((entry) => ({
+      nombre: entry.name,
+      ciudad: entry.city,
+      mensaje: entry.message,
+      vela: !!entry.candle,
+      fecha: entry.created_at,
+      visible: !entry.hidden
+    })),
+    velas: data.candles.length
+  };
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader(
+    'Content-Disposition',
+    `attachment; filename="memorial-${util.slugify(data.memorial.full_name)}.json"`
+  );
+  res.send(JSON.stringify(payload, null, 2));
+});
 
 router.get('/memoriales/:id/tarjeta', loadMemorialOwned, asyncHandler(async (req, res, next) => {
   try {

@@ -25,9 +25,10 @@ segundos, música MP3 y un libro de visitas con velas virtuales.
 | Libro de visitas | Mensajes moderables (ocultar/eliminar), velas virtuales, paginación y protección anti-spam |
 
 Extras: **tarjeta conmemorativa A5 imprimible** con retrato y QR, **presentación de recuerdos**
-(slideshow del lightbox), reordenamiento de la galería, diseño editorial responsive, memoriales
-públicos o privados, sitemap/SEO, página de demo, centro de ayuda, términos, privacidad y
-comprobantes de compra.
+(slideshow del lightbox), reordenamiento de la galería, **búsqueda y filtros en el jardín público**,
+**moderación global de mensajes**, **respaldo JSON** por memorial, diseño editorial responsive,
+memoriales públicos o privados, sitemap/SEO, página de demo, centro de ayuda, términos, privacidad
+y comprobantes de compra.
 
 ## 🚀 Puesta en marcha
 
@@ -77,9 +78,11 @@ Copia `.env.example` (todas son opcionales): `PORT`, `BASE_URL`, `DATA_DIR`, `PA
 4. **Administración** → `/panel/memoriales/:id`: detalles, fotos (principal, orden y descripciones),
    video, música, libro de visitas, compartir/QR, tarjeta conmemorativa, certificado y eliminación
    con confirmación por nombre.
-5. **Memorial público** → `/m/:slug`: portada con retrato, historia, galería con lightbox, video,
-   libro de visitas, velas, QR y acceso al certificado.
-6. **Verificación** → `/certificado` y `/certificado/JM-AAAA-XXXXX`.
+5. **Memorial público** → `/m/:slug`: portada con retrato, historia, galería con lightbox y
+   presentación, video, libro de visitas paginado, velas, QR y acceso al certificado.
+6. **Jardín público** → `/memoriales`: búsqueda por nombre, relación o frase y filtros por personas o
+   mascotas.
+7. **Verificación** → `/certificado` y `/certificado/JM-AAAA-XXXXX`.
 
 ## 🗂 Estructura
 
@@ -147,6 +150,8 @@ scripts/                  seed-demo.js y generate_music.py (melodía ambiente)
 - Subir video de 42 s (acepta) y de 75 s (rechaza con mensaje claro).
 - Firmar el libro de visitas, encender velas y superar el límite de intentos.
 - Cambiar el memorial a privado: terceros reciben 404, el titular lo ve.
+- Buscar en `/memoriales` por nombre y filtrar por mascotas; probar un término sin resultados.
+- Moderar un mensaje desde `/panel/mensajes` y desde el editor del memorial.
 - Descargar el certificado PDF y verificarlo en `/certificado`.
 - Descargar la tarjeta conmemorativa y escanear su QR con el celular.
 - Reordenar fotos y reproducir la presentación de recuerdos desde el lightbox.

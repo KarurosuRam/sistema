@@ -50,19 +50,28 @@ router.get('/como-funciona', (req, res) => {
 router.get('/memoriales', (req, res) => {
   const page = Math.max(1, Number.parseInt(req.query.page, 10) || 1);
   const perPage = 12;
-  const total = store.countPublicMemorials();
+  const query = String(req.query.q || '').trim().slice(0, 80);
+  const kind = req.query.tipo === 'mascota' ? 'mascota' : req.query.tipo === 'persona' ? 'persona' : null;
+  const filters = { query, kind };
+
+  const total = query ? store.countSearchPublicMemorials(filters) : store.countPublicMemorials();
   const pages = Math.max(1, Math.ceil(total / perPage));
   const currentPage = Math.min(page, pages);
-  const memorials = store.listPublicMemorials({ limit: perPage, offset: (currentPage - 1) * perPage });
+  const memorials = query
+    ? store.searchPublicMemorials({ ...filters, limit: perPage, offset: (currentPage - 1) * perPage })
+    : store.listPublicMemorials({ limit: perPage, offset: (currentPage - 1) * perPage, kind });
+
   res.render('memoriales', {
-    pageTitle: 'Memoriales públicos',
+    pageTitle: query ? `Búsqueda: ${query}` : 'Memoriales públicos',
     metaDescription: 'Conoce los memoriales digitales que familias de todo Chile han creado en Jardín Memorial.',
     bodyClass: 'page-explore',
     activeNav: 'memoriales',
     memorials,
     total,
     page: currentPage,
-    pages
+    pages,
+    query,
+    kind
   });
 });
 

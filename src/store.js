@@ -176,6 +176,39 @@ function listPublicMemorials({ limit = 12, offset = 0, kind = null } = {}) {
   );
 }
 
+function searchPublicMemorials({ query, limit = 12, offset = 0, kind = null } = {}) {
+  const term = `%${String(query || '').replace(/[%_]/g, '')}%`;
+  const params = [term, term, term];
+  let sql = `SELECT m.*, (SELECT COUNT(*) FROM photos p WHERE p.memorial_id = m.id) AS photo_count
+       FROM memorials m
+      WHERE m.is_public = 1
+        AND (m.full_name LIKE ? COLLATE NOCASE
+             OR m.relationship LIKE ? COLLATE NOCASE
+             OR m.epitaph LIKE ? COLLATE NOCASE)`;
+  if (kind) {
+    sql += ' AND m.kind = ?';
+    params.push(kind);
+  }
+  sql += ' ORDER BY m.created_at DESC LIMIT ? OFFSET ?';
+  params.push(limit, offset);
+  return all(sql, ...params);
+}
+
+function countSearchPublicMemorials({ query, kind = null } = {}) {
+  const term = `%${String(query || '').replace(/[%_]/g, '')}%`;
+  const params = [term, term, term];
+  let sql = `SELECT COUNT(*) AS total FROM memorials m
+      WHERE m.is_public = 1
+        AND (m.full_name LIKE ? COLLATE NOCASE
+             OR m.relationship LIKE ? COLLATE NOCASE
+             OR m.epitaph LIKE ? COLLATE NOCASE)`;
+  if (kind) {
+    sql += ' AND m.kind = ?';
+    params.push(kind);
+  }
+  return get(sql, ...params).total;
+}
+
 function countPublicMemorials() {
   return get('SELECT COUNT(*) AS total FROM memorials WHERE is_public = 1').total;
 }
@@ -274,6 +307,17 @@ function userStats(userId) {
   return { ...row, ...extras };
 }
 
+function exportMemorialData(memorialId) {
+  const memorial = findMemorialById(memorialId);
+  if (!memorial) return null;
+  return {
+    memorial,
+    photos: listPhotos(memorialId),
+    guestbook: all('SELECT * FROM guestbook WHERE memorial_id = ? ORDER BY created_at ASC', memorialId),
+    candles: all('SELECT * FROM candles WHERE memorial_id = ? ORDER BY created_at ASC', memorialId)
+  };
+}
+
 function listRecentGuestbookForUser(userId, limit = 8) {
   return all(
     `SELECT g.*, m.full_name, m.slug, m.id AS memorial_id
@@ -366,6 +410,31 @@ function setGuestbookHidden(id, hidden) {
   run('UPDATE guestbook SET hidden = ? WHERE id = ?', hidden ? 1 : 0, id);
 }
 
+function listGuestbookForUser(userId, { limit = 60, includeHidden = true } = {}) {
+  return all(
+    `SELECT g.*, m.full_name, m.slug, m.id AS memorial_id
+       FROM guestbook g
+       JOIN memorials m ON m.id = g.memorial_id
+      WHERE m.user_id = ?
+        ${includeHidden ? '' : 'AND g.hidden = 0'}
+      ORDER BY g.created_at DESC
+      LIMIT ?`,
+    userId,
+    limit
+  );
+}
+
+function countGuestbookForUser(userId) {
+  return get(
+    `SELECT COUNT(*) AS total,
+            SUM(CASE WHEN g.hidden = 1 THEN 1 ELSE 0 END) AS hidden
+       FROM guestbook g
+       JOIN memorials m ON m.id = g.memorial_id
+      WHERE m.user_id = ?`,
+    userId
+  );
+}
+
 function deleteGuestbookEntry(id) {
   run('DELETE FROM guestbook WHERE id = ?', id);
 }
@@ -421,6 +490,8 @@ module.exports = {
   listMemorialsByUser,
   listPublicMemorials,
   countPublicMemorials,
+  searchPublicMemorials,
+  countSearchPublicMemorials,
   countAllMemorials,
   updateMemorial,
   setMemorialMainPhoto,
@@ -442,6 +513,9 @@ module.exports = {
   countGuestbook,
   addGuestbookEntry,
   findGuestbookEntry,
+  listGuestbookForUser,
+  countGuestbookForUser,
+  exportMemorialData,
   setGuestbookHidden,
   deleteGuestbookEntry,
   addCandle,

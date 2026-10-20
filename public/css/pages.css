@@ -1021,6 +1021,111 @@
   margin: 0 auto;
 }
 
+.explore-search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  max-width: 860px;
+  margin: 0 auto 30px;
+  padding: 10px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-xs);
+}
+
+.explore-search__field {
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+  display: flex;
+  align-items: center;
+}
+
+.explore-search__field svg {
+  position: absolute;
+  left: 16px;
+  width: 18px;
+  height: 18px;
+  color: var(--muted-light);
+  pointer-events: none;
+}
+
+.explore-search__field .input {
+  border: 0;
+  background: transparent;
+  padding: 11px 16px 11px 44px;
+  border-radius: var(--radius-pill);
+}
+
+.explore-search__field .input:focus {
+  box-shadow: none;
+  background: var(--cream);
+}
+
+.explore-search__filters {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  background: var(--cream-deep);
+  border-radius: var(--radius-pill);
+}
+
+.explore-chip {
+  position: relative;
+  padding: 8px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+
+.explore-chip input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.explore-chip.is-active,
+.explore-chip:has(input:checked) {
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: var(--shadow-xs);
+}
+
+.explore-chip:focus-within {
+  outline: 2px solid var(--sage-deep);
+  outline-offset: 2px;
+}
+
+.explore-search .btn {
+  flex: none;
+}
+
+.explore-results {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  max-width: 860px;
+  margin: 0 auto 24px;
+  padding: 12px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--sage-wash);
+  border: 1px solid var(--sage-soft);
+  font-size: 0.84rem;
+  color: var(--sage-deep);
+}
+
+.explore-results strong {
+  font-weight: 500;
+}
+
 .empty-state {
   text-align: center;
   padding: clamp(48px, 7vw, 80px) 24px;
@@ -1617,6 +1722,18 @@
 }
 
 @media (max-width: 680px) {
+  .explore-search {
+    border-radius: var(--radius);
+  }
+
+  .explore-search .btn {
+    width: 100%;
+  }
+
+  .explore-search__field .input {
+    background: var(--cream);
+  }
+
   .pricing-grid {
     grid-template-columns: 1fr;
   }

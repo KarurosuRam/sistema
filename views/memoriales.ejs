@@ -8,12 +8,32 @@
 
 <section class="section section--tight" style="padding-top: 10px;">
   <div class="container">
+    <form class="explore-search reveal" action="/memoriales" method="get" role="search">
+      <div class="explore-search__field">
+        <%- icon('search', 18) %>
+        <input class="input" type="search" name="q" value="<%= query %>" maxlength="80" placeholder="Buscar por nombre, relación o frase…" aria-label="Buscar memoriales">
+      </div>
+      <div class="explore-search__filters" role="group" aria-label="Filtrar por tipo">
+        <label class="explore-chip <%= !kind ? 'is-active' : '' %>"><input type="radio" name="tipo" value="" <%= !kind ? 'checked' : '' %>>Todos</label>
+        <label class="explore-chip <%= kind === 'persona' ? 'is-active' : '' %>"><input type="radio" name="tipo" value="persona" <%= kind === 'persona' ? 'checked' : '' %>>Personas</label>
+        <label class="explore-chip <%= kind === 'mascota' ? 'is-active' : '' %>"><input type="radio" name="tipo" value="mascota" <%= kind === 'mascota' ? 'checked' : '' %>>Mascotas</label>
+      </div>
+      <button class="btn" type="submit">Buscar</button>
+    </form>
+
+    <% if (query) { %>
+      <div class="explore-results reveal">
+        <span><strong><%= helpers.formatNumber(total) %></strong> <%= total === 1 ? 'memorial encontrado' : 'memoriales encontrados' %> para «<%= query %>»<%= kind ? (kind === 'mascota' ? ' · solo mascotas' : ' · solo personas') : '' %></span>
+        <a class="link-arrow" href="/memoriales" style="font-size: 0.66rem;">Limpiar búsqueda <%- icon('close', 13) %></a>
+      </div>
+    <% } %>
+
     <% if (!memorials.length) { %>
       <div class="empty-state">
         <%- icon('flower', 42) %>
-        <h3>El jardín está empezando a florecer</h3>
-        <p>Todavía no hay memoriales públicos. Sé de las primeras familias en compartir una historia.</p>
-        <a class="btn" href="/registro">Crear un memorial</a>
+        <h3><%= query ? 'No encontramos memoriales con esos términos' : 'El jardín está empezando a florecer' %></h3>
+        <p><%= query ? 'Prueba con otro nombre o revisa la ortografía. También puedes explorar todos los memoriales.' : 'Todavía no hay memoriales públicos. Sé de las primeras familias en compartir una historia.' %></p>
+        <a class="btn" href="<%= query ? '/memoriales' : '/registro' %>"><%= query ? 'Ver todos los memoriales' : 'Crear un memorial' %></a>
       </div>
     <% } else { %>
       <div class="memorial-grid">
@@ -28,7 +48,7 @@
             <% if (i === page) { %>
               <span class="is-current" aria-current="page"><%= i %></span>
             <% } else { %>
-              <a href="/memoriales?page=<%= i %>"><%= i %></a>
+              <a href="/memoriales?page=<%= i %><%= query ? '&q=' + encodeURIComponent(query) : '' %><%= kind ? '&tipo=' + kind : '' %>"><%= i %></a>
             <% } %>
           <% } %>
         </nav>
