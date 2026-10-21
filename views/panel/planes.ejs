@@ -33,7 +33,16 @@
     <% if (payment.provider === 'demo') { %>
       <div class="warning-note" style="margin-bottom: 26px;">
         <%- icon('info', 17) %>
-        <span>Estás en el entorno de demostración: el pago es simulado y no se realizará ningún cobro real. Al confirmar, los memoriales se acreditan al instante.</span>
+        <span>
+          <strong>Los cobros están desactivados:</strong> no hay una pasarela conectada, así que
+          ninguna compra pide tarjeta ni cobra dinero real (los memoriales se acreditan al
+          instante para que puedas probar).
+          <% if (config.isAdminEmail(user.email)) { %>
+            <br>Para cobrar de verdad, conecta Mercado Pago y publica el sitio con acceso a
+            internet.
+            <a class="text-link" href="/panel/admin/pagos">Configurar pagos</a>.
+          <% } %>
+        </span>
       </div>
     <% } else { %>
       <div class="pay-method <%= payment.provider === 'mercadopago' ? 'pay-method--mp' : 'pay-method--flow' %>" style="margin-bottom: 26px;">

@@ -56,9 +56,10 @@
           <%- icon('info', 16) %>
           <span>
             Ahora mismo la app registra las compras <strong>sin cobrar</strong>. Para cobrar de
-            verdad hay que definir <code>PAYMENTS_MODE</code> y las credenciales en el archivo
-            <code>.env</code> del servidor, y reiniciar la app. La guía paso a paso está en
-            <code>docs/mercadopago.md</code> (recomendado) o <code>docs/flow.md</code>.
+            verdad hay que conectar una pasarela y publicar el sitio en un servidor con acceso a
+            internet: la vista previa de este entorno no puede comunicarse con Mercado Pago ni
+            con Flow. La guía paso a paso está en <code>docs/mercadopago.md</code> (recomendado)
+            o <code>docs/flow.md</code>.
             <% if (requestedMode !== 'auto' && requestedMode !== 'demo') { %>
               El servidor pidió <code>PAYMENTS_MODE=<%= requestedMode %></code> pero no encontró sus credenciales.
             <% } %>

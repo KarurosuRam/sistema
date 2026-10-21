@@ -2445,3 +2445,13 @@
   padding: 7px 10px;
   font-size: 0.8rem;
 }
+
+.pay-method--off {
+  background: #fdf3e7;
+  border: 1px solid #f0d6b4;
+  color: #7a4a12;
+}
+
+.pay-method--off svg {
+  color: #b4762a;
+}

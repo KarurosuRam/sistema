@@ -78,25 +78,26 @@
             podrás revisarlo desde tu comprobante en «Historial de compras».
           </p>
         <% } else { %>
-          <div class="pay-method">
-            <%- icon('card', 22) %>
+          <div class="pay-method pay-method--off">
+            <%- icon('alert-circle', 22) %>
             <div>
-              <strong>Pago con tarjeta</strong>
-              <span>Transacción protegida · demostración</span>
+              <strong>No hay una pasarela de pago conectada</strong>
+              <span>
+                Esta instalación está en modo demostración: no se pide tarjeta ni se realiza
+                ningún cobro. Al confirmar, el memorial se acredita igual para que puedas probar.
+              </span>
             </div>
           </div>
 
-          <div class="card-demo" aria-hidden="true">
-            <div class="card-demo__row">
-              <span>JARDÍN MEMORIAL</span>
-              <span>DEMO</span>
-            </div>
-            <div class="card-demo__number">•••• •••• •••• 2026</div>
-            <div class="card-demo__foot">
-              <span><%= user.name %></span>
-              <span>12 / 30</span>
-            </div>
-          </div>
+          <% if (config.isAdminEmail(user.email)) { %>
+            <a class="btn btn--ghost btn--block" href="/panel/admin/pagos" style="margin-bottom: 6px;">
+              <%- icon('card', 15) %> Conectar Mercado Pago
+            </a>
+            <p class="hint" style="margin-bottom: 18px;">
+              Los cobros reales necesitan credenciales de la pasarela y un servidor publicado con
+              acceso a internet; la vista previa no puede comunicarse con Mercado Pago.
+            </p>
+          <% } %>
         <% } %>
 
         <%# Dentro de WordPress la app vive en un iframe: el pago se abre en la
