@@ -50,8 +50,9 @@ function sprig(doc, x, y, scale, rotation) {
  * Tarjeta conmemorativa imprimible (A5 horizontal) con el QR del memorial.
  * Pensada para recordatorios de ceremonia, tarjetas o placas.
  */
-async function generatePoster({ memorial, siteUrl: requestedUrl }) {
-  const siteUrl = (process.env.BASE_URL || '').trim().replace(/\/+$/, '') || config.defaultSiteUrl;
+async function generatePoster({ memorial }) {
+  // Mismo criterio que el certificado: SITE_URL manda sobre el dominio fijo.
+  const siteUrl = config.publicUrl;
   const pageWidth = 595.28;
   const pageHeight = 419.53;
 

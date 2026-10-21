@@ -120,6 +120,27 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_candles_memorial ON candles(memorial_id, created_at DESC);
 `);
 
+/**
+ * Migraciones aditivas: las bases ya creadas no se recrean, solo se les
+ * agregan las columnas nuevas que necesita la integración de pagos.
+ */
+function ensureColumn(table, column, definition) {
+  const columns = db.prepare(`PRAGMA table_info(${table})`).all();
+  if (!columns.some((item) => item.name === column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
+  }
+}
+
+ensureColumn('purchases', 'provider', "TEXT NOT NULL DEFAULT 'demo'");
+ensureColumn('purchases', 'provider_token', 'TEXT');
+ensureColumn('purchases', 'provider_order', 'TEXT');
+ensureColumn('purchases', 'payer_email', 'TEXT');
+ensureColumn('purchases', 'paid_at', 'TEXT');
+ensureColumn('purchases', 'updated_at', 'TEXT');
+db.exec(
+  'CREATE UNIQUE INDEX IF NOT EXISTS idx_purchases_token ON purchases(provider_token) WHERE provider_token IS NOT NULL'
+);
+
 function run(sql, ...params) {
   const result = db.prepare(sql).run(...params);
   return { changes: Number(result.changes), lastInsertRowid: Number(result.lastInsertRowid) };

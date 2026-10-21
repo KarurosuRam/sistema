@@ -1593,6 +1593,79 @@
   color: var(--muted);
 }
 
+/* Flow: pasos del pago y estado en el comprobante */
+.pay-method--flow {
+  border-color: var(--sage-soft);
+  background: linear-gradient(120deg, var(--sage-wash), var(--paper));
+}
+
+.flow-steps {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.flow-steps li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.flow-steps li > span {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--sage-deep);
+  color: var(--cream);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.receipt-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  margin: 0 0 18px;
+  border-radius: var(--radius-xs);
+  border: 1px solid var(--sage-soft);
+  background: var(--sage-wash);
+  font-size: 0.82rem;
+  color: var(--ink);
+}
+
+.receipt-status--pending {
+  border-color: #ecd9b4;
+  background: #fbf3e2;
+}
+
+.receipt-status--failed {
+  border-color: #e7c3bb;
+  background: var(--danger-soft);
+}
+
+.receipt-status svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.receipt-status__actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .card-demo {
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);

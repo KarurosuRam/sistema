@@ -25,7 +25,7 @@ segundos, música MP3 y un libro de visitas con velas virtuales.
 | Precio $6.990 / 4 por $11.990 | Planes `single` y `pack4` con créditos; el pack cuesta $2.998 por memorial (ahorro $15.970) |
 | Enlace generado automáticamente | `https://www.jardinmemorial.cl/m/<slug>` creado al guardar, con opción de personalizar el slug |
 | Código QR automático | PNG en alta resolución (`/m/<slug>/qr.png` y descarga desde el panel) + QR embebido |
-| Certificado de propiedad | PDF A4 horizontal con código verificable, firmas, QR y página pública de verificación |
+| Certificado de propiedad | PDF A4 horizontal con código único, firmas y QR; privado, solo lo descarga la cuenta titular |
 | Foto principal | Primera foto del memorial, reordenable desde el panel |
 | Hasta 10 fotos | Carga múltiple, miniaturas optimizadas, descripciones y control estricto del límite |
 | Video de máx. 60 s | MP4/MOV hasta 120 MB; se inspecciona la duración real del contenedor y se rechaza si excede |
@@ -48,8 +48,10 @@ npm start          # incluye --experimental-sqlite
 # → http://localhost:3000
 ```
 
-En el primer arranque, si la base está vacía, se crea automáticamente el **contenido de demostración**
-(cuenta, 5 memoriales, galerías, mensajes y velas).
+En el primer arranque, si la base está vacía **y los pagos están en modo demostración**, se crea
+automáticamente el **contenido de demostración** (cuenta, 5 memoriales, galerías, mensajes y velas).
+En una instalación con pagos reales no se siembra nada: hay que pedirlo con `SEED_DEMO=true` y,
+antes de abrir al público, retirarlo con `npm run purge-demo`.
 
 **Cuenta de demostración**
 
@@ -70,18 +72,56 @@ Para empezar sin datos de ejemplo:
 SEED_DEMO=false npm start
 ```
 
+Para retirar la demo de una base que ya la tenía (cuenta, memoriales, archivos y compras
+simuladas):
+
+```bash
+npm run purge-demo
+```
+
+### Puesta en marcha en producción
+
+```bash
+cp .env.example .env      # completa SITE_URL, llaves de Flow y DATA_DIR
+npm ci --omit=dev
+npm start
+```
+
+También hay una imagen lista para Docker:
+
+```bash
+docker build -t jardin-memorial .
+docker run -d --name jardin-memorial -p 3000:3000 \
+  --env-file .env -v /srv/jardin-data:/app/data jardin-memorial
+```
+
 ### Variables de entorno
 
-Copia `.env.example` (todas son opcionales): `PORT`, `BASE_URL`, `DATA_DIR`, `PAYMENTS_MODE`
-(`demo`/`live`), `SEED_DEMO`, `EMBED_ORIGINS`. Los datos viven en `./data` — base
-`jardin.sqlite` (WAL) y `data/uploads/{img,audio,video}` — y están excluidos de Git.
+Todas las variables están documentadas en `.env.example`. Las principales:
 
-`EMBED_ORIGINS` autoriza orígenes externos a mostrar el sitio en un iframe (por ejemplo, una
-vista previa alojada en otro dominio). En desarrollo se habilitan automáticamente los hosts de
-previsualización (`*.e2b.app`, `*.arena.ai`): esos hosts se tratan como HTTPS aunque el proxy no
-envíe `X-Forwarded-Proto` —así los enlaces, QR y `canonical` no salen como `http://`— y las
-cookies pasan a `SameSite=None; Secure` para que la sesión funcione dentro del marco. Con `NODE_ENV=production` y sin `EMBED_ORIGINS` la
-política vuelve a ser estricta (`SAMEORIGIN` + `frame-ancestors 'self'`).
+| Variable | Para qué |
+| --- | --- |
+| `SITE_URL` | URL pública HTTPS de la app; se usa en Flow, QR y certificados |
+| `PAYMENTS_MODE` | `flow` (cobros reales) o `demo` (simulado) |
+| `FLOW_ENV` | `sandbox` o `production` |
+| `FLOW_API_KEY` / `FLOW_SECRET_KEY` | Credenciales del comercio en Flow |
+| `DATA_DIR` | Carpeta de la base SQLite y los uploads (por omisión `./data`) |
+| `SEED_DEMO` / `DEMO_ACCESS` | Contenido de ejemplo y acceso de un clic (`off`) |
+| `EMBED_ORIGINS` | Dominios autorizados a mostrar la app en iframe |
+| `COOKIE_DOMAIN` | Cookie compartida entre subdominios (opcional) |
+| `PORT` | Puerto interno (3000) |
+
+Sin credenciales de Flow la app funciona en **modo demostración**; con ambas llaves cobra de
+verdad. Los datos viven en `DATA_DIR` — base `jardin.sqlite` (WAL) y
+`data/uploads/{img,audio,video}` — y están excluidos de Git.
+
+`EMBED_ORIGINS` autoriza orígenes externos a mostrar el sitio en un iframe (por ejemplo, el
+dominio de WordPress o una vista previa alojada en otro dominio). En desarrollo se habilitan
+automáticamente los hosts de previsualización (`*.e2b.app`, `*.arena.ai`): esos hosts se tratan
+como HTTPS aunque el proxy no envíe `X-Forwarded-Proto` —así los enlaces, QR y `canonical` no
+salen como `http://`— y las cookies pasan a `SameSite=None; Secure` para que la sesión funcione
+dentro del marco. Con `NODE_ENV=production` y sin `EMBED_ORIGINS` la política vuelve a ser
+estricta (`SAMEORIGIN` + `frame-ancestors 'self'`).
 
 ### Diagnóstico de la vista previa
 
@@ -111,7 +151,7 @@ servidor la reconoce aunque no reciba cookies.
 En modo demostración existe **`/probar`**: muestra la URL pública de la instalación con su código
 QR y permite entrar al panel de demo con un clic (`/probar?entrar=1`). Es la forma más rápida de
 probar la plataforma en el computador o en el teléfono sin escribir credenciales. La ruta se
-desactiva sola con `PAYMENTS_MODE=live` (o con `DEMO_ACCESS=off`) y responde 404 en producción.
+desactiva sola con `PAYMENTS_MODE=flow` (o con `DEMO_ACCESS=off`) y responde 404 en producción.
 
 Además, mientras no haya sesión, todas las páginas muestran una franja de **modo demostración** con
 acceso directo al panel.
@@ -153,11 +193,16 @@ src/
   media.js                sharp (fotos), duración MP3, validación MP4/MOV
   qr.js / certificate.js  QR y certificado PDF (PDFKit + tipografías de marca)
   poster.js               tarjeta conmemorativa A5 con retrato y QR
+  flow.js / payments.js   API de Flow, firma HMAC y acreditación idempotente
+  embed-session.js        sesión por enlace para iframes sin cookies
   icons.js                set de iconos y logotipo
-  routes/                 public · auth · panel · memorial
+  routes/                 public · auth · panel · payments · memorial
 views/                    layout general + layout propio del memorial
 public/css|js|img|audio|fonts
-scripts/                  seed-demo.js y generate_music.py (melodía ambiente)
+scripts/                  seed-demo.js, purge-demo.js y generate_music.py
+docs/                     flow.md (pagos) y wordpress.md (instalación)
+deploy/                   wordpress/ (compose, plugin), systemd/, nginx/
+Dockerfile                imagen de producción (Node 22 + node:sqlite)
 ```
 
 ## 🔐 Seguridad y privacidad
@@ -186,17 +231,49 @@ scripts/                  seed-demo.js y generate_music.py (melodía ambiente)
 | Música | 20 MB · MP3 |
 | Mensaje del libro | 1.200 caracteres |
 
-## 🧾 Pagos en producción
+## 🧾 Pagos con Flow
 
-`PAYMENTS_MODE=demo` simula la compra para poder probar el flujo completo. Para cobrar de verdad:
+Los cobros usan la **API de Flow** (`https://www.flow.cl/api`). El comprador paga en Flow y los
+créditos se acreditan **solo** cuando Flow confirma el pago:
 
-1. Define `PAYMENTS_MODE=live` y conecta una pasarela chilena (Webpay Plus / Mercado Pago) en
-   `src/routes/panel.js` (`POST /panel/comprar/:plan`), creando la transacción y acreditando los
-   créditos **solo** en el webhook de confirmación.
-2. Configura `BASE_URL` con el dominio real y sirve el sitio bajo HTTPS (obligatorio para cookies
-   `Secure`, portapapeles y autoplay de audio).
-3. Respalda periódicamente `data/` (SQLite + uploads) y mantén el proceso detrás de un proxy con
-   límite de tamaño de subida coherente con los límites de la app.
+1. La app crea la orden con `POST /payment/create` (referencia `JM-…`, monto del plan, CLP,
+   correo del titular y las dos URLs de vuelta) y redirige al pagador a `flow.cl`.
+2. Flow notifica a `POST /pago/confirmacion`; la app consulta `GET /payment/getStatus` con su
+   firma HMAC y acredita los cupos si el estado es **2 (pagada)** y el monto coincide.
+3. El navegador vuelve por `GET /pago/retorno`, que vuelve a consultar el estado y lleva al
+   comprobante. Si el pago aún no llegó, el comprobante lo muestra **Pendiente** con el botón
+   **Verificar pago**.
+
+La acreditación es idempotente (un reintento de Flow no duplica memoriales) y los estados
+1/3/4 dejan la compra pendiente, rechazada o anulada sin tocar los cupos.
+
+```bash
+PAYMENTS_MODE=flow
+FLOW_ENV=production
+FLOW_API_KEY=...
+FLOW_SECRET_KEY=...
+SITE_URL=https://memoriales.tudominio.cl
+```
+
+La guía completa —credenciales, sandbox, tarjetas de prueba, estados, errores y pasaje a
+producción— está en **[`docs/flow.md`](docs/flow.md)**.
+
+## 🧩 Instalación en WordPress
+
+La app puede publicarse dentro de un WordPress existente: corre en un subdominio propio
+(`memoriales.tudominio.cl`) y se inserta en una página con un iframe del mismo dominio
+registrable, de modo que la sesión sigue funcionando.
+
+Incluido en el repositorio:
+
+- `deploy/wordpress/docker-compose.yml` — WordPress + MariaDB + app + Caddy con HTTPS automático.
+- `deploy/wordpress/plugin/jardin-memorial/` y `jardin-memorial.zip` — plugin con los shortcodes
+  `[jardin_memorial]` y `[jardin_memorial_enlace]`, ajustes y plantilla de página a pantalla completa.
+- `deploy/systemd/` y `deploy/nginx/` — servicio y proxy inverso para una instalación sin Docker.
+- `Dockerfile` — imagen de la app para producción.
+
+Guía paso a paso (DNS, requisitos, las dos formas de instalación, plugin, respaldos, verificación y
+problemas frecuentes): **[`docs/wordpress.md`](docs/wordpress.md)**.
 
 ## 🧪 Pruebas manuales sugeridas
 

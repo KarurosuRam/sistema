@@ -15,6 +15,7 @@ const { validateMemorial } = require('../validation');
 const { qrBuffer, qrDataUrl } = require('../qr');
 const { generateCertificate } = require('../certificate');
 const { generatePoster } = require('../poster');
+const payments = require('../payments');
 
 const router = express.Router();
 
@@ -105,32 +106,95 @@ router.get('/comprar/:plan', (req, res, next) => {
   });
 });
 
-router.post('/comprar/:plan', purchaseLimiter, (req, res, next) => {
-  const plan = config.prices[req.params.plan];
-  if (!plan) return next();
+router.post(
+  '/comprar/:plan',
+  purchaseLimiter,
+  asyncHandler(async (req, res, next) => {
+    const plan = config.prices[req.params.plan];
+    if (!plan) return next();
 
-  if (config.paymentsMode === 'live') {
-    req.flash('error', 'La pasarela de pagos está en configuración. Escríbenos a ' + config.contactEmail + ' para completar tu compra.');
-    return res.redirect(`/panel/comprar/${plan.id}`);
-  }
+    // Pago real con Flow: se crea la orden y se lleva al comprador a su
+    // pasarela. Los cupos recién se acreditan cuando Flow confirma.
+    if (payments.isFlowMode()) {
+      try {
+        const { purchase, redirectUrl } = await payments.startFlowPayment({
+          user: req.user,
+          plan
+        });
+        return res.redirect(redirectUrl);
+      } catch (error) {
+        console.error('[flow] No se pudo iniciar el pago:', error.message);
+        req.flash(
+          'error',
+          'No pudimos iniciar el pago con Flow. No se hizo ningún cargo; inténtalo de nuevo en unos minutos o escríbenos a ' +
+            config.contactEmail +
+            '.'
+        );
+        return res.redirect(`/panel/comprar/${plan.id}`);
+      }
+    }
 
-  try {
-    const reference = `JM-${Date.now().toString(36).toUpperCase()}-${util.randomCode(4)}`;
-    const { purchase } = store.completePurchase({
-      userId: req.user.id,
-      plan: plan.id,
-      planName: plan.name,
-      amount: plan.amount,
-      credits: plan.credits,
-      reference,
-      mode: 'demo'
-    });
-    req.flash('success', `Pago aprobado. Se agregaron ${plan.credits} ${plan.credits === 1 ? 'memorial' : 'memoriales'} a tu cuenta.`);
+    try {
+      const reference = `JM-${Date.now().toString(36).toUpperCase()}-${util.randomCode(4)}`;
+      const { purchase } = store.completePurchase({
+        userId: req.user.id,
+        plan: plan.id,
+        planName: plan.name,
+        amount: plan.amount,
+        credits: plan.credits,
+        reference,
+        mode: 'demo'
+      });
+      req.flash(
+        'success',
+        `Pago aprobado. Se agregaron ${plan.credits} ${plan.credits === 1 ? 'memorial' : 'memoriales'} a tu cuenta.`
+      );
+      return res.redirect(`/panel/compra/${purchase.reference}`);
+    } catch (error) {
+      return next(error);
+    }
+  })
+);
+
+/**
+ * Botón «verificar pago» del comprobante: vuelve a preguntar a Flow por una
+ * orden que quedó pendiente (por ejemplo, si la notificación aún no llegó).
+ */
+router.post(
+  '/compra/:reference/verificar',
+  asyncHandler(async (req, res, next) => {
+    const purchase = store.findPurchaseByReference(String(req.params.reference));
+    if (!purchase || purchase.user_id !== req.user.id) return next();
+
+    if (!purchase.provider_token) {
+      req.flash('info', 'Esta compra no tiene una orden de pago asociada.');
+      return res.redirect(`/panel/compra/${purchase.reference}`);
+    }
+
+    try {
+      const result = await payments.syncPayment(purchase.provider_token);
+      if (result.status === 'pagado') {
+        req.flash(
+          result.credited ? 'success' : 'info',
+          result.credited
+            ? `Pago confirmado. Se agregaron ${result.purchase.credits} cupos a tu cuenta.`
+            : 'El pago ya estaba confirmado en tu cuenta.'
+        );
+      } else if (result.status === 'pendiente') {
+        req.flash('info', 'Flow todavía no confirma el pago. Vuelve a revisar en unos minutos.');
+      } else if (result.status === 'invalido') {
+        req.flash('error', 'La información del pago no coincide con la orden. Escríbenos antes de reintentar.');
+      } else {
+        req.flash('error', 'El pago no se completó. Puedes intentarlo de nuevo desde el plan.');
+      }
+    } catch (error) {
+      console.error('[flow] Error al verificar el pago:', error.message);
+      req.flash('error', 'No pudimos consultar Flow en este momento. Inténtalo de nuevo en unos minutos.');
+    }
+
     return res.redirect(`/panel/compra/${purchase.reference}`);
-  } catch (error) {
-    return next(error);
-  }
-});
+  })
+);
 
 router.get('/compra/:reference', (req, res, next) => {
   const purchase = store.findPurchaseByReference(String(req.params.reference));
@@ -140,7 +204,8 @@ router.get('/compra/:reference', (req, res, next) => {
     metaDescription: 'Comprobante de compra de Jardín Memorial.',
     bodyClass: 'page-panel',
     purchase,
-    mode: config.paymentsMode
+    mode: config.paymentsMode,
+    flowEnvironment: config.flow.env
   });
 });
 

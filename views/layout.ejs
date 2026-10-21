@@ -26,7 +26,7 @@
   <% if (typeof extraCss !== 'undefined' && extraCss) { %><link rel="stylesheet" href="<%= extraCss %>"><% } %>
   <% if (currentPath.indexOf('/panel') === 0 || currentPath === '/cuenta') { %><link rel="stylesheet" href="/css/panel.css?v=<%= assetVersion %>"><% } %>
 </head>
-<body class="<%= bodyClass %>">
+<body class="<%= bodyClass %><%= typeof embeddedView !== 'undefined' && embeddedView ? ' is-embedded' : '' %><%= typeof chromeless !== 'undefined' && chromeless ? ' is-chromeless' : '' %>">
   <a class="skip-link" href="#main">Saltar al contenido</a>
   <% if (demoAccess && !user) { %>
     <div class="demo-ribbon">

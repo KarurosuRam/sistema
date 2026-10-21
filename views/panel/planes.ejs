@@ -13,7 +13,13 @@
       <div>
         <span class="balance__label">Saldo actual</span>
         <div class="balance__value"><%= user.credits %> <span>memoriales disponibles</span></div>
-        <p class="balance__hint">Al confirmar una compra, los cupos se suman de inmediato a tu cuenta.</p>
+        <p class="balance__hint">
+          <% if (paymentsMode === 'flow') { %>
+            Pagas con Flow y los cupos se suman a tu cuenta en cuanto se confirma el pago.
+          <% } else { %>
+            Al confirmar una compra, los cupos se suman de inmediato a tu cuenta.
+          <% } %>
+        </p>
       </div>
     </div>
 
@@ -21,6 +27,14 @@
       <div class="warning-note" style="margin-bottom: 26px;">
         <%- icon('info', 17) %>
         <span>Estás en el entorno de demostración: el pago es simulado y no se realizará ningún cobro real. Al confirmar, los memoriales se acreditan al instante.</span>
+      </div>
+    <% } else { %>
+      <div class="pay-method pay-method--flow" style="margin-bottom: 26px;">
+        <%- icon('shield', 22) %>
+        <div>
+          <strong>Pago seguro con Flow</strong>
+          <span>Tarjetas de crédito y débito, Webpay, MACH y otros medios. Flow procesa el pago: tus datos de tarjeta nunca pasan por Jardín Memorial.</span>
+        </div>
       </div>
     <% } %>
 

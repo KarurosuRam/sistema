@@ -67,10 +67,10 @@ function drawSprig(doc, x, y, scale = 1, rotation = 0) {
  * Genera el certificado de propiedad en PDF.
  * @returns {Promise<Buffer>}
  */
-async function generateCertificate({ memorial, owner, siteUrl: requestedUrl }) {
-  // El certificado impreso siempre refiere al dominio público de la marca,
-  // salvo que se configure BASE_URL explícitamente (p. ej. en una instalación propia).
-  const siteUrl = (process.env.BASE_URL || '').trim().replace(/\/+$/, '') || config.defaultSiteUrl;
+async function generateCertificate({ memorial, owner }) {
+  // El certificado impreso refiere siempre a la URL pública configurada
+  // (SITE_URL), también cuando la app vive en un subdominio de WordPress.
+  const siteUrl = config.publicUrl;
   const pageWidth = 841.89;
   const pageHeight = 595.28;
   const doc = new PDFDocument({

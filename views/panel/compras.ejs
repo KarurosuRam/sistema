@@ -53,7 +53,15 @@
                 <td><%= purchase.plan_name %></td>
                 <td><%= purchase.credits %></td>
                 <td><strong><%= helpers.formatCLP(purchase.amount) %></strong></td>
-                <td><span class="badge"><%- icon('check', 12) %> Pagado</span></td>
+                <td>
+                  <% if (purchase.status === 'pagado') { %>
+                    <span class="badge"><%- icon('check', 12) %> Pagado</span>
+                  <% } else if (purchase.status === 'pendiente') { %>
+                    <span class="badge badge--gold"><%- icon('clock', 12) %> Pendiente</span>
+                  <% } else { %>
+                    <span class="badge badge--clay"><%- icon('alert-circle', 12) %> <%= purchase.status === 'anulado' ? 'Anulado' : 'Rechazado' %></span>
+                  <% } %>
+                </td>
                 <td class="mono"><%= purchase.reference %></td>
                 <td><a class="text-link" href="/panel/compra/<%= purchase.reference %>">Ver</a></td>
               </tr>

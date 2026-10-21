@@ -46,29 +46,134 @@ function consumeCredit(userId) {
 
 /* -------------------------------------------------------------- purchases */
 
-function createPurchase({ userId, plan, planName, amount, credits, reference, mode }) {
+function createPurchase({
+  userId,
+  plan,
+  planName,
+  amount,
+  credits,
+  reference,
+  mode,
+  provider = 'demo',
+  status = 'pagado'
+}) {
   const now = nowIso();
   run(
-    `INSERT INTO purchases (user_id, plan, plan_name, amount, credits, reference, status, mode, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, 'pagado', ?, ?)`,
+    `INSERT INTO purchases
+       (user_id, plan, plan_name, amount, credits, reference, status, mode, provider, created_at, paid_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     userId,
     plan,
     planName,
     amount,
     credits,
     reference,
-    mode || 'demo',
+    status,
+    mode || provider,
+    provider,
+    now,
+    status === 'pagado' ? now : null,
     now
   );
   return get('SELECT * FROM purchases WHERE reference = ?', reference);
 }
 
+/** Compra inmediata (modo demostración): se acredita en el acto. */
 function completePurchase({ userId, plan, planName, amount, credits, reference, mode }) {
   return transaction(() => {
-    createPurchase({ userId, plan, planName, amount, credits, reference, mode });
+    createPurchase({ userId, plan, planName, amount, credits, reference, mode, provider: mode || 'demo' });
     run('UPDATE users SET credits = credits + ? WHERE id = ?', credits, userId);
     return { purchase: findPurchaseByReference(reference), user: findUserById(userId) };
   });
+}
+
+/** Compra real: nace pendiente hasta que la pasarela confirme el pago. */
+function createPendingPurchase({ userId, plan, planName, amount, credits, reference, provider = 'flow' }) {
+  return createPurchase({
+    userId,
+    plan,
+    planName,
+    amount,
+    credits,
+    reference,
+    mode: provider,
+    provider,
+    status: 'pendiente'
+  });
+}
+
+/** Guarda el token de la orden y el número de orden de Flow. */
+function attachPaymentToken(reference, { token, providerOrder }) {
+  run(
+    `UPDATE purchases
+        SET provider_token = ?, provider_order = COALESCE(?, provider_order), updated_at = ?
+      WHERE reference = ?`,
+    token,
+    providerOrder ? String(providerOrder) : null,
+    nowIso(),
+    reference
+  );
+  return findPurchaseByReference(reference);
+}
+
+function findPurchaseByProviderToken(token) {
+  if (!token) return null;
+  return get('SELECT * FROM purchases WHERE provider_token = ?', String(token));
+}
+
+/**
+ * Acredita una compra pendiente una sola vez. La condición `status != 'pagado'`
+ * dentro de la transacción es la que evita duplicar cupos cuando Flow reintenta
+ * la notificación o el comprador recarga la página de retorno.
+ */
+function completePendingPurchase(reference, { providerOrder, payerEmail } = {}) {
+  return transaction(() => {
+    const purchase = findPurchaseByReference(reference);
+    if (!purchase) return null;
+    if (purchase.status === 'pagado') return { purchase, credited: false, alreadyPaid: true };
+
+    const now = nowIso();
+    const result = run(
+      `UPDATE purchases
+          SET status = 'pagado',
+              provider_order = COALESCE(?, provider_order),
+              payer_email = COALESCE(?, payer_email),
+              paid_at = ?,
+              updated_at = ?
+        WHERE reference = ? AND status != 'pagado'`,
+      providerOrder ? String(providerOrder) : null,
+      payerEmail ? String(payerEmail) : null,
+      now,
+      now,
+      reference
+    );
+
+    if (result.changes !== 1) {
+      return { purchase: findPurchaseByReference(reference), credited: false, alreadyPaid: true };
+    }
+
+    run('UPDATE users SET credits = credits + ? WHERE id = ?', purchase.credits, purchase.user_id);
+    return { purchase: findPurchaseByReference(reference), credited: true, alreadyPaid: false };
+  });
+}
+
+/** Estados que no acreditan cupos: pendiente, rechazado o anulado. */
+function updatePurchaseStatus(reference, status, { providerOrder, payerEmail } = {}) {
+  if (!['pendiente', 'rechazado', 'anulado'].includes(status)) return findPurchaseByReference(reference);
+  run(
+    `UPDATE purchases
+        SET status = ?,
+            provider_order = COALESCE(?, provider_order),
+            payer_email = COALESCE(?, payer_email),
+            updated_at = ?
+      WHERE reference = ? AND status != 'pagado'`,
+    status,
+    providerOrder ? String(providerOrder) : null,
+    payerEmail ? String(payerEmail) : null,
+    nowIso(),
+    reference
+  );
+  return findPurchaseByReference(reference);
 }
 
 function listPurchases(userId, limit = 20) {
@@ -481,6 +586,11 @@ module.exports = {
   consumeCredit,
   createPurchase,
   completePurchase,
+  createPendingPurchase,
+  attachPaymentToken,
+  findPurchaseByProviderToken,
+  completePendingPurchase,
+  updatePurchaseStatus,
   listPurchases,
   findPurchaseByReference,
   createMemorial,

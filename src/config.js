@@ -4,6 +4,37 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 
+// --- Flow (pagos reales) ----------------------------------------------------
+// Sandbox por defecto: con FLOW_ENV=production se apunta al ambiente real.
+// Las llaves se obtienen en https://www.flow.cl/app/web/misDatos.php (o en
+// https://sandbox.flow.cl/app/web/misDatos.php para pruebas).
+const flowEnv = process.env.FLOW_ENV === 'production' ? 'production' : 'sandbox';
+const flow = {
+  env: flowEnv,
+  apiKey: String(process.env.FLOW_API_KEY || '').trim(),
+  secretKey: String(process.env.FLOW_SECRET_KEY || '').trim(),
+  // FLOW_API_URL / FLOW_PAY_URL existen solo para pruebas automatizadas con un
+  // Flow simulado; en instalaciones reales se dejan sin definir.
+  baseUrl:
+    String(process.env.FLOW_API_URL || '').trim() ||
+    (flowEnv === 'production' ? 'https://www.flow.cl/api' : 'https://sandbox.flow.cl/api'),
+  payUrl:
+    String(process.env.FLOW_PAY_URL || '').trim() ||
+    (flowEnv === 'production'
+      ? 'https://www.flow.cl/app/web/pay.php'
+      : 'https://sandbox.flow.cl/app/web/pay.php')
+};
+flow.configured = Boolean(flow.apiKey && flow.secretKey);
+
+const publicUrl = String(
+  process.env.SITE_URL ||
+    process.env.PUBLIC_URL ||
+    process.env.BASE_URL ||
+    'https://www.jardinmemorial.cl'
+)
+  .trim()
+  .replace(/\/+$/, '');
+
 const config = {
   root: ROOT,
   port: Number(process.env.PORT) || 3000,
@@ -34,10 +65,26 @@ const config = {
       badge: 'Más elegido'
     }
   },
-  // Demo: los pagos se simulan. Para producción se integra una pasarela
-  // (Webpay Plus / Mercado Pago) y se define PAYMENTS_MODE=live.
-  paymentsMode: process.env.PAYMENTS_MODE === 'live' ? 'live' : 'demo',
+  // Pagos: con llaves de Flow se cobra de verdad (PAYMENTS_MODE=flow, valor
+  // por omisión cuando hay credenciales). PAYMENTS_MODE=demo fuerza el modo
+  // simulado, útil para la vista previa y para las pruebas locales.
+  flow,
+  publicUrl,
+  paymentsMode:
+    String(process.env.PAYMENTS_MODE || '').toLowerCase() === 'demo'
+      ? 'demo'
+      : flow.configured
+        ? 'flow'
+        : 'demo',
   sessionDays: 30,
+  // Dominio opcional para compartir la cookie de sesión entre subdominios
+  // (por ejemplo .jardinmemorial.cl cuando el sitio vive en WordPress y la
+  // app en memoriales.jardinmemorial.cl). Vacío = solo el host actual.
+  cookieDomain: String(process.env.COOKIE_DOMAIN || '').trim() || undefined,
+  // Oculta siempre el encabezado y el pie propios (instalaciones donde el
+  // encabezado del tema de WordPress ya está visible). El plugin usa
+  // `?chrome=0` por página cuando se necesita lo mismo sin tocar el entorno.
+  hideSiteChrome: process.env.EMBED_CHROME === '1',
   // En la vista previa (demostración) el sitio se muestra dentro de un iframe
   // en otro origen. EMBED_MODE habilita los orígenes permitidos y las cookies
   // SameSite=None que ese contexto necesita. En producción queda desactivado

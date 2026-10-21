@@ -9,6 +9,7 @@ const config = require('./config');
 const store = require('./store');
 const util = require('./util');
 const { sessionLoader, flashMiddleware, COOKIE } = require('./auth');
+const paymentsRoutes = require('./routes/payments');
 const { install: installEmbedSession } = require('./embed-session');
 const { csrfCreate } = require('./security');
 const assets = require('./assets');
@@ -146,6 +147,46 @@ app.use((req, res, next) => {
   res.locals.demoAccess = config.demoAccess;
   res.locals.activeNav = '';
   res.locals.hideFooter = false;
+
+  // Integración con WordPress: la app se muestra dentro de una página del
+  // sitio. `?embed=1` oculta el encabezado y el pie propios (el tema ya los
+  // tiene) y deja una cookie para no perder ese modo al navegar.
+  if (req.query.embed === '1') {
+    res.cookie('jm_embed', '1', {
+      maxAge: 1000 * 60 * 60 * 24 * 30,
+      httpOnly: false,
+      sameSite: 'lax',
+      secure: req.secure,
+      path: '/'
+    });
+  } else if (req.query.embed === '0') {
+    res.clearCookie('jm_embed', { path: '/' });
+  }
+  res.locals.embeddedView =
+    req.query.embed === '1' || req.cookies.jm_embed === '1';
+  // El encabezado y el pie propios se conservan dentro del iframe: la página de
+  // WordPress usa una plantilla sin el encabezado del tema, así que la app
+  // aporta la navegación. Para incrustarla en una página normal del tema (con
+  // su propio encabezado) se pide `?chrome=0` —preferencia que se guarda en una
+  // cookie para no perderla al navegar— o se fija EMBED_CHROME=1.
+  const chromeParam = String(req.query.chrome || '');
+  if (res.locals.embeddedView && (chromeParam === '0' || chromeParam === '1')) {
+    res.cookie('jm_chrome', chromeParam, {
+      maxAge: 1000 * 60 * 60 * 24 * 30,
+      httpOnly: false,
+      sameSite: 'lax',
+      secure: req.secure,
+      path: '/'
+    });
+  }
+  const chromePref =
+    chromeParam === '0' || chromeParam === '1'
+      ? chromeParam
+      : String(req.cookies.jm_chrome || '');
+  res.locals.chromeless =
+    chromePref === '0' ? true : chromePref === '1' ? false : config.hideSiteChrome;
+  res.locals.paymentsMode = config.paymentsMode;
+  res.locals.flowEnv = config.flow.env;
   next();
 });
 
@@ -156,6 +197,7 @@ app.get('/healthz', (req, res) => {
 app.use('/', demoRoutes);
 app.use('/', publicRoutes);
 app.use('/', authRoutes);
+app.use('/', paymentsRoutes);
 app.use('/panel', panelRoutes);
 app.use('/m', memorialRoutes);
 

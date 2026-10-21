@@ -1736,3 +1736,28 @@ svg {
     display: none;
   }
 }
+
+/* ==========================================================================
+   Modo incrustado (WordPress)
+   La app se muestra dentro de una página del tema: el encabezado y el pie
+   propios se ocultan para no duplicar la navegación del sitio.
+   ========================================================================== */
+
+/* Dentro de una página de WordPress con la plantilla a pantalla completa, la
+   app conserva su encabezado (es la única navegación del marco). Cuando se
+   incrusta en una página normal del tema se pide `?chrome=0` y se oculta. */
+.is-chromeless .site-header,
+.is-chromeless .site-footer,
+.is-chromeless .demo-ribbon,
+.is-chromeless .skip-link {
+  display: none !important;
+}
+
+.is-embedded .mem-hero {
+  min-height: auto;
+}
+
+.is-embedded .mem-section {
+  padding-left: 18px;
+  padding-right: 18px;
+}
