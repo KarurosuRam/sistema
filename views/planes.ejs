@@ -6,8 +6,10 @@
       Elige un memorial individual o el pack familia de cuatro. Todos incluyen enlace, QR,
       certificado de propiedad, galería, video, música y libro de visitas.
     </p>
-    <% if (paymentsMode === 'demo') { %>
+    <% if (payment.provider === 'demo') { %>
       <p class="payment-note reveal" style="margin-top: 22px;"><%- icon('info', 14) %> Entorno de demostración: el pago se simula y el saldo se acredita al instante.</p>
+    <% } else { %>
+      <p class="payment-note reveal" style="margin-top: 22px;"><%- icon('shield', 14) %> Pago único y seguro con <%= payment.name %>. No guardamos datos de tarjeta.</p>
     <% } %>
   </div>
 </section>

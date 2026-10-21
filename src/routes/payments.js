@@ -1,24 +1,31 @@
 'use strict';
 
 /**
- * Retorno y confirmación de Flow.
+ * Vuelta del comprador y notificaciones de las pasarelas.
  *
- * - `POST /pago/confirmacion`: notificación servidor a servidor. Flow envía el
- *   token y espera un 200; si no lo recibe, reintenta. Cualquier error de red
- *   se responde 500 a propósito para que reintente.
- * - `GET /pago/retorno`: a donde vuelve el navegador del comprador después de
- *   pagar. Se consulta el estado real y se le lleva a su comprobante.
+ * Flow
+ * - `POST /pago/confirmacion`: notificación servidor a servidor con `token`.
+ * - `GET /pago/retorno`: vuelta del navegador con `token`.
  *
- * Ninguna de las dos rutas usa CSRF: no hay formulario propio de por medio y
- * la autenticidad la da la firma de Flow + la consulta de estado con la
- * SecretKey del comercio.
+ * Mercado Pago (Checkout Pro)
+ * - `POST /pago/mp/webhook`: notificación con `data.id` del pago. Se valida la
+ *   firma `x-signature` cuando hay secreto configurado y siempre se consulta el
+ *   pago real a la API antes de acreditar.
+ * - `GET /pago/mp/retorno`: vuelta del navegador con `payment_id` y
+ *   `external_reference`.
+ *
+ * Ninguna ruta usa CSRF: no hay formulario propio de por medio. La
+ * autenticidad la da la firma de la pasarela y, sobre todo, la consulta de
+ * estado con las credenciales del comercio.
  */
 
 const express = require('express');
 
 const config = require('../config');
+const store = require('../store');
 const payments = require('../payments');
 const flow = require('../flow');
+const mercadopago = require('../mercadopago');
 
 const router = express.Router();
 
@@ -26,12 +33,55 @@ function receiptPath(purchase) {
   return `/panel/compra/${encodeURIComponent(purchase.reference)}`;
 }
 
+/** Mensajes comunes a la vuelta del navegador de cualquier pasarela. */
+function flashResult(req, result, gatewayName) {
+  if (!result.purchase) {
+    req.flash(
+      'error',
+      'No encontramos la compra asociada a este pago. Escríbenos si el cargo aparece en tu tarjeta.'
+    );
+    return;
+  }
+
+  if (result.status === 'pagado') {
+    if (result.credited) {
+      req.flash(
+        'success',
+        `Pago aprobado. Se agregaron ${result.purchase.credits} ${
+          result.purchase.credits === 1 ? 'memorial' : 'memoriales'
+        } a tu cuenta.`
+      );
+    } else {
+      req.flash('info', 'El pago ya estaba confirmado en tu cuenta.');
+    }
+  } else if (result.status === 'rechazado') {
+    req.flash(
+      'error',
+      `${gatewayName} rechazó el pago. No se hizo ningún cargo y puedes intentarlo de nuevo.`
+    );
+  } else if (result.status === 'anulado') {
+    req.flash('error', 'El pago fue anulado. Puedes intentarlo otra vez cuando quieras.');
+  } else if (result.status === 'invalido') {
+    req.flash(
+      'error',
+      'El pago no coincide con la orden registrada. Escríbenos antes de volver a intentarlo.'
+    );
+  } else {
+    req.flash(
+      'info',
+      `Tu pago está pendiente de confirmación. Actualizamos el estado en cuanto ${gatewayName} nos avise.`
+    );
+  }
+}
+
+/* ------------------------------------------------------------------ Flow -- */
+
 router.post('/pago/confirmacion', express.urlencoded({ extended: false }), async (req, res) => {
   const token = String(req.body?.token || '').trim();
   if (!token) return res.status(200).type('text/plain').send('OK');
 
   try {
-    const result = await payments.syncPayment(token);
+    const result = await payments.syncFlowPayment(token);
     if (!result.purchase) {
       console.warn('[flow] Notificación con token desconocido.');
     }
@@ -59,33 +109,9 @@ router.get('/pago/retorno', async (req, res) => {
   let target = '/panel/planes';
 
   try {
-    const result = await payments.syncPayment(token);
-
-    if (!result.purchase) {
-      req.flash('error', 'No encontramos la compra asociada a este pago. Escríbenos si el cargo aparece en tu tarjeta.');
-      return res.redirect('/panel/planes');
-    }
-
-    target = receiptPath(result.purchase);
-
-    if (result.status === 'pagado') {
-      if (result.credited) {
-        req.flash(
-          'success',
-          `Pago aprobado. Se agregaron ${result.purchase.credits} ${
-            result.purchase.credits === 1 ? 'memorial' : 'memoriales'
-          } a tu cuenta.`
-        );
-      }
-    } else if (result.status === 'rechazado') {
-      req.flash('error', 'Flow rechazó el pago. No se hizo ningún cargo y puedes intentarlo de nuevo.');
-    } else if (result.status === 'anulado') {
-      req.flash('error', 'El pago fue anulado. Puedes intentarlo otra vez cuando quieras.');
-    } else if (result.status === 'invalido') {
-      req.flash('error', 'El pago no coincide con la orden registrada. Escríbenos antes de volver a intentarlo.');
-    } else {
-      req.flash('info', 'Tu pago está pendiente de confirmación. Actualizamos el estado en cuanto Flow nos avise.');
-    }
+    const result = await payments.syncFlowPayment(token);
+    if (result.purchase) target = receiptPath(result.purchase);
+    flashResult(req, result, 'Flow');
   } catch (error) {
     console.error('[flow] Error al volver desde Flow:', error.message);
     req.flash(
@@ -98,10 +124,115 @@ router.get('/pago/retorno', async (req, res) => {
   return res.redirect(target);
 });
 
-/** Diagnóstico para el administrador: no expone llaves. */
+/* ---------------------------------------------------------- Mercado Pago -- */
+
+/** Identificador del pago dentro de una notificación o de la vuelta. */
+function paymentIdFromRequest(req) {
+  return String(
+    req.body?.data?.id ||
+      req.query['data.id'] ||
+      req.query.payment_id ||
+      req.query.collection_id ||
+      req.query.id ||
+      ''
+  ).trim();
+}
+
+/**
+ * Webhook de Mercado Pago. Responde 200 en cuanto el pago queda procesado y
+ * 500 solo si conviene que la pasarela reintente.
+ */
+router.post('/pago/mp/webhook', async (req, res) => {
+  const type = String(req.body?.type || req.query.type || req.query.topic || '').trim();
+  const paymentId = paymentIdFromRequest(req);
+
+  // La firma solo se exige cuando el comercio la configuró en el panel.
+  const signatureOk = mercadopago.verifyWebhookSignature({
+    signature: req.get('x-signature'),
+    requestId: req.get('x-request-id'),
+    dataId: paymentId,
+    secret: config.mercadopago.webhookSecret
+  });
+  if (signatureOk === false) {
+    console.warn('[mp] Webhook con firma inválida; se ignora.');
+    return res.status(401).type('text/plain').send('Firma inválida');
+  }
+
+  // merchant_order y otros eventos no acreditan nada: se confirman y se ignoran.
+  if (type !== 'payment' || !paymentId) {
+    return res.status(200).type('text/plain').send('OK');
+  }
+
+  try {
+    const result = await payments.syncMercadoPagoPayment(paymentId);
+    if (!result.purchase) {
+      console.warn(`[mp] Pago ${paymentId} sin compra asociada (referencia desconocida).`);
+    }
+    return res.status(200).type('text/plain').send('OK');
+  } catch (error) {
+    console.error('[mp] Error al procesar la notificación:', error.message);
+    return res.status(500).type('text/plain').send('ERROR');
+  }
+});
+
+router.get('/pago/mp/webhook', (req, res) => {
+  res.status(405).type('text/plain').send('Método no permitido');
+});
+
+/** Vuelta del navegador después de pagar en Mercado Pago. */
+router.get('/pago/mp/retorno', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+
+  const paymentId = paymentIdFromRequest(req);
+  const reference = String(req.query.external_reference || '').trim();
+
+  let target = '/panel/planes';
+
+  try {
+    let result = { purchase: null, status: 'desconocido' };
+
+    if (paymentId) {
+      result = await payments.syncMercadoPagoPayment(paymentId);
+    }
+
+    // Si el pago aún no aparece (por ejemplo, la pasarela devuelve solo la
+    // referencia), se sincroniza la compra por su referencia interna.
+    if (!result.purchase && reference) {
+      const purchase = store.findPurchaseByReference(reference);
+      if (purchase) result = await payments.syncPurchase(purchase);
+    }
+
+    if (result.purchase) target = receiptPath(result.purchase);
+    flashResult(req, result, 'Mercado Pago');
+  } catch (error) {
+    console.error('[mp] Error al volver desde Mercado Pago:', error.message);
+    req.flash(
+      'error',
+      'No pudimos confirmar el pago con Mercado Pago en este momento. Tu compra quedó registrada como pendiente; revisa el historial en unos minutos.'
+    );
+  }
+
+  return res.redirect(target);
+});
+
+/* ------------------------------------------------------------ diagnóstico -- */
+
+/** Estado de la configuración de pagos. No expone llaves ni tokens. */
 router.get('/pago/estado', (req, res) => {
+  const activa = config.paymentProvider;
   res.json({
-    modo: config.paymentsMode,
+    modo: activa,
+    pasarela: activa === 'demo' ? 'Demostración' : payments.providerName(activa),
+    cobrosReales: activa !== 'demo',
+    solicitado: config.requestedPaymentMode,
+    aviso: config.paymentWarning,
+    mercadopago: {
+      ambiente: config.mercadopago.env,
+      configurado: mercadopago.isConfigured(),
+      firmaWebhook: Boolean(config.mercadopago.webhookSecret),
+      urlRetorno: `${config.publicUrl}/pago/mp/retorno`,
+      urlWebhook: `${config.publicUrl}/pago/mp/webhook`
+    },
     flow: {
       ambiente: config.flow.env,
       configurado: flow.isConfigured(),

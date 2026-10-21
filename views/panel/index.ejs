@@ -18,6 +18,9 @@
         <p>Un espacio para cuidar los recuerdos de quienes quieres.</p>
       </div>
       <div class="edit-head__actions">
+        <% if (config.isAdminEmail(user.email)) { %>
+          <a class="btn btn--ghost" href="/panel/admin/pagos"><%- icon('settings', 16) %> Pagos</a>
+        <% } %>
         <a class="btn btn--ghost" href="/panel/mensajes">Ver mensajes</a>
         <a class="btn btn--ghost" href="/planes">Ver planes</a>
         <% if (user.credits > 0) { %>

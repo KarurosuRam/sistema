@@ -1,4 +1,9 @@
-# Pagos con Flow
+# Pagos con Flow (alternativa)
+
+> La pasarela **recomendada** es Mercado Pago por su alta inmediata y su panel más
+> simple de administrar: ver [`mercadopago.md`](mercadopago.md). Flow queda disponible
+> para quienes ya tienen un comercio aprobado allí; se activa con
+> `PAYMENTS_MODE=flow` y las llaves de abajo.
 
 La app cobra con la **API de Flow** (`https://www.flow.cl/api`). No hay formulario de
 tarjeta propio: la app crea la orden, el comprador paga en el sitio de Flow y los
@@ -45,9 +50,10 @@ FLOW_SECRET_KEY=tu-secret-key
 SITE_URL=https://memoriales.tudominio.cl
 ```
 
-- Si `PAYMENTS_MODE` no se define, la app usa **flow** en cuanto hay credenciales y
-  **demo** en caso contrario. `PAYMENTS_MODE=demo` fuerza el modo simulado (útil para
-  una vista previa), aunque existan llaves.
+- `PAYMENTS_MODE=flow` es obligatorio para usar Flow: si no hay llaves, la app queda en
+  **modo demostración** y lo advierte en el panel y en `/pago/estado`.
+- `PAYMENTS_MODE=demo` fuerza el modo simulado (útil para una vista previa), aunque
+  existan llaves.
 - `SITE_URL` debe ser una URL **HTTPS pública**: con ella se construyen las dos
   direcciones que Flow necesita. Si no es HTTPS, la app rechaza iniciar el pago con un
   mensaje claro en el comprobante.

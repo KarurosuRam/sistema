@@ -1,7 +1,7 @@
 # Instalar Jardín Memorial en un sitio WordPress
 
 Guía completa para dejar la plataforma de memoriales funcionando **junto a un
-WordPress existente**, con pagos reales de Flow, sin tocar el tema ni los plugins del
+WordPress existente**, con pagos reales (Mercado Pago o Flow), sin tocar el tema ni los plugins del
 sitio principal.
 
 ---
@@ -22,7 +22,7 @@ dominio:
         │                          │
    ┌────┴─────┐              ┌─────┴─────┐
    │ WordPress│              │  App Node │  ← panel, memoriales,
-   │  (PHP)   │              │  Express  │    checkout y Flow
+   │  (PHP)   │              │  Express  │    checkout y pagos
    └──────────┘              └───────────┘
         │                          │
    MariaDB/MySQL              SQLite + uploads (data/)
@@ -61,7 +61,7 @@ dominio:
 | Docker | Opcional, solo para la instalación con `docker compose` |
 | Dominio | Acceso al DNS para crear dos registros `A`/`AAAA` |
 | Correo | Una casilla para los certificados TLS (Let's Encrypt) y el contacto del sitio |
-| Flow | Comercio creado y credenciales de producción (ver [`flow.md`](flow.md)) |
+| Pagos | Cuenta de Mercado Pago con Access Token (ver [`mercadopago.md`](mercadopago.md)); Flow es opcional |
 
 Si el WordPress ya está alojado en un hosting compartido (cPanel, Plesk, Hostinger, etc.)
 **sin acceso a Node**, no se puede instalar la app en ese mismo hosting: hay dos caminos
@@ -129,13 +129,15 @@ ACME_EMAIL=hola@tudominio.cl
 MYSQL_PASSWORD=una-clave-larga-y-unica
 MYSQL_ROOT_PASSWORD=otra-clave-larga-y-unica
 
-PAYMENTS_MODE=flow
-FLOW_ENV=production
-FLOW_API_KEY=...
-FLOW_SECRET_KEY=...
+PAYMENTS_MODE=mercadopago
+MP_ENV=production
+MP_ACCESS_TOKEN=APP_USR-...
 SEED_DEMO=false
 DEMO_ACCESS=off
 ```
+
+> Guía de pagos: [`mercadopago.md`](mercadopago.md) (recomendada) o
+> [`flow.md`](flow.md) si prefieres Flow.
 
 ### 3.4 Levantar los servicios
 
@@ -239,7 +241,8 @@ sudo -u jm cp .env.example .env
 sudo -u jm nano .env
 ```
 
-`.env` para este caso:
+La app lee ese `.env` automáticamente al arrancar (las variables del entorno tienen
+prioridad, así que también puedes pasarlas por systemd o Docker). `.env` para este caso:
 
 ```ini
 NODE_ENV=production
@@ -248,10 +251,9 @@ SITE_URL=https://memoriales.tudominio.cl
 EMBED_ORIGINS=https://www.tudominio.cl
 DATA_DIR=/var/lib/jardin-memorial
 
-PAYMENTS_MODE=flow
-FLOW_ENV=production
-FLOW_API_KEY=...
-FLOW_SECRET_KEY=...
+PAYMENTS_MODE=mercadopago
+MP_ENV=production
+MP_ACCESS_TOKEN=APP_USR-...
 
 SEED_DEMO=false
 DEMO_ACCESS=off
@@ -307,19 +309,24 @@ En el WordPress actual hay que tener en cuenta:
 
 ## 5. Variables de entorno
 
-Archivo de referencia: [`.env.example`](../.env.example).
+Archivo de referencia: [`.env.example`](../.env.example). La app lee `.env` sola al
+arrancar; en Docker las variables las inyecta `docker-compose.yml`.
 
 | Variable | Para qué | Ejemplo |
 | --- | --- | --- |
-| `SITE_URL` | URL pública de la app. Se usa en Flow, QR y certificados | `https://memoriales.tudominio.cl` |
+| `SITE_URL` | URL pública de la app. Se usa en pagos, QR y certificados | `https://memoriales.tudominio.cl` |
 | `EMBED_ORIGINS` | Dominios de WordPress autorizados a mostrar la app en iframe | `https://www.tudominio.cl` |
 | `EMBED_CHROME` | `1` oculta siempre el encabezado/pie propios de la app; normalmente `0` | `0` |
-| `PAYMENTS_MODE` | `flow` (cobros reales) o `demo` (simulado) | `flow` |
-| `FLOW_ENV` | `sandbox` o `production` | `production` |
-| `FLOW_API_KEY` / `FLOW_SECRET_KEY` | Credenciales del comercio | — |
+| `PAYMENTS_MODE` | `mercadopago`, `flow` o `demo` (simulado) | `mercadopago` |
+| `MP_ACCESS_TOKEN` | Access Token de Mercado Pago (pruebas o producción) | `TEST-…` / `APP_USR-…` |
+| `MP_ENV` | `sandbox` o `production` | `production` |
+| `MP_WEBHOOK_SECRET` | Secreto de firma del webhook (opcional) | — |
+| `FLOW_ENV` | `sandbox` o `production` (solo si usas Flow) | `production` |
+| `FLOW_API_KEY` / `FLOW_SECRET_KEY` | Credenciales del comercio Flow | — |
 | `DATA_DIR` | Carpeta de la base y los archivos subidos | `/var/lib/jardin-memorial` |
 | `SEED_DEMO` | Sembrar contenido de ejemplo en una base vacía | `false` |
 | `DEMO_ACCESS` | `off` desactiva `/probar` y el acceso de un clic | `off` |
+| `ADMIN_EMAILS` | Correo(s) con acceso a `/panel/admin/pagos` | `dueno@tudominio.cl` |
 | `COOKIE_DOMAIN` | Dominio de la cookie de sesión, para compartirla entre subdominios | `.tudominio.cl` |
 | `PORT` | Puerto interno de la app | `3000` |
 
@@ -345,10 +352,10 @@ instalación habitual —WordPress en `www` y la app solo en `memoriales`— no 
    app emite sus cookies como `SameSite=None; Secure; Partitioned` para que funcionen dentro
    del marco; como WordPress y la app comparten el dominio registrable, la sesión es la misma
    tanto dentro del iframe como al abrir la app en una pestaña.
-5. El pago sale de la app hacia `flow.cl` en la ventana superior (no dentro del iframe):
-   es la única redirección externa inevitable y necesaria para pagar con tarjeta.
-6. Al volver de Flow, el comprador aterriza en el comprobante dentro del mismo dominio de
-   la app.
+5. El pago sale de la app hacia `mercadopago.cl` (o `flow.cl`) en la ventana superior, no
+   dentro del iframe: es la única redirección externa inevitable y necesaria para pagar.
+6. Al volver de la pasarela, el comprador aterriza en el comprobante dentro del mismo
+   dominio de la app.
 
 ### Ajustes finos
 
@@ -371,10 +378,20 @@ error de instalación.
 
 ---
 
+### Comprobar credenciales desde el panel
+
+Con `ADMIN_EMAILS=dueno@tudominio.cl`, entra a la app, abre **Mi jardín → Pagos** (o
+`https://memoriales.tudominio.cl/panel/admin/pagos`). Ahí ves la pasarela activa, el
+ambiente, las URLs que hay que registrar y el botón **Probar credenciales**, que consulta
+la cuenta de Mercado Pago sin crear cobros. Es la forma más rápida de confirmar que
+`.env` quedó bien cargado antes de avisarle a los clientes.
+
 ## 7. Pasar a producción y cobrar de verdad
 
-1. Credenciales **de producción** de Flow (`FLOW_ENV=production`). Ver [`flow.md`](flow.md).
-2. `PAYMENTS_MODE=flow`, `SITE_URL` con el dominio definitivo.
+1. Credenciales **de producción** de la pasarela: Mercado Pago
+   (`MP_ENV=production`, token `APP_USR-…`; ver [`mercadopago.md`](mercadopago.md)) o
+   Flow (`FLOW_ENV=production`; ver [`flow.md`](flow.md)).
+2. `PAYMENTS_MODE=mercadopago` (o `flow`) y `SITE_URL` con el dominio definitivo.
 3. `SEED_DEMO=false`, `DEMO_ACCESS=off`.
 4. Si la base ya venía con la demo (`demo@jardinmemorial.cl`):
 
@@ -427,7 +444,7 @@ docker compose logs -f app          # o: journalctl -u jardin-memorial -f
 
 Los eventos de pago se registran con el prefijo `[flow]`.
 
-### Cambiar de versión de Flow a demo (solo pruebas)
+### Cambiar de pasarela o pasar a demo (solo pruebas)
 
 `PAYMENTS_MODE=demo DEMO_ACCESS=on` y reinicia. Nunca dejes el modo demo en un sitio
 público: los memoriales se acreditarían sin cobrar.
@@ -456,14 +473,16 @@ público: los memoriales se acreditarían sin cobrar.
 | Síntoma | Causa y solución |
 | --- | --- |
 | El iframe sale en blanco o “rechazó la conexión” | Falta el dominio de WordPress en `EMBED_ORIGINS`; la app envía `X-Frame-Options: SAMEORIGIN`. Corrige y reinicia |
+| No aparece el enlace **Pagos** en el panel | Falta `ADMIN_EMAILS` con el correo de la cuenta; reinicia la app después de agregarlo |
+| La pasarela sigue “en demostración” | Revisa `/panel/admin/pagos` o `/pago/estado`: el aviso dice qué variable falta |
 | Se ven dos encabezados (el del tema y el de la app) | Usa la plantilla a pantalla completa o `[jardin_memorial chrome="0"]` |
 | No hay forma de navegar dentro de la app | La página usa `chrome="0"` o `EMBED_CHROME=1`: el encabezado de la app está oculto. Vuelve a `chrome="1"` o agrega los enlaces con `[jardin_memorial_enlace]` |
 | “Contenido mixto” / iframe bloqueado | La app se está cargando por `http://`; usa `https://` en la URL del plugin |
 | Error 502 en `memoriales.` | La app no está corriendo (`systemctl status`, `docker compose logs app`) |
 | No obtiene certificado TLS | DNS sin propagar o puerto 80 cerrado; revisa `docker compose logs caddy` |
 | La sesión se pierde al navegar | La app y WordPress están en dominios distintos, o el navegador bloquea cookies de terceros; usa subdominios del mismo dominio |
-| “La pasarela de pagos está en configuración” | Faltan llaves de Flow o el modo es `demo` |
-| Pago aprobado pero cupos sin acreditar | La notificación de Flow no llegó a `/pago/confirmacion`; revisa el log y usa **Verificar pago** en el comprobante |
+| “La pasarela de pagos está en configuración” | Faltan credenciales de la pasarela o el modo es `demo` |
+| Pago aprobado pero cupos sin acreditar | La notificación no llegó: revisa `/pago/mp/webhook` (Mercado Pago) o `/pago/confirmacion` (Flow), el log y usa **Verificar pago** en el comprobante |
 | El video no sube | El proxy limita el tamaño: sube `client_max_body_size` a `200m` (Nginx) o `request_body` (Caddy). El límite de la app es 120 MB |
 | WordPress no muestra la plantilla de pantalla completa | Es un tema de bloques: usa el shortcode en un contenedor de ancho completo o un patrón de página sin encabezado |
 | Los enlaces del menú abren la app dentro del iframe | Usa `[jardin_memorial_enlace]` en lugar de un enlace normal a la página |
@@ -484,5 +503,6 @@ deploy/
   nginx/jardin-memorial.conf        Proxy inverso para la opción B
 Dockerfile                      Imagen de la app
 .env.example                    Variables de la app
-docs/flow.md                    Configuración de pagos con Flow
+docs/mercadopago.md             Cobrar con Mercado Pago (recomendado)
+docs/flow.md                    Alternativa: pagos con Flow
 ```

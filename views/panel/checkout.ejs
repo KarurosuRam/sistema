@@ -33,18 +33,37 @@
           </div>
         </div>
 
-        <% if (paymentsMode === 'flow') { %>
-          <div class="pay-method pay-method--flow">
+        <% if (payment.provider !== 'demo') { %>
+          <% if ((payment.provider === 'mercadopago' && mpEnv === 'sandbox') || (payment.provider === 'flow' && flowEnv === 'sandbox')) { %>
+            <div class="demo-note" style="margin-top: 0; margin-bottom: 18px;">
+              <%- icon('info', 16) %>
+              <span>Ambiente de pruebas de <%= payment.name %>: no se cobra dinero real. Usa tarjetas de prueba.</span>
+            </div>
+          <% } %>
+
+          <div class="pay-method <%= payment.provider === 'mercadopago' ? 'pay-method--mp' : 'pay-method--flow' %>">
             <%- icon('shield', 22) %>
             <div>
-              <strong>Pago seguro con Flow</strong>
-              <span>Tarjetas de crédito y débito, Webpay, MACH y otros medios disponibles.</span>
+              <strong>Pago seguro con <%= payment.name %></strong>
+              <span>
+                <% if (payment.provider === 'mercadopago') { %>
+                  Tarjetas de crédito y débito, cuotas y dinero en cuenta de Mercado Pago.
+                  El pago se completa en el sitio seguro de Mercado Pago.
+                <% } else { %>
+                  Tarjetas de crédito y débito, Webpay, MACH y otros medios disponibles.
+                <% } %>
+              </span>
             </div>
           </div>
 
           <ul class="flow-steps">
-            <li><span>1</span> Al continuar te llevamos a <strong>flow.cl</strong>, la pasarela de pagos.</li>
-            <li><span>2</span> Pagas con el medio que prefieras, en la conexión segura de Flow.</li>
+            <% if (payment.provider === 'mercadopago') { %>
+              <li><span>1</span> Al continuar te llevamos a <strong>mercadopago.cl</strong>, la pasarela de pagos.</li>
+              <li><span>2</span> Pagas con tarjeta, cuotas o saldo de Mercado Pago, en su conexión segura.</li>
+            <% } else { %>
+              <li><span>1</span> Al continuar te llevamos a <strong>flow.cl</strong>, la pasarela de pagos.</li>
+              <li><span>2</span> Pagas con el medio que prefieras, en la conexión segura de Flow.</li>
+            <% } %>
             <li><span>3</span> Vuelves automáticamente aquí y los cupos quedan en tu cuenta.</li>
           </ul>
 
@@ -75,20 +94,20 @@
         <% } %>
 
         <%# Dentro de WordPress la app vive en un iframe: el pago se abre en la
-            ventana completa para que Flow no quede enmarcado (y bloqueado). %>
-        <form action="/panel/comprar/<%= plan.id %>" method="post"<% if (paymentsMode === 'flow' && typeof embeddedView !== 'undefined' && embeddedView) { %> target="_top"<% } %> style="margin-top: 10px;">
+            ventana completa para que la pasarela no quede enmarcada (y bloqueada). %>
+        <form action="/panel/comprar/<%= plan.id %>" method="post"<% if (payment.provider !== 'demo' && typeof embeddedView !== 'undefined' && embeddedView) { %> target="_top"<% } %> style="margin-top: 10px;">
           <input type="hidden" name="_csrf" value="<%= csrfToken %>">
           <button class="btn btn--block btn--lg" type="submit">
-            <% if (paymentsMode === 'flow') { %>
-              <%- icon('lock', 16) %> Pagar <%= helpers.formatCLP(plan.amount) %> con Flow
+            <% if (payment.provider !== 'demo') { %>
+              <%- icon('lock', 16) %> Pagar <%= helpers.formatCLP(plan.amount) %> con <%= payment.name %>
             <% } else { %>
               <%- icon('lock', 16) %> Confirmar pago de <%= helpers.formatCLP(plan.amount) %>
             <% } %>
           </button>
         </form>
         <p class="hint" style="text-align: center; margin-top: 12px;">
-          <% if (paymentsMode === 'flow') { %>
-            Serás redirigido a Flow.cl para completar el pago. Al continuar aceptas los
+          <% if (payment.provider !== 'demo') { %>
+            Serás redirigido a <%= payment.name %> para completar el pago. Al continuar aceptas los
             <a class="text-link" href="/terminos">términos y condiciones</a> del servicio.
           <% } else { %>
             Al confirmar aceptas los <a class="text-link" href="/terminos">términos y condiciones</a> del servicio.

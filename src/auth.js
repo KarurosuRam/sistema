@@ -115,6 +115,17 @@ function requireAuth(req, res, next) {
 }
 
 /**
+ * Página sólo para administradores (ADMIN_EMAILS). A quien no le corresponde se
+ * le responde 404 en vez de 403: así la ruta no revela que existe.
+ */
+function requireAdmin(req, res, next) {
+  if (req.user && config.isAdminEmail(req.user.email)) return next();
+  const error = new Error('Página no encontrada');
+  error.status = 404;
+  return next(error);
+}
+
+/**
  * Si ya hay una sesión abierta no tiene sentido volver a mostrar el ingreso:
  * se devuelve a la persona a la página principal (donde ve su cuenta activa)
  * en vez de mandarla al panel, que era lo que resultaba desconcertante.
@@ -204,6 +215,7 @@ module.exports = {
   sessionLoader,
   afterLogin,
   requireAuth,
+  requireAdmin,
   requireGuest,
   loadMemorialOwned,
   loadPublicMemorial,

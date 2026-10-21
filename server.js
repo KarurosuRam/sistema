@@ -27,9 +27,34 @@ async function bootstrap() {
   }
 
   server = app.listen(config.port, '0.0.0.0', () => {
-    const mode = config.paymentsMode === 'demo' ? 'demostración' : `producción · pagos Flow (${config.flow.env})`;
-    console.log(`🌿 Jardín Memorial escuchando en http://0.0.0.0:${config.port} (modo ${mode})`);
+    const provider = config.paymentProvider;
+    const pasarela =
+      provider === 'mercadopago'
+        ? `Mercado Pago (${config.mercadopago.env})`
+        : provider === 'flow'
+          ? `Flow (${config.flow.env})`
+          : 'demostración';
+    console.log(`🌿 Jardín Memorial escuchando en http://0.0.0.0:${config.port} (modo ${pasarela})`);
     console.log(`   URL pública: ${config.publicUrl}`);
+    if (provider === 'demo') {
+      console.log(
+        '   Pagos: simulados. Define MP_ACCESS_TOKEN (Mercado Pago) o FLOW_API_KEY/FLOW_SECRET_KEY para cobrar de verdad.'
+      );
+    }
+    if (provider === 'mercadopago') {
+      console.log(`   Pagos: webhook ${config.publicUrl}/pago/mp/webhook · retorno ${config.publicUrl}/pago/mp/retorno`);
+    }
+    if (provider === 'flow') {
+      console.log(`   Pagos: confirmación ${config.publicUrl}/pago/confirmacion · retorno ${config.publicUrl}/pago/retorno`);
+    }
+    if (config.paymentWarning) {
+      console.warn(`   ⚠ ${config.paymentWarning}`);
+    }
+    if (provider === 'mercadopago' && !config.mercadopago.webhookSecret) {
+      console.log(
+        '   Pagos: webhook sin firma configurada (MP_WEBHOOK_SECRET). Igual se verifica cada pago contra la API.'
+      );
+    }
   });
 }
 

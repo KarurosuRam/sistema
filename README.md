@@ -82,7 +82,7 @@ npm run purge-demo
 ### Puesta en marcha en producción
 
 ```bash
-cp .env.example .env      # completa SITE_URL, llaves de Flow y DATA_DIR
+cp .env.example .env      # completa SITE_URL, credenciales de pago y DATA_DIR
 npm ci --omit=dev
 npm start
 ```
@@ -101,19 +101,25 @@ Todas las variables están documentadas en `.env.example`. Las principales:
 
 | Variable | Para qué |
 | --- | --- |
-| `SITE_URL` | URL pública HTTPS de la app; se usa en Flow, QR y certificados |
-| `PAYMENTS_MODE` | `flow` (cobros reales) o `demo` (simulado) |
-| `FLOW_ENV` | `sandbox` o `production` |
+| `SITE_URL` | URL pública HTTPS de la app; se usa en pagos, QR y certificados |
+| `PAYMENTS_MODE` | `mercadopago` (recomendado), `flow` o `demo` (simulado) |
+| `MP_ACCESS_TOKEN` | Access Token de Mercado Pago (`TEST-…` o `APP_USR-…`) |
+| `MP_ENV` | `sandbox` o `production` |
+| `MP_WEBHOOK_SECRET` | Secreto de firma del webhook (opcional) |
+| `FLOW_ENV` | `sandbox` o `production` (alternativa Flow) |
 | `FLOW_API_KEY` / `FLOW_SECRET_KEY` | Credenciales del comercio en Flow |
 | `DATA_DIR` | Carpeta de la base SQLite y los uploads (por omisión `./data`) |
 | `SEED_DEMO` / `DEMO_ACCESS` | Contenido de ejemplo y acceso de un clic (`off`) |
 | `EMBED_ORIGINS` | Dominios autorizados a mostrar la app en iframe |
 | `COOKIE_DOMAIN` | Cookie compartida entre subdominios (opcional) |
+| `ADMIN_EMAILS` | Correo(s) con acceso a `/panel/admin/pagos` (estado de pagos) |
 | `PORT` | Puerto interno (3000) |
 
-Sin credenciales de Flow la app funciona en **modo demostración**; con ambas llaves cobra de
-verdad. Los datos viven en `DATA_DIR` — base `jardin.sqlite` (WAL) y
-`data/uploads/{img,audio,video}` — y están excluidos de Git.
+La app lee `.env` automáticamente al arrancar (`npm start`, `npm run seed`, etc.); si una
+variable ya existe en el entorno —Docker, systemd o la shell— esa tiene prioridad.
+Sin credenciales de pago funciona en **modo demostración**; con un Access Token de
+Mercado Pago (o las llaves de Flow) cobra de verdad. Los datos viven en `DATA_DIR` — base
+`jardin.sqlite` (WAL) y `data/uploads/{img,audio,video}` — y están excluidos de Git.
 
 `EMBED_ORIGINS` autoriza orígenes externos a mostrar el sitio en un iframe (por ejemplo, el
 dominio de WordPress o una vista previa alojada en otro dominio). En desarrollo se habilitan
@@ -151,7 +157,7 @@ servidor la reconoce aunque no reciba cookies.
 En modo demostración existe **`/probar`**: muestra la URL pública de la instalación con su código
 QR y permite entrar al panel de demo con un clic (`/probar?entrar=1`). Es la forma más rápida de
 probar la plataforma en el computador o en el teléfono sin escribir credenciales. La ruta se
-desactiva sola con `PAYMENTS_MODE=flow` (o con `DEMO_ACCESS=off`) y responde 404 en producción.
+desactiva sola cuando hay una pasarela real configurada (o con `DEMO_ACCESS=off`) y responde 404 en producción.
 
 Además, mientras no haya sesión, todas las páginas muestran una franja de **modo demostración** con
 acceso directo al panel.
@@ -193,14 +199,15 @@ src/
   media.js                sharp (fotos), duración MP3, validación MP4/MOV
   qr.js / certificate.js  QR y certificado PDF (PDFKit + tipografías de marca)
   poster.js               tarjeta conmemorativa A5 con retrato y QR
-  flow.js / payments.js   API de Flow, firma HMAC y acreditación idempotente
+  mercadopago.js / flow.js  clientes de Mercado Pago y Flow
+  payments.js             órdenes, verificación y acreditación idempotente
   embed-session.js        sesión por enlace para iframes sin cookies
   icons.js                set de iconos y logotipo
   routes/                 public · auth · panel · payments · memorial
 views/                    layout general + layout propio del memorial
 public/css|js|img|audio|fonts
 scripts/                  seed-demo.js, purge-demo.js y generate_music.py
-docs/                     flow.md (pagos) y wordpress.md (instalación)
+docs/                     mercadopago.md, flow.md y wordpress.md
 deploy/                   wordpress/ (compose, plugin), systemd/, nginx/
 Dockerfile                imagen de producción (Node 22 + node:sqlite)
 ```
@@ -232,32 +239,57 @@ Dockerfile                imagen de producción (Node 22 + node:sqlite)
 | Música | 20 MB · MP3 |
 | Mensaje del libro | 1.200 caracteres |
 
-## 🧾 Pagos con Flow
+## 🧾 Pagos
 
-Los cobros usan la **API de Flow** (`https://www.flow.cl/api`). El comprador paga en Flow y los
-créditos se acreditan **solo** cuando Flow confirma el pago:
+La pasarela recomendada es **Mercado Pago Checkout Pro**: alta online, sin contrato ni
+abono mensual, panel en español y credenciales de prueba inmediatas. Flow queda disponible
+como alternativa si ya tienes comercio ahí.
 
-1. La app crea la orden con `POST /payment/create` (referencia `JM-…`, monto del plan, CLP,
-   correo del titular y las dos URLs de vuelta) y redirige al pagador a `flow.cl`.
-2. Flow notifica a `POST /pago/confirmacion`; la app consulta `GET /payment/getStatus` con su
-   firma HMAC y acredita los cupos si el estado es **2 (pagada)** y el monto coincide.
-3. El navegador vuelve por `GET /pago/retorno`, que vuelve a consultar el estado y lleva al
-   comprobante. Si el pago aún no llegó, el comprobante lo muestra **Pendiente** con el botón
+El comprador paga en el sitio de la pasarela y los cupos se acreditan **solo** cuando la
+API confirma el pago:
+
+1. La app crea la orden (Mercado Pago: `POST /checkout/preferences`; Flow:
+   `POST /payment/create`) con la referencia `JM-…`, el monto del plan en CLP, el correo
+   del titular y las URLs de vuelta y notificación.
+2. La pasarela confirma por webhook (Mercado Pago: `POST /pago/mp/webhook` con firma
+   `x-signature`; Flow: `POST /pago/confirmacion` con token) y la app **consulta el pago
+   real** antes de acreditar.
+3. El navegador vuelve por `/pago/mp/retorno` o `/pago/retorno`, que vuelve a consultar el
+   estado y lleva al comprobante. Si el pago aún no llegó, queda **Pendiente** con el botón
    **Verificar pago**.
 
-La acreditación es idempotente (un reintento de Flow no duplica memoriales) y los estados
-1/3/4 dejan la compra pendiente, rechazada o anulada sin tocar los cupos.
+Se acredita una sola vez aunque la pasarela reintente; un monto o una referencia que no
+coincidan no suman cupos. Mercado Pago no expone datos de tarjeta a la app.
 
 ```bash
-PAYMENTS_MODE=flow
-FLOW_ENV=production
-FLOW_API_KEY=...
-FLOW_SECRET_KEY=...
+PAYMENTS_MODE=mercadopago
+MP_ENV=production
+MP_ACCESS_TOKEN=APP_USR-...
 SITE_URL=https://memoriales.tudominio.cl
 ```
 
-La guía completa —credenciales, sandbox, tarjetas de prueba, estados, errores y pasaje a
-producción— está en **[`docs/flow.md`](docs/flow.md)**.
+Con `ADMIN_EMAILS=tu@correo.cl` aparece en el panel la página
+**`/panel/admin/pagos`**: pasarela activa, ambiente, credenciales enmascaradas, URLs de
+webhook y retorno listas para copiar, ventas del período y un botón **Probar credenciales**
+que consulta la cuenta real de Mercado Pago sin crear cobros.
+
+Guía paso a paso, credenciales y tarjetas de prueba:
+**[`docs/mercadopago.md`](docs/mercadopago.md)**. Alternativa con Webpay/MACH:
+**[`docs/flow.md`](docs/flow.md)**.
+
+### ¿No cobra y sigue en demostración?
+
+La app arranca en modo demostración cuando no encuentra credenciales. Revisa:
+
+1. `curl https://tu-dominio/pago/estado` → `modo` debe ser `mercadopago` (o `flow`), no `demo`.
+   El campo `aviso` dice qué falta.
+2. `MP_ACCESS_TOKEN` (empieza con `TEST-` en pruebas, `APP_USR-` en producción) y
+   `SITE_URL` en **HTTPS**.
+3. Si usas `.env`, que esté en la carpeta del proyecto (la app lo lee sola) y que el
+   proceso lo vea: `npm start` desde esa carpeta, o `docker compose up -d --force-recreate`
+   después de cambiar variables.
+4. En producción, `MP_ENV=production` y el webhook `https://tu-dominio/pago/mp/webhook`
+   registrado en Mercado Pago.
 
 ## 🧩 Instalación en WordPress
 

@@ -8,7 +8,7 @@ const config = require('../config');
 const store = require('../store');
 const util = require('../util');
 const media = require('../media');
-const { requireAuth, loadMemorialOwned } = require('../auth');
+const { requireAuth, requireAdmin, loadMemorialOwned } = require('../auth');
 const { csrfProtect, createRateLimiter } = require('../security');
 const { photoSingle, photoArray, audioSingle, videoSingle } = require('../upload');
 const { validateMemorial } = require('../validation');
@@ -16,6 +16,7 @@ const { qrBuffer, qrDataUrl } = require('../qr');
 const { generateCertificate } = require('../certificate');
 const { generatePoster } = require('../poster');
 const payments = require('../payments');
+const mercadopago = require('../mercadopago');
 
 const router = express.Router();
 
@@ -37,7 +38,6 @@ router.use((req, res, next) => {
   res.locals.activeNav = 'panel';
   res.locals.bodyClass = res.locals.bodyClass || 'page-panel';
   res.locals.plans = config.prices;
-  res.locals.paymentsMode = config.paymentsMode;
   next();
 });
 
@@ -113,20 +113,22 @@ router.post(
     const plan = config.prices[req.params.plan];
     if (!plan) return next();
 
-    // Pago real con Flow: se crea la orden y se lleva al comprador a su
-    // pasarela. Los cupos recién se acreditan cuando Flow confirma.
-    if (payments.isFlowMode()) {
+    // Pago real: se crea la orden en la pasarela activa (Mercado Pago o Flow)
+    // y se lleva al comprador a su checkout. Los cupos recién se acreditan
+    // cuando la pasarela confirma el pago.
+    if (!payments.isDemo()) {
+      const pasarela = payments.providerName();
       try {
-        const { purchase, redirectUrl } = await payments.startFlowPayment({
+        const { redirectUrl } = await payments.startPayment({
           user: req.user,
           plan
         });
         return res.redirect(redirectUrl);
       } catch (error) {
-        console.error('[flow] No se pudo iniciar el pago:', error.message);
+        console.error(`[pagos] No se pudo iniciar el pago con ${pasarela}:`, error.message);
         req.flash(
           'error',
-          'No pudimos iniciar el pago con Flow. No se hizo ningún cargo; inténtalo de nuevo en unos minutos o escríbenos a ' +
+          `No pudimos iniciar el pago con ${pasarela}. No se hizo ningún cargo; inténtalo de nuevo en unos minutos o escríbenos a ` +
             config.contactEmail +
             '.'
         );
@@ -157,8 +159,8 @@ router.post(
 );
 
 /**
- * Botón «verificar pago» del comprobante: vuelve a preguntar a Flow por una
- * orden que quedó pendiente (por ejemplo, si la notificación aún no llegó).
+ * Botón «verificar pago» del comprobante: vuelve a preguntar a la pasarela por
+ * una compra que quedó pendiente (por ejemplo, si la notificación aún no llegó).
  */
 router.post(
   '/compra/:reference/verificar',
@@ -166,13 +168,10 @@ router.post(
     const purchase = store.findPurchaseByReference(String(req.params.reference));
     if (!purchase || purchase.user_id !== req.user.id) return next();
 
-    if (!purchase.provider_token) {
-      req.flash('info', 'Esta compra no tiene una orden de pago asociada.');
-      return res.redirect(`/panel/compra/${purchase.reference}`);
-    }
+    const pasarela = payments.providerName(purchase.provider);
 
     try {
-      const result = await payments.syncPayment(purchase.provider_token);
+      const result = await payments.syncPurchase(purchase);
       if (result.status === 'pagado') {
         req.flash(
           result.credited ? 'success' : 'info',
@@ -181,15 +180,17 @@ router.post(
             : 'El pago ya estaba confirmado en tu cuenta.'
         );
       } else if (result.status === 'pendiente') {
-        req.flash('info', 'Flow todavía no confirma el pago. Vuelve a revisar en unos minutos.');
+        req.flash('info', `${pasarela} todavía no confirma el pago. Vuelve a revisar en unos minutos.`);
       } else if (result.status === 'invalido') {
         req.flash('error', 'La información del pago no coincide con la orden. Escríbenos antes de reintentar.');
+      } else if (result.status === 'desconocido') {
+        req.flash('info', 'Esta compra no tiene una orden de pago asociada en la pasarela.');
       } else {
         req.flash('error', 'El pago no se completó. Puedes intentarlo de nuevo desde el plan.');
       }
     } catch (error) {
-      console.error('[flow] Error al verificar el pago:', error.message);
-      req.flash('error', 'No pudimos consultar Flow en este momento. Inténtalo de nuevo en unos minutos.');
+      console.error('[pagos] Error al verificar el pago:', error.message);
+      req.flash('error', `No pudimos consultar ${pasarela} en este momento. Inténtalo de nuevo en unos minutos.`);
     }
 
     return res.redirect(`/panel/compra/${purchase.reference}`);
@@ -204,8 +205,9 @@ router.get('/compra/:reference', (req, res, next) => {
     metaDescription: 'Comprobante de compra de Jardín Memorial.',
     bodyClass: 'page-panel',
     purchase,
-    mode: config.paymentsMode,
-    flowEnvironment: config.flow.env
+    mode: config.paymentProvider,
+    flowEnvironment: config.flow.env,
+    mpEnvironment: config.mercadopago.env
   });
 });
 
@@ -217,6 +219,82 @@ router.get('/compras', (req, res) => {
     purchases: store.listPurchases(req.user.id, 100)
   });
 });
+
+/* ------------------------------------------------------- administración */
+
+/** Muestra sólo lo suficiente para reconocer una credencial, nunca completa. */
+function maskSecret(value) {
+  const text = String(value || '');
+  if (!text) return '';
+  if (text.length <= 10) return `${text.slice(0, 1)}••••`;
+  return `${text.slice(0, 6)}••••${text.slice(-4)}`;
+}
+
+router.get('/admin/pagos', requireAdmin, (req, res) => {
+  const mp = config.mercadopago;
+  const flow = config.flow;
+  res.render('panel/pagos', {
+    pageTitle: 'Pagos y pasarela',
+    metaDescription: 'Estado de la pasarela de pagos de Jardín Memorial.',
+    bodyClass: 'page-panel',
+    provider: config.paymentProvider,
+    requestedMode: config.requestedPaymentMode,
+    warning: config.paymentWarning,
+    realCharges: config.paymentProvider !== 'demo',
+    mp: {
+      env: mp.env,
+      configured: mp.configured,
+      tokenMasked: maskSecret(mp.accessToken),
+      tokenType: /^TEST-/i.test(mp.accessToken)
+        ? 'pruebas'
+        : /^APP_USR-/i.test(mp.accessToken)
+          ? 'producción'
+          : mp.accessToken
+            ? 'desconocido'
+            : 'sin token',
+      webhookSecret: Boolean(mp.webhookSecret),
+      webhookUrl: `${config.publicUrl}/pago/mp/webhook`,
+      returnUrl: `${config.publicUrl}/pago/mp/retorno`
+    },
+    flow: {
+      env: flow.env,
+      configured: flow.configured,
+      apiKeyMasked: maskSecret(flow.apiKey),
+      secretMasked: maskSecret(flow.secretKey),
+      confirmationUrl: `${config.publicUrl}/pago/confirmacion`,
+      returnUrl: `${config.publicUrl}/pago/retorno`
+    },
+    totals: store.purchaseTotals(),
+    purchases: store.listRecentPurchases(20),
+    adminEmails: config.adminEmails
+  });
+});
+
+router.post('/admin/pagos/probar', requireAdmin, asyncHandler(async (req, res, next) => {
+  try {
+    if (config.mercadopago.configured) {
+      const account = await mercadopago.getAccount();
+      const who = account.nickname || account.email || `cuenta ${account.id}`;
+      req.flash(
+        'success',
+        account.test
+          ? `Conexión correcta con Mercado Pago: ${who} (${account.country}). El token es de PRUEBAS: no se cobra dinero real.`
+          : `Conexión correcta con Mercado Pago: ${who} (${account.country}). El token es de PRODUCCIÓN: los cobros son reales.`
+      );
+    } else if (config.flow.configured) {
+      req.flash(
+        'info',
+        'Las llaves de Flow están cargadas. Flow no ofrece una consulta de cuenta: para confirmar la conexión hay que hacer una compra de prueba (ver docs/flow.md).'
+      );
+    } else {
+      req.flash('error', 'No hay credenciales de pago configuradas todavía. Agrega MP_ACCESS_TOKEN o las llaves de Flow en el archivo .env y reinicia la app.');
+    }
+  } catch (error) {
+    const detail = error && error.message ? error.message : 'error desconocido';
+    req.flash('error', `No pudimos conectar con Mercado Pago: ${detail}`);
+  }
+  return res.redirect('/panel/admin/pagos');
+}));
 
 /* ----------------------------------------------------------- mensajes */
 

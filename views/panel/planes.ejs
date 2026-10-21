@@ -14,8 +14,8 @@
         <span class="balance__label">Saldo actual</span>
         <div class="balance__value"><%= user.credits %> <span>memoriales disponibles</span></div>
         <p class="balance__hint">
-          <% if (paymentsMode === 'flow') { %>
-            Pagas con Flow y los cupos se suman a tu cuenta en cuanto se confirma el pago.
+          <% if (payment.provider !== 'demo') { %>
+            Pagas con <%= payment.name %> y los cupos se suman a tu cuenta en cuanto se confirma el pago.
           <% } else { %>
             Al confirmar una compra, los cupos se suman de inmediato a tu cuenta.
           <% } %>
@@ -23,17 +23,30 @@
       </div>
     </div>
 
-    <% if (paymentsMode === 'demo') { %>
+    <% if (payment.warning) { %>
+      <div class="warning-note" style="margin-bottom: 26px;">
+        <%- icon('alert-circle', 17) %>
+        <span><strong>Configuración de pagos incompleta.</strong> <%= payment.warning %></span>
+      </div>
+    <% } %>
+
+    <% if (payment.provider === 'demo') { %>
       <div class="warning-note" style="margin-bottom: 26px;">
         <%- icon('info', 17) %>
         <span>Estás en el entorno de demostración: el pago es simulado y no se realizará ningún cobro real. Al confirmar, los memoriales se acreditan al instante.</span>
       </div>
     <% } else { %>
-      <div class="pay-method pay-method--flow" style="margin-bottom: 26px;">
+      <div class="pay-method <%= payment.provider === 'mercadopago' ? 'pay-method--mp' : 'pay-method--flow' %>" style="margin-bottom: 26px;">
         <%- icon('shield', 22) %>
         <div>
-          <strong>Pago seguro con Flow</strong>
-          <span>Tarjetas de crédito y débito, Webpay, MACH y otros medios. Flow procesa el pago: tus datos de tarjeta nunca pasan por Jardín Memorial.</span>
+          <strong>Pago seguro con <%= payment.name %></strong>
+          <span>
+            <% if (payment.provider === 'mercadopago') { %>
+              Tarjetas de crédito y débito, cuotas y dinero en cuenta de Mercado Pago. El pago se completa en el sitio seguro de Mercado Pago: tus datos de tarjeta nunca pasan por Jardín Memorial.
+            <% } else { %>
+              Tarjetas de crédito y débito, Webpay, MACH y otros medios. Flow procesa el pago: tus datos de tarjeta nunca pasan por Jardín Memorial.
+            <% } %>
+          </span>
         </div>
       </div>
     <% } %>

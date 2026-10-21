@@ -184,6 +184,32 @@ function findPurchaseByReference(reference) {
   return get('SELECT * FROM purchases WHERE reference = ?', reference);
 }
 
+/* --------------------------------------------------------- administración */
+// Consultas globales de la página /panel/admin/pagos. No filtran por usuario:
+// sólo las usa un administrador (ADMIN_EMAILS).
+
+function listRecentPurchases(limit = 25) {
+  return all(
+    `SELECT p.*, u.name AS user_name, u.email AS user_email
+       FROM purchases p
+       JOIN users u ON u.id = p.user_id
+      ORDER BY p.created_at DESC
+      LIMIT ?`,
+    limit
+  );
+}
+
+function purchaseTotals() {
+  return get(
+    `SELECT
+       COUNT(*) AS total,
+       COALESCE(SUM(CASE WHEN status = 'pagado' THEN amount ELSE 0 END), 0) AS amount_paid,
+       COALESCE(SUM(CASE WHEN status = 'pagado' THEN credits ELSE 0 END), 0) AS credits_sold,
+       COALESCE(SUM(CASE WHEN status = 'pendiente' THEN 1 ELSE 0 END), 0) AS pending
+     FROM purchases`
+  );
+}
+
 /* -------------------------------------------------------------- memorials */
 
 function uniqueSlug(base) {
@@ -593,6 +619,8 @@ module.exports = {
   updatePurchaseStatus,
   listPurchases,
   findPurchaseByReference,
+  listRecentPurchases,
+  purchaseTotals,
   createMemorial,
   findMemorialById,
   findMemorialBySlug,

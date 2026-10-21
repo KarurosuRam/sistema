@@ -1594,9 +1594,16 @@
 }
 
 /* Flow: pasos del pago y estado en el comprobante */
-.pay-method--flow {
+.pay-method--flow,
+.pay-method--mp {
   border-color: var(--sage-soft);
   background: linear-gradient(120deg, var(--sage-wash), var(--paper));
+}
+
+/* Mercado Pago usa el mismo tratamiento visual; el nombre cambia. */
+.pay-method--mp {
+  border-color: #b8d9f2;
+  background: linear-gradient(120deg, #eef6fd, var(--paper));
 }
 
 .flow-steps {
@@ -2280,5 +2287,98 @@
   .subnav__inner a {
     flex: none;
     white-space: nowrap;
+  }
+}
+
+/* ------------------------------------------------ administración: pagos */
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.section-head h2 {
+  font-family: var(--serif);
+  font-size: 1.35rem;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.admin-kv {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+  overflow: hidden;
+}
+
+.admin-kv__row {
+  display: grid;
+  grid-template-columns: minmax(140px, 200px) 1fr;
+  align-items: center;
+  gap: 10px 20px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--line);
+}
+
+.admin-kv__row:first-child {
+  border-top: 0;
+}
+
+.admin-kv__row > span {
+  font-size: 0.64rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.admin-kv__row > strong {
+  font-size: 0.88rem;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.admin-kv .copy-field {
+  width: 100%;
+}
+
+.admin-kv .copy-field input {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.74rem;
+}
+
+.admin-steps {
+  margin: 0 0 14px;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.admin-steps code,
+.admin-kv code,
+.demo-note code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.86em;
+  background: var(--sage-wash);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+
+.demo-note--warn {
+  background: #fdf3e7;
+  border-color: #f0d6b4;
+  color: #7a4a12;
+}
+
+@media (max-width: 640px) {
+  .admin-kv__row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 12px 14px;
   }
 }

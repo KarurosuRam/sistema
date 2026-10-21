@@ -69,10 +69,14 @@ services:
       DATA_DIR: /app/data
       SITE_URL: https://${APP_DOMAIN}
       EMBED_ORIGINS: https://${WORDPRESS_DOMAIN}
-      PAYMENTS_MODE: ${PAYMENTS_MODE:-flow}
+      PAYMENTS_MODE: ${PAYMENTS_MODE:-mercadopago}
+      MP_ENV: ${MP_ENV:-sandbox}
+      MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN:-}
+      MP_WEBHOOK_SECRET: ${MP_WEBHOOK_SECRET:-}
       FLOW_ENV: ${FLOW_ENV:-sandbox}
       FLOW_API_KEY: ${FLOW_API_KEY:-}
       FLOW_SECRET_KEY: ${FLOW_SECRET_KEY:-}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
       COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
       SEED_DEMO: ${SEED_DEMO:-false}
       DEMO_ACCESS: ${DEMO_ACCESS:-off}

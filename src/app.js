@@ -186,7 +186,18 @@ app.use((req, res, next) => {
   res.locals.chromeless =
     chromePref === '0' ? true : chromePref === '1' ? false : config.hideSiteChrome;
   res.locals.paymentsMode = config.paymentsMode;
+  res.locals.payment = {
+    provider: config.paymentProvider,
+    name:
+      config.paymentProvider === 'mercadopago'
+        ? 'Mercado Pago'
+        : config.paymentProvider === 'flow'
+          ? 'Flow'
+          : 'Demostración',
+    warning: config.paymentWarning
+  };
   res.locals.flowEnv = config.flow.env;
+  res.locals.mpEnv = config.mercadopago.env;
   next();
 });
 

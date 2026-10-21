@@ -2,6 +2,11 @@
   var estado = purchase.status || 'pagado';
   var pagado = estado === 'pagado';
   var pendiente = estado === 'pendiente';
+  var pasarela = purchase.mode === 'mercadopago'
+    ? 'Mercado Pago'
+    : purchase.mode === 'flow'
+      ? 'Flow'
+      : 'la demostración';
   var titulo = pagado
     ? '¡Gracias por confiar en nosotros!'
     : pendiente
@@ -10,13 +15,15 @@
   var bajada = pagado
     ? 'Ya puedes crear ' + (purchase.credits === 1 ? 'tu memorial' : 'tus ' + purchase.credits + ' memoriales') + '.'
     : pendiente
-      ? 'Flow todavía no confirma el pago. En cuanto lo haga, los cupos se suman solos a tu cuenta.'
+      ? pasarela + ' todavía no confirma el pago. En cuanto lo haga, los cupos se suman solos a tu cuenta.'
       : 'No se acreditó ningún cupo. Puedes reintentar el pago cuando quieras.';
   var medio = purchase.mode === 'demo'
     ? 'Demostración (simulado)'
-    : purchase.mode === 'flow'
-      ? 'Flow' + (flowEnv === 'sandbox' ? ' · ambiente de pruebas' : '')
-      : 'Tarjeta';
+    : purchase.mode === 'mercadopago'
+      ? 'Mercado Pago' + (mpEnv === 'sandbox' ? ' · ambiente de pruebas' : '')
+      : purchase.mode === 'flow'
+        ? 'Flow' + (flowEnv === 'sandbox' ? ' · ambiente de pruebas' : '')
+        : 'Tarjeta';
 %>
 <section class="panel-shell">
   <div class="container">
@@ -50,7 +57,7 @@
           <%- icon(pendiente ? 'clock' : 'alert-circle', 18) %>
           <span>
             <% if (pendiente) { %>
-              Estamos esperando la confirmación de Flow. También puedes revisarlo ahora.
+              Estamos esperando la confirmación de <%= pasarela %>. También puedes revisarlo ahora.
             <% } else if (estado === 'invalido') { %>
               El pago no coincide con la orden registrada. Escríbenos antes de reintentar.
             <% } else { %>
@@ -58,13 +65,13 @@
             <% } %>
           </span>
           <div class="receipt-status__actions">
-            <% if (purchase.provider_token) { %>
+            <% if (purchase.provider !== 'demo') { %>
               <form action="/panel/compra/<%= purchase.reference %>/verificar" method="post">
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <button class="btn btn--ghost btn--sm" type="submit"><%- icon('clock', 14) %> Verificar pago</button>
               </form>
             <% } %>
-            <form action="/panel/comprar/<%= purchase.plan %>" method="post"<% if (mode === 'flow' && typeof embeddedView !== 'undefined' && embeddedView) { %> target="_top"<% } %>>
+            <form action="/panel/comprar/<%= purchase.plan %>" method="post"<% if (payment.provider !== 'demo' && typeof embeddedView !== 'undefined' && embeddedView) { %> target="_top"<% } %>>
               <input type="hidden" name="_csrf" value="<%= csrfToken %>">
               <button class="btn btn--sm" type="submit"><%- icon('card', 14) %> Reintentar pago</button>
             </form>
@@ -79,7 +86,7 @@
         <div class="order-row"><span>Memoriales acreditados</span><span><%= pagado ? purchase.credits : '0 (se acreditan al confirmar)' %></span></div>
         <div class="order-row"><span>Medio de pago</span><span><%= medio %></span></div>
         <% if (purchase.provider_order) { %>
-          <div class="order-row"><span>Orden Flow</span><span class="mono"><%= purchase.provider_order %></span></div>
+          <div class="order-row"><span><%= purchase.mode === 'mercadopago' ? 'N.º de pago' : 'Orden Flow' %></span><span class="mono"><%= purchase.provider_order %></span></div>
         <% } %>
         <% if (purchase.paid_at) { %>
           <div class="order-row"><span>Fecha de pago</span><span><%= helpers.formatDateTime(purchase.paid_at) %></span></div>
@@ -96,7 +103,7 @@
           <a class="btn" href="/panel/nuevo" style="margin-bottom: 10px;"><%- icon('plus', 16) %> Crear un memorial</a>
           <div class="receipt__stamp"><%- icon('shield', 13) %> Compra registrada en tu cuenta</div>
         <% } else { %>
-          <p style="margin-bottom: 12px;">El comprobante se actualizará automáticamente cuando Flow confirme el pago. Si el cargo aparece en tu tarjeta y aquí sigue pendiente, escríbenos a <a class="text-link" href="mailto:<%= site.email %>"><%= site.email %></a> con la referencia <strong><%= purchase.reference %></strong>.</p>
+          <p style="margin-bottom: 12px;">El comprobante se actualizará automáticamente cuando <%= pasarela %> confirme el pago. Si el cargo aparece en tu tarjeta y aquí sigue pendiente, escríbenos a <a class="text-link" href="mailto:<%= site.email %>"><%= site.email %></a> con la referencia <strong><%= purchase.reference %></strong>.</p>
           <div class="receipt__stamp"><%- icon('shield', 13) %> Sin cobros duplicados: cada orden se acredita una sola vez</div>
         <% } %>
       </div>
