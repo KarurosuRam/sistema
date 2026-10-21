@@ -175,7 +175,7 @@ async function generateCertificate({ memorial, owner, siteUrl: requestedUrl }) {
   doc.text(
     `fue creado el ${issued} y registrado a nombre de ${owner.name}, titular de los derechos de ` +
       'administración y resguardo de sus recuerdos. Esta constancia se emite de forma electrónica ' +
-      'y puede verificarse en línea con el código indicado.',
+      'y se resguarda en la cuenta titular.',
     left,
     cursorY,
     { width: contentWidth, lineGap: 4 }
@@ -244,7 +244,7 @@ async function generateCertificate({ memorial, owner, siteUrl: requestedUrl }) {
     .fontSize(7.2)
     .fillColor(C.soft)
     .text(
-      `Verifica la autenticidad de este certificado en ${siteUrl.replace(/^https?:\/\//, '')}/certificado/${memorial.certificate_code}`,
+      'Certificado privado: solo la cuenta titular puede consultarlo y descargarlo.',
       60,
       pageHeight - 66,
       { width: pageWidth - 120, align: 'center' }

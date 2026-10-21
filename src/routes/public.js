@@ -6,7 +6,7 @@ const store = require('../store');
 const util = require('../util');
 const { qrSvg, qrDataUrl } = require('../qr');
 const { createRateLimiter } = require('../security');
-const { startSession, afterLogin } = require('../auth');
+const { startSession, afterLogin, requireAuth } = require('../auth');
 
 const router = express.Router();
 
@@ -87,45 +87,27 @@ router.get('/preguntas-frecuentes', (req, res) => {
   });
 });
 
+// El certificado de propiedad es privado: se consulta desde la cuenta titular.
+// La antigua verificación pública por código ya no está disponible.
 router.get('/certificado', (req, res) => {
-  const code = String(req.query.codigo || req.query.code || '').trim().toUpperCase();
-  if (code) {
-    const match = store.findMemorialByCertificate(code);
-    if (match) return res.redirect(`/certificado/${encodeURIComponent(match.certificate_code)}`);
-    return res.status(404).render('certificado-verificar', {
-      pageTitle: 'Verificar certificado',
-      metaDescription: 'Verifica la autenticidad de un certificado de propiedad de Jardín Memorial.',
-      bodyClass: 'page-certificate',
-      activeNav: '',
-      notFound: true,
-      code
-    });
-  }
-  res.render('certificado-verificar', {
-    pageTitle: 'Verificar certificado',
-    metaDescription: 'Verifica la autenticidad de un certificado de propiedad de Jardín Memorial.',
-    bodyClass: 'page-certificate',
-    activeNav: '',
-    notFound: false,
-    code: ''
-  });
+  if (req.user) return res.redirect('/panel');
+  return res.redirect('/ingresar?next=%2Fpanel');
 });
 
-router.get('/certificado/:code', (req, res, next) => {
+router.get('/certificado/:code', requireAuth, (req, res, next) => {
   const code = String(req.params.code || '').trim().toUpperCase();
   const memorial = store.findMemorialByCertificate(code);
-  if (!memorial) {
-    const error = new Error('Certificado no encontrado');
-    error.status = 404;
-    return next(error);
-  }
+  // A quien no es titular no se le revela siquiera si el certificado existe.
+  if (!memorial || memorial.user_id !== req.user.id) return next();
   const owner = store.findUserById(memorial.user_id);
-  const qr = null;
+  // Documento privado: no se cachea ni se indexa.
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.setHeader('X-Robots-Tag', 'noindex');
   qrSvg(`${util.baseUrl(req)}/m/${memorial.slug}`)
     .then((svg) => {
       res.render('certificado', {
         pageTitle: `Certificado ${memorial.certificate_code}`,
-        metaDescription: `Verificación del certificado de propiedad del memorial de ${memorial.full_name}.`,
+        metaDescription: `Certificado de propiedad del memorial de ${memorial.full_name}.`,
         bodyClass: 'page-certificate',
         activeNav: '',
         memorial,

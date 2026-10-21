@@ -308,10 +308,12 @@
         <h2 class="mem-heading">Invita a quienes <em>lo quisieron</em></h2>
         <p>Comparte este memorial con la familia y los amigos. Cada visita, cada mensaje y cada vela mantienen su memoria viva.</p>
 
-        <a class="mem-share__cert" href="/certificado/<%= memorial.certificate_code %>">
-          <%- icon('award', 17) %>
-          Certificado de propiedad · <%= memorial.certificate_code %>
-        </a>
+        <% if (isOwner) { %>
+          <a class="mem-share__cert" href="/certificado/<%= memorial.certificate_code %>">
+            <%- icon('award', 17) %>
+            Certificado de propiedad · <%= memorial.certificate_code %>
+          </a>
+        <% } %>
       </div>
 
       <div class="mem-share__qr">
@@ -334,8 +336,10 @@
       </a>
       <p>“Lo que amamos no se pierde: se transforma en memoria.”</p>
       <div class="mem-footer__meta">
-        <span>Certificado <%= memorial.certificate_code %></span>
-        <span>·</span>
+        <% if (isOwner) { %>
+          <span>Certificado <%= memorial.certificate_code %></span>
+          <span>·</span>
+        <% } %>
         <span><%= helpers.formatTimestamp(memorial.created_at) %></span>
         <span>·</span>
         <a href="/privacidad">Privacidad</a>

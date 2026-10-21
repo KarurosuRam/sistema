@@ -133,10 +133,11 @@ acceso directo al panel.
    video, música, libro de visitas, compartir/QR, tarjeta conmemorativa, certificado y eliminación
    con confirmación por nombre.
 5. **Memorial público** → `/m/:slug`: portada con retrato, historia, galería con lightbox y
-   presentación, video, libro de visitas paginado, velas, QR y acceso al certificado.
+   presentación, video, libro de visitas paginado, velas y QR.
 6. **Jardín público** → `/memoriales`: búsqueda por nombre, relación o frase y filtros por personas o
    mascotas.
-7. **Verificación** → `/certificado` y `/certificado/JM-AAAA-XXXXX`.
+7. **Certificado privado** → `/certificado/JM-AAAA-XXXXX`: solo lo abre la cuenta titular;
+   a cualquier otra persona se le responde 404.
 
 ## 🗂 Estructura
 
@@ -208,7 +209,7 @@ scripts/                  seed-demo.js y generate_music.py (melodía ambiente)
 - Cambiar el memorial a privado: terceros reciben 404, el titular lo ve.
 - Buscar en `/memoriales` por nombre y filtrar por mascotas; probar un término sin resultados.
 - Moderar un mensaje desde `/panel/mensajes` y desde el editor del memorial.
-- Descargar el certificado PDF y verificarlo en `/certificado`.
+- Descargar el certificado PDF desde el panel; abrir `/certificado/JM-AAAA-XXXXX` con la cuenta titular y confirmar que un tercero recibe 404.
 - Descargar la tarjeta conmemorativa y escanear su QR con el celular.
 - Reordenar fotos y reproducir la presentación de recuerdos desde el lightbox.
 - Con más de 30 mensajes, usar “Ver más mensajes” y confirmar que el contador avanza.

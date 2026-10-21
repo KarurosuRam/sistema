@@ -34,7 +34,7 @@
           <a class="share-btn" href="https://wa.me/?text=<%= encodeURIComponent('Te comparto el memorial de ' + memorial.full_name + ': ' + publicUrl) %>"><%- icon('whatsapp', 17) %> Compartir por WhatsApp</a>
           <a class="share-btn" href="mailto:?subject=<%= encodeURIComponent('Memorial de ' + memorial.full_name) %>&body=<%= encodeURIComponent('Quiero compartir contigo el memorial de ' + memorial.full_name + ':\n' + publicUrl) %>"><%- icon('mail', 17) %> Enviar por correo</a>
           <a class="share-btn" href="/m/<%= memorial.slug %>"><%- icon('external-link', 17) %> Abrir el memorial</a>
-          <a class="share-btn" href="/certificado/<%= memorial.certificate_code %>"><%- icon('award', 17) %> Verificar certificado</a>
+          <a class="share-btn" href="/certificado/<%= memorial.certificate_code %>"><%- icon('award', 17) %> Ver certificado</a>
         </div>
 
         <div class="cert-preview" style="background: linear-gradient(135deg, var(--sage-wash), var(--paper));">
@@ -50,7 +50,7 @@
           <span class="cert-preview__seal"><%- icon('award', 24) %></span>
           <div style="flex: 1;">
             <strong>Certificado de propiedad</strong>
-            <span>Código <%= memorial.certificate_code %> · verificable en línea</span>
+            <span>Código <%= memorial.certificate_code %> · privado, solo en tu cuenta</span>
           </div>
           <a class="btn btn--ghost btn--sm" href="/panel/memoriales/<%= memorial.id %>/certificado">Descargar</a>
         </div>
