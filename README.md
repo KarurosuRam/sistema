@@ -208,7 +208,8 @@ Dockerfile                imagen de producción (Node 22 + node:sqlite)
 ## 🔐 Seguridad y privacidad
 
 - Contraseñas con **scrypt** + salt; comparación en tiempo constante.
-- Sesiones con token aleatorio en cookie `HttpOnly`, `SameSite=Lax` y expiración de 30 días.
+- Sesiones con token aleatorio en cookie `HttpOnly`, `SameSite=Lax` y expiración de 30 días
+  (`SameSite=None; Secure; Partitioned` cuando la app se muestra incrustada).
 - **CSRF de doble envío** en todos los POST (también en multipart, validado después de Multer).
   En la vista previa embebida sin cookies se acepta el token del formulario con validación de
   origen (ver «Ingreso en la vista previa»).

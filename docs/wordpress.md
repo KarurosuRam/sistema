@@ -320,17 +320,16 @@ Archivo de referencia: [`.env.example`](../.env.example).
 | `DATA_DIR` | Carpeta de la base y los archivos subidos | `/var/lib/jardin-memorial` |
 | `SEED_DEMO` | Sembrar contenido de ejemplo en una base vacía | `false` |
 | `DEMO_ACCESS` | `off` desactiva `/probar` y el acceso de un clic | `off` |
-| `COOKIE_DOMAIN` | Cookie compartida entre subdominios | `.tudominio.cl` |
+| `COOKIE_DOMAIN` | Dominio de la cookie de sesión, para compartirla entre subdominios | `.tudominio.cl` |
 | `PORT` | Puerto interno de la app | `3000` |
 
 `EMBED_ORIGINS` acepta varios valores separados por coma. Si se deja vacío en producción,
 la app responde `X-Frame-Options: SAMEORIGIN` y el iframe de WordPress **no cargará**:
 es el error más común de esta instalación.
 
-`COOKIE_DOMAIN` solo es necesario si en el futuro quieres que WordPress y la app
-compartan la misma cookie de sesión (por ejemplo, para mostrar “Mi jardín” en el menú de
-WordPress). Con dos subdominios, la cookie de la app ya funciona dentro del iframe sin
-esta variable.
+`COOKIE_DOMAIN` solo hace falta si la app va a responder en más de un subdominio (por
+ejemplo, `www` y `memoriales`) y quieres que la sesión sea la misma en ambos. Con la
+instalación habitual —WordPress en `www` y la app solo en `memoriales`— no se necesita.
 
 ---
 
@@ -342,8 +341,10 @@ esta variable.
    son la única navegación del visitante (inicio, precios, memoriales, ingresar).
 3. La app responde con `Content-Security-Policy: frame-ancestors 'self' https://www.tudominio.cl`
    y **sin** `X-Frame-Options`, para permitir solo a ese dominio.
-4. Los formularios de la app son POST internos al subdominio; la sesión usa cookie
-   `SameSite=Lax`, que el navegador envía por ser *same-site*.
+4. Los formularios de la app son POST internos al subdominio. Al declarar `EMBED_ORIGINS`, la
+   app emite sus cookies como `SameSite=None; Secure; Partitioned` para que funcionen dentro
+   del marco; como WordPress y la app comparten el dominio registrable, la sesión es la misma
+   tanto dentro del iframe como al abrir la app en una pestaña.
 5. El pago sale de la app hacia `flow.cl` en la ventana superior (no dentro del iframe):
    es la única redirección externa inevitable y necesaria para pagar con tarjeta.
 6. Al volver de Flow, el comprador aterriza en el comprobante dentro del mismo dominio de

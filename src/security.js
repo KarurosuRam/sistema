@@ -31,6 +31,9 @@ function cookieOptions(req, extra = {}) {
     // Cookies particionadas (CHIPS): Chrome bloquea las cookies de terceros
     // dentro de un iframe, y sin esto la sesión no viaja en la vista previa.
     ...(embedded ? { partitioned: true } : {}),
+    // Opcional: compartir la cookie entre subdominios del mismo sitio
+    // (por ejemplo .tudominio.cl cuando WordPress y la app conviven).
+    ...(config.cookieDomain ? { domain: config.cookieDomain } : {}),
     ...extra
   };
 }
