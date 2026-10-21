@@ -864,6 +864,9 @@
 /* ------------------------------------------------------------- upload zone */
 
 .dropzone {
+  /* El dropzone es un <label>: por defecto es inline y, con hijos de bloque
+     como el icono, el borde se parte y el contenido se sale por arriba. */
+  display: block;
   position: relative;
   border: 1.5px dashed var(--line-strong);
   border-radius: var(--radius);
