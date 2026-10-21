@@ -178,6 +178,24 @@ devuelve `500` para que la pasarela reintente (lo hace durante varios días).
 
 ## 7. Administración diaria
 
+### Configurar desde el panel (sin tocar el servidor)
+
+Si no tienes acceso a la carpeta del proyecto, entra con una cuenta incluida en
+`ADMIN_EMAILS`, abre **Mi jardín → Pagos** y usa **Conectar tu cuenta**:
+
+1. Elige **Mercado Pago** como pasarela.
+2. Elige el ambiente (**Pruebas** mientras validas).
+3. Pega el **Access Token** y el **secreto del webhook** y guarda.
+
+El token se prueba contra la API antes de guardarse: si es inválido, la app no lo
+acepta y muestra el error. Se almacena cifrado (AES-256-GCM) en la base, con una clave
+local en `DATA_DIR/.settings-key`, y se aplica **sin reiniciar**. Puedes borrarlo con
+**Borrar guardadas** cuando quieras volver al modo anterior.
+
+> Lo que definas en el entorno (`MP_ACCESS_TOKEN`, `MP_ENV`, `PAYMENTS_MODE`) siempre
+> tiene prioridad sobre lo guardado en el panel. En ese caso los campos aparecen
+> deshabilitados con la nota «Definido en el servidor».
+
 ### Panel de la app: `/panel/admin/pagos`
 
 Con `ADMIN_EMAILS=tu@correo.cl` en el entorno, tu cuenta ve en el panel el enlace
@@ -219,6 +237,7 @@ base (`purchases` / `users.credits`) después de acordarlo con el cliente.
 
 | Síntoma | Causa y solución |
 | --- | --- |
+| «No pudimos conectarnos con api.mercadopago.com» | El servidor no tiene salida a internet o un firewall bloquea HTTPS. En la vista previa del proyecto esto es normal: los cobros reales se prueban en el servidor publicado |
 | “La pasarela de pagos está en configuración” o modo demo | Falta `MP_ACCESS_TOKEN` o `PAYMENTS_MODE` no es `mercadopago` |
 | Error `invalid_back_urls` al pagar | `SITE_URL` no es HTTPS público |
 | `401` / `invalid access token` | Token vencido, de otro ambiente o con espacios |

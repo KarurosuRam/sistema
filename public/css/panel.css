@@ -2382,3 +2382,66 @@
     padding: 12px 14px;
   }
 }
+
+/* ------------------------------------------- administración: credenciales */
+
+.settings-form {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 20px;
+}
+
+.settings-form .field-grid {
+  margin-bottom: 4px;
+}
+
+.settings-form__title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 22px 0 12px;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.settings-form__title svg {
+  width: 16px;
+  height: 16px;
+  color: var(--sage-deep);
+}
+
+.settings-form > .btn {
+  margin-top: 18px;
+}
+
+.settings-form .field .hint {
+  display: block;
+  margin-top: 5px;
+  line-height: 1.45;
+}
+
+.settings-clear {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.settings-clear form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.input--sm {
+  width: auto;
+  min-width: 150px;
+  padding: 7px 10px;
+  font-size: 0.8rem;
+}

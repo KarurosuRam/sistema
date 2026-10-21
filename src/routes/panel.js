@@ -17,6 +17,7 @@ const { generateCertificate } = require('../certificate');
 const { generatePoster } = require('../poster');
 const payments = require('../payments');
 const mercadopago = require('../mercadopago');
+const settings = require('../settings');
 
 const router = express.Router();
 
@@ -266,8 +267,76 @@ router.get('/admin/pagos', requireAdmin, (req, res) => {
     },
     totals: store.purchaseTotals(),
     purchases: store.listRecentPurchases(20),
-    adminEmails: config.adminEmails
+    adminEmails: config.adminEmails,
+    settings: settings.summary()
   });
+});
+
+router.post('/admin/pagos/guardar', requireAdmin, asyncHandler(async (req, res, next) => {
+  // Si llega un token nuevo, se prueba antes de guardarlo: así nadie queda con
+  // un cobro «configurado» que en realidad la API rechaza.
+  const submittedToken = String(req.body.mp_token || '').trim();
+  if (submittedToken && !process.env.MP_ACCESS_TOKEN) {
+    try {
+      const account = await mercadopago.getAccount(submittedToken);
+      req.flash(
+        'info',
+        `Token válido: ${account.nickname || account.email || account.id} (${account.country}).`
+      );
+    } catch (error) {
+      const network = !error.status;
+      req.flash(
+        'error',
+        network
+          ? `No pudimos comprobar el token porque este servidor no logra conectarse con Mercado Pago: ${error.message}. No guardamos nada. Si estás en la vista previa, es lo esperado: las credenciales se configuran en el servidor donde publiques el sitio.`
+          : `Ese Access Token no funciona: ${error.message}. No guardamos nada; revisa que sea el de Mercado Pago → Tus integraciones → Credenciales.`
+      );
+      return res.redirect('/panel/admin/pagos');
+    }
+  }
+
+  const result = settings.save({
+    mode: req.body.mode,
+    mpEnv: req.body.mp_env,
+    mpToken: req.body.mp_token,
+    mpWebhookSecret: req.body.mp_webhook_secret,
+    flowEnv: req.body.flow_env,
+    flowApiKey: req.body.flow_api_key,
+    flowSecretKey: req.body.flow_secret_key
+  });
+
+  const parts = [];
+  if (result.changes.length) {
+    parts.push(`Guardamos ${result.changes.join(', ')}.`);
+  } else {
+    parts.push('No había cambios que guardar.');
+  }
+  parts.push(
+    result.provider === 'demo'
+      ? 'La app sigue en modo demostración: las compras no cobran dinero real.'
+      : `Los cobros ya usan ${payments.providerName(result.provider)} con la configuración nueva.`
+  );
+  if (result.ignored.length) {
+    parts.push(
+      `Estas variables las define el servidor y no se tocaron desde aquí: ${result.ignored.join(', ')}.`
+    );
+  }
+  req.flash(result.provider === 'demo' ? 'info' : 'success', parts.join(' '));
+  return res.redirect('/panel/admin/pagos');
+}));
+
+router.post('/admin/pagos/quitar', requireAdmin, (req, res) => {
+  const which = ['mercadopago', 'flow', 'all'].includes(req.body.provider)
+    ? req.body.provider
+    : 'mercadopago';
+  const result = settings.clear(which);
+  req.flash(
+    'info',
+    result.removed.length
+      ? 'Borramos las credenciales guardadas desde el panel. La app vuelve a usar el entorno (o la demostración).'
+      : 'No había credenciales guardadas desde el panel para borrar.'
+  );
+  res.redirect('/panel/admin/pagos');
 });
 
 router.post('/admin/pagos/probar', requireAdmin, asyncHandler(async (req, res, next) => {
@@ -291,7 +360,12 @@ router.post('/admin/pagos/probar', requireAdmin, asyncHandler(async (req, res, n
     }
   } catch (error) {
     const detail = error && error.message ? error.message : 'error desconocido';
-    req.flash('error', `No pudimos conectar con Mercado Pago: ${detail}`);
+    req.flash(
+      'error',
+      error && error.status === 0
+        ? `No pudimos conectar con Mercado Pago: ${detail}.`
+        : `No pudimos verificar la cuenta en Mercado Pago: ${detail}.`
+    );
   }
   return res.redirect('/panel/admin/pagos');
 }));

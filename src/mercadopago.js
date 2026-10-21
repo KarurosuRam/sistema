@@ -39,23 +39,36 @@ function token() {
   return config.mercadopago.accessToken;
 }
 
-async function request(path, { method = 'GET', body = null } = {}) {
-  if (!isConfigured()) {
+async function request(path, { method = 'GET', body = null, accessToken = null } = {}) {
+  const bearer = String(accessToken || token() || '').trim();
+  if (!bearer) {
     throw new MercadoPagoError(
       'Mercado Pago no está configurado. Define MP_ACCESS_TOKEN en el entorno.'
     );
   }
 
-  const response = await fetch(`${config.mercadopago.baseUrl}${path}`, {
-    method,
-    signal: AbortSignal.timeout(TIMEOUT_MS),
-    headers: {
-      Authorization: `Bearer ${token()}`,
-      'Content-Type': 'application/json',
-      Accept: 'application/json'
-    },
-    ...(body ? { body: JSON.stringify(body) } : {})
-  });
+  const url = `${config.mercadopago.baseUrl}${path}`;
+  let response;
+  try {
+    response = await fetch(url, {
+      method,
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+      headers: {
+        Authorization: `Bearer ${bearer}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      },
+      ...(body ? { body: JSON.stringify(body) } : {})
+    });
+  } catch (error) {
+    // Un fallo de red es distinto de un token rechazado: el mensaje tiene que
+    // decir cuál de los dos es, porque la solución es distinta.
+    const detail = error.name === 'TimeoutError' ? 'el servidor no respondió a tiempo' : error.message;
+    throw new MercadoPagoError(
+      `no pudimos conectarnos con ${new URL(url).host} (${detail}). Revisa la salida a internet del servidor`,
+      { status: 0 }
+    );
+  }
 
   const text = await response.text();
   let data = null;
@@ -136,15 +149,15 @@ async function getPayment(paymentId) {
  * panel: confirma que el token existe, que no expiró y a qué cuenta pertenece.
  * https://www.mercadopago.cl/developers → Users / me
  */
-async function getAccount() {
-  const account = await request('/users/me');
+async function getAccount(accessToken = null) {
+  const account = await request('/users/me', { accessToken });
   return {
     id: account?.id || null,
     nickname: account?.nickname || '',
     email: account?.email || '',
     country: account?.country_id || '',
     site: account?.site_id || '',
-    test: /^TEST-/i.test(token())
+    test: /^TEST-/i.test(String(accessToken || token()))
   };
 }
 

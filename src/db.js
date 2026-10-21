@@ -118,6 +118,14 @@ db.exec(`
     created_at TEXT NOT NULL
   );
   CREATE INDEX IF NOT EXISTS idx_candles_memorial ON candles(memorial_id, created_at DESC);
+
+  -- Configuración editable desde el panel (credenciales de pago, modo). Los
+  -- valores secretos se guardan cifrados por settings.js, nunca en claro.
+  CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  );
 `);
 
 /**

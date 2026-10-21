@@ -5,6 +5,22 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 
+// Carga `.env` automáticamente (Node 20.12+). Las variables que ya existen en
+// el entorno —Docker, systemd o la shell— tienen prioridad, así que un `.env`
+// local nunca pisa la configuración de producción.
+try {
+  const envFile = path.join(ROOT, '.env');
+  if (fs.existsSync(envFile)) {
+    if (typeof process.loadEnvFile === 'function') {
+      process.loadEnvFile(envFile);
+    } else {
+      console.warn('[config] Este Node no puede leer .env solo; define las variables en el entorno.');
+    }
+  }
+} catch (error) {
+  console.warn(`[config] No pudimos leer .env: ${error.message}`);
+}
+
 // Carga `.env` si existe (Node 20.12+). Es lo que hace que `cp .env.example .env`
 // funcione tal cual con `npm start`, sin exportar variables a mano. Las
 // variables ya definidas en el entorno tienen prioridad (en Docker o systemd
@@ -71,38 +87,68 @@ const publicUrl = String(
   .replace(/\/+$/, '');
 
 // Pasarela activa: PAYMENTS_MODE manda; si no, se detecta por credenciales.
-const requestedPaymentMode = String(process.env.PAYMENTS_MODE || '').trim().toLowerCase();
+// Un administrador puede fijar el modo desde el panel (se guarda en la base);
+// ese valor sólo se usa cuando PAYMENTS_MODE no está definido en el entorno.
+const envPaymentMode = String(process.env.PAYMENTS_MODE || '').trim().toLowerCase();
+let paymentModeOverride = null;
 
-const paymentProvider = (() => {
-  if (requestedPaymentMode === 'demo') return 'demo';
-  if (requestedPaymentMode === 'flow') return flow.configured ? 'flow' : 'demo';
-  if (['mercadopago', 'mp', 'meli'].includes(requestedPaymentMode)) {
+function requestedMode() {
+  return paymentModeOverride || envPaymentMode || 'auto';
+}
+
+function computeProvider() {
+  const requested = requestedMode();
+  if (requested === 'demo') return 'demo';
+  if (requested === 'flow') return flow.configured ? 'flow' : 'demo';
+  if (['mercadopago', 'mp', 'meli'].includes(requested)) {
     return mercadopago.configured ? 'mercadopago' : 'demo';
-  }
-  if (requestedPaymentMode && requestedPaymentMode !== 'auto') {
-    console.warn(
-      `[pagos] PAYMENTS_MODE="${requestedPaymentMode}" no existe; se usa la detección automática.`
-    );
   }
   if (mercadopago.configured) return 'mercadopago';
   if (flow.configured) return 'flow';
   return 'demo';
-})();
+}
 
 /**
  * Aviso para el administrador cuando se pidió una pasarela real pero faltan
  * sus credenciales. La app sigue funcionando en modo demostración; el aviso
  * se ve en el panel y en /pago/estado.
  */
-const paymentWarning = (() => {
-  if (requestedPaymentMode === 'mercadopago' && !mercadopago.configured) {
+function computeWarning() {
+  const requested = requestedMode();
+  if (requested === 'mercadopago' && !mercadopago.configured) {
     return 'PAYMENTS_MODE=mercadopago pero falta MP_ACCESS_TOKEN: las compras se registran en modo demostración.';
   }
-  if (requestedPaymentMode === 'flow' && !flow.configured) {
+  if (requested === 'flow' && !flow.configured) {
     return 'PAYMENTS_MODE=flow pero faltan FLOW_API_KEY/FLOW_SECRET_KEY: las compras se registran en modo demostración.';
   }
   return null;
-})();
+}
+
+/**
+ * Recalcula lo que depende de las credenciales. Se llama al arrancar, después
+ * de que el panel guarde o borre credenciales, y al cambiar de ambiente.
+ */
+function refreshPayments() {
+  mercadopago.configured = Boolean(mercadopago.accessToken);
+  flow.configured = Boolean(flow.apiKey && flow.secretKey);
+  if (!flow.baseUrlFromEnv) {
+    flow.baseUrl =
+      flow.env === 'production' ? 'https://www.flow.cl/api' : 'https://sandbox.flow.cl/api';
+  }
+  if (!flow.payUrlFromEnv) {
+    flow.payUrl =
+      flow.env === 'production'
+        ? 'https://www.flow.cl/app/web/pay.php'
+        : 'https://sandbox.flow.cl/app/web/pay.php';
+  }
+}
+
+flow.baseUrlFromEnv = Boolean(String(process.env.FLOW_API_URL || '').trim());
+flow.payUrlFromEnv = Boolean(String(process.env.FLOW_PAY_URL || '').trim());
+
+if (envPaymentMode && envPaymentMode !== 'auto' && !['demo', 'flow', 'mercadopago', 'mp', 'meli'].includes(envPaymentMode)) {
+  console.warn(`[pagos] PAYMENTS_MODE="${envPaymentMode}" no existe; se usa la detección automática.`);
+}
 
 // --- Administración ---------------------------------------------------------
 // Correos con acceso a la página de estado de pagos (/panel/admin/pagos).
@@ -149,16 +195,18 @@ const config = {
   flow,
   mercadopago,
   publicUrl,
-  paymentProvider,
   adminEmails,
   isAdminEmail(email) {
     return Boolean(email) && adminEmails.includes(String(email).trim().toLowerCase());
   },
-  requestedPaymentMode: requestedPaymentMode || 'auto',
-  paymentWarning,
-  // Alias histórico: las vistas y el código anteriores comparan con
-  // `paymentsMode` (demo · flow · mercadopago).
-  paymentsMode: paymentProvider,
+  refreshPayments,
+  /** Modo fijado desde el panel; null = manda el entorno o la detección. */
+  setModeOverride(mode) {
+    paymentModeOverride = mode && mode !== 'auto' ? String(mode).toLowerCase() : null;
+  },
+  getModeOverride() {
+    return paymentModeOverride;
+  },
   sessionDays: 30,
   // Dominio opcional para compartir la cookie de sesión entre subdominios
   // (por ejemplo .jardinmemorial.cl cuando el sitio vive en WordPress y la
@@ -196,6 +244,17 @@ const config = {
     noche: { name: 'Noche serena', accent: '#a99bf5' }
   }
 };
+
+// Valores derivados: se leen siempre frescos para que un cambio de
+// credenciales en el panel surta efecto sin reiniciar el proceso.
+Object.defineProperties(config, {
+  paymentProvider: { enumerable: true, get: computeProvider },
+  // Alias histórico: las vistas y el código anteriores comparan con
+  // `paymentsMode` (demo · flow · mercadopago).
+  paymentsMode: { enumerable: true, get: computeProvider },
+  requestedPaymentMode: { enumerable: true, get: requestedMode },
+  paymentWarning: { enumerable: true, get: computeWarning }
+});
 
 config.embedMode = config.embedOrigins.length > 0;
 // Acceso de prueba de un clic: solo existe mientras los pagos sean simulados.

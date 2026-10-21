@@ -21,6 +21,11 @@ const publicRoutes = require('./routes/public');
 const authRoutes = require('./routes/auth');
 const panelRoutes = require('./routes/panel');
 const memorialRoutes = require('./routes/memorial');
+const settings = require('./settings');
+
+// Credenciales guardadas desde el panel (si las hay) antes de atender la
+// primera petición. El entorno siempre tiene prioridad.
+settings.apply();
 
 const app = express();
 

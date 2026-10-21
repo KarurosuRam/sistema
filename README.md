@@ -48,6 +48,9 @@ npm start          # incluye --experimental-sqlite
 # → http://localhost:3000
 ```
 
+Para configurar correo, pagos y dominio, copia `.env.example` a `.env` y edítalo: la app
+lee ese archivo sola al arrancar (lo que ya exista en el entorno tiene prioridad).
+
 En el primer arranque, si la base está vacía **y los pagos están en modo demostración**, se crea
 automáticamente el **contenido de demostración** (cuenta, 5 memoriales, galerías, mensajes y velas).
 En una instalación con pagos reales no se siembra nada: hay que pedirlo con `SEED_DEMO=true` y,
@@ -271,11 +274,18 @@ SITE_URL=https://memoriales.tudominio.cl
 Con `ADMIN_EMAILS=tu@correo.cl` aparece en el panel la página
 **`/panel/admin/pagos`**: pasarela activa, ambiente, credenciales enmascaradas, URLs de
 webhook y retorno listas para copiar, ventas del período y un botón **Probar credenciales**
-que consulta la cuenta real de Mercado Pago sin crear cobros.
+que consulta la cuenta real de Mercado Pago sin crear cobros. Ahí mismo se pueden **pegar
+las credenciales** (se guardan cifradas en la base y se aplican sin reiniciar); el token se
+valida contra la API antes de aceptarlo. Las variables del entorno tienen prioridad.
 
 Guía paso a paso, credenciales y tarjetas de prueba:
 **[`docs/mercadopago.md`](docs/mercadopago.md)**. Alternativa con Webpay/MACH:
 **[`docs/flow.md`](docs/flow.md)**.
+
+> **La vista previa de este proyecto no tiene salida a internet hacia Mercado Pago ni
+> Flow**, así que ahí los cobros siempre serán simulados y «Probar credenciales» dirá que
+> no puede conectarse. Para cobrar de verdad hay que publicar la app en un servidor con
+> internet (ver [`docs/wordpress.md`](docs/wordpress.md)).
 
 ### ¿No cobra y sigue en demostración?
 

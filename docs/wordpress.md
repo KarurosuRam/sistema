@@ -312,6 +312,11 @@ En el WordPress actual hay que tener en cuenta:
 Archivo de referencia: [`.env.example`](../.env.example). La app lee `.env` sola al
 arrancar; en Docker las variables las inyecta `docker-compose.yml`.
 
+Las credenciales de pago también se pueden pegar desde **Mi jardín → Pagos →
+Conectar tu cuenta** (requiere `ADMIN_EMAILS`): se guardan cifradas en la base y se
+aplican sin reiniciar. Las variables del entorno siempre tienen prioridad sobre ese
+formulario, así que en Docker conviene seguir usando `docker-compose.yml`.
+
 | Variable | Para qué | Ejemplo |
 | --- | --- | --- |
 | `SITE_URL` | URL pública de la app. Se usa en pagos, QR y certificados | `https://memoriales.tudominio.cl` |
