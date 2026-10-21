@@ -11,7 +11,6 @@ const { startSession, afterLogin, requireAuth } = require('../auth');
 const router = express.Router();
 
 router.get('/', (req, res) => {
-  const stats = store.siteStats();
   const featured = store.listPublicMemorials({ limit: 3 });
   res.render('home', {
     pageTitle: null,
@@ -19,7 +18,6 @@ router.get('/', (req, res) => {
       'Crea un memorial digital para tu ser querido o mascota: enlace único, código QR, foto principal, galería de 10 fotos, video de 60 segundos, música, libro de visitas y certificado de propiedad.',
     bodyClass: 'page-home',
     activeNav: 'inicio',
-    stats,
     featured,
     plans: config.prices
   });
