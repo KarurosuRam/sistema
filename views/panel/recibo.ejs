@@ -12,11 +12,14 @@
     : pendiente
       ? 'Tu pago está pendiente'
       : 'El pago no se completó';
+  var demoPendiente = pendiente && purchase.mode === 'demo';
   var bajada = pagado
     ? 'Ya puedes crear ' + (purchase.credits === 1 ? 'tu memorial' : 'tus ' + purchase.credits + ' memoriales') + '.'
-    : pendiente
-      ? pasarela + ' todavía no confirma el pago. En cuanto lo haga, los cupos se suman solos a tu cuenta.'
-      : 'No se acreditó ningún cupo. Puedes reintentar el pago cuando quieras.';
+    : demoPendiente
+      ? 'Esta compra de prueba quedó pendiente. Termínala para acreditar los memoriales.'
+      : pendiente
+        ? pasarela + ' todavía no confirma el pago. En cuanto lo haga, los cupos se suman solos a tu cuenta.'
+        : 'No se acreditó ningún cupo. Puedes reintentar el pago cuando quieras.';
   var medio = purchase.mode === 'demo'
     ? 'Demostración (simulado)'
     : purchase.mode === 'mercadopago'
@@ -65,7 +68,11 @@
             <% } %>
           </span>
           <div class="receipt-status__actions">
-            <% if (purchase.provider !== 'demo') { %>
+            <% if (purchase.provider === 'demo') { %>
+              <a class="btn btn--sm" href="/pago/demo/<%= purchase.reference %>">
+                <%- icon('card', 14) %> Completar pago de prueba
+              </a>
+            <% } else { %>
               <form action="/panel/compra/<%= purchase.reference %>/verificar" method="post">
                 <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <button class="btn btn--ghost btn--sm" type="submit"><%- icon('clock', 14) %> Verificar pago</button>

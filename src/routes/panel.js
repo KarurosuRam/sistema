@@ -138,21 +138,20 @@ router.post(
     }
 
     try {
+      // Modo demostración: la compra queda pendiente y se "paga" en la
+      // pasarela simulada, para que el recorrido completo se pueda ver y
+      // probar sin cobrar nada.
       const reference = `JM-${Date.now().toString(36).toUpperCase()}-${util.randomCode(4)}`;
-      const { purchase } = store.completePurchase({
+      store.createPendingPurchase({
         userId: req.user.id,
         plan: plan.id,
         planName: plan.name,
         amount: plan.amount,
         credits: plan.credits,
         reference,
-        mode: 'demo'
+        provider: 'demo'
       });
-      req.flash(
-        'success',
-        `Pago aprobado. Se agregaron ${plan.credits} ${plan.credits === 1 ? 'memorial' : 'memoriales'} a tu cuenta.`
-      );
-      return res.redirect(`/panel/compra/${purchase.reference}`);
+      return res.redirect(`/pago/demo/${reference}`);
     } catch (error) {
       return next(error);
     }

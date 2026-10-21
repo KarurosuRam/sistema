@@ -8,6 +8,10 @@ crédito, débito, cuotas y saldo de Mercado Pago. Flow sigue disponible como al
 La app usa **Checkout Pro**: el comprador paga en el sitio seguro de Mercado Pago y
 vuelve solo. Jardín Memorial **nunca ve ni guarda datos de tarjeta**.
 
+Sin credenciales, las compras pasan por una **pasarela de prueba** interna
+(`/pago/demo/…`) que no cobra ni pide datos de tarjeta; sirve para ver el recorrido completo
+antes de conectar la cuenta real.
+
 > ¿La app sigue diciendo “demostración”? Casi siempre es porque el `.env` no se estaba
 > leyendo o la variable no llegó al proceso. Desde esta versión la app **lee `.env` sola**
 > al arrancar (las variables del entorno tienen prioridad) y `/pago/estado` dice

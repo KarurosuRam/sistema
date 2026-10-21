@@ -53,7 +53,8 @@ SITE_URL=https://memoriales.tudominio.cl
 - `PAYMENTS_MODE=flow` es obligatorio para usar Flow: si no hay llaves, la app queda en
   **modo demostración** y lo advierte en el panel y en `/pago/estado`.
 - `PAYMENTS_MODE=demo` fuerza el modo simulado (útil para una vista previa), aunque
-  existan llaves.
+  existan llaves. En ese modo la compra pasa por `/pago/demo/…`, una pasarela de prueba
+  que no cobra ni pide tarjeta.
 - `SITE_URL` debe ser una URL **HTTPS pública**: con ella se construyen las dos
   direcciones que Flow necesita. Si no es HTTPS, la app rechaza iniciar el pago con un
   mensaje claro en el comprobante.

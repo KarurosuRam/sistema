@@ -16,6 +16,7 @@
             <%- icon('info', 16) %>
             <span>
               Esta es una compra de <strong>demostración</strong>: no se cobra dinero real.
+              Al continuar pasas a la pasarela de prueba, donde completas el pago simulado.
               <% if (config.isAdminEmail(user.email)) { %>
                 Para activar los cobros, conecta tu cuenta en
                 <a class="text-link" href="/panel/admin/pagos">Pagos</a>.
@@ -108,7 +109,7 @@
             <% if (payment.provider !== 'demo') { %>
               <%- icon('lock', 16) %> Pagar <%= helpers.formatCLP(plan.amount) %> con <%= payment.name %>
             <% } else { %>
-              <%- icon('check', 16) %> Confirmar compra de prueba · <%= helpers.formatCLP(plan.amount) %>
+              <%- icon('card', 16) %> Continuar al pago de prueba · <%= helpers.formatCLP(plan.amount) %>
             <% } %>
           </button>
         </form>

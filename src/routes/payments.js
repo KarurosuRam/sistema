@@ -26,6 +26,8 @@ const store = require('../store');
 const payments = require('../payments');
 const flow = require('../flow');
 const mercadopago = require('../mercadopago');
+const { requireAuth } = require('../auth');
+const { csrfProtect } = require('../security');
 
 const router = express.Router();
 
@@ -218,6 +220,66 @@ router.get('/pago/mp/retorno', async (req, res) => {
 /* ------------------------------------------------------------ diagnóstico -- */
 
 /** Estado de la configuración de pagos. No expone llaves ni tokens. */
+/* ---------------------------------------------------------- pago de prueba */
+
+/**
+ * Pasarela simulada del modo demostración. Existe para que el recorrido de
+ * compra se pueda ver completo dentro de la vista previa: la compra queda
+ * pendiente, se "paga" aquí y recién entonces se acredita. No pide ni guarda
+ * datos de tarjeta y no se comunica con ninguna pasarela.
+ */
+function demoPurchase(req, res) {
+  const purchase = store.findPurchaseByReference(String(req.params.reference));
+  if (!purchase || purchase.user_id !== req.user.id) return null;
+  if (purchase.mode !== 'demo') return null;
+  return purchase;
+}
+
+router.get('/pago/demo/:reference', requireAuth, (req, res, next) => {
+  const purchase = demoPurchase(req, res);
+  if (!purchase) return next();
+  if (purchase.status !== 'pendiente') return res.redirect(receiptPath(purchase));
+
+  res.set('Cache-Control', 'no-store');
+  return res.render('pago/demo', {
+    pageTitle: 'Pago de prueba',
+    metaDescription: 'Simulación del pago de un plan de Jardín Memorial.',
+    bodyClass: 'page-panel page-demo-pay',
+    purchase,
+    plan: config.prices[purchase.plan] || null,
+    gateway: payments.providerName()
+  });
+});
+
+router.post('/pago/demo/:reference/aprobar', requireAuth, csrfProtect, (req, res, next) => {
+  const purchase = demoPurchase(req, res);
+  if (!purchase) return next();
+
+  const result = store.completePendingPurchase(purchase.reference);
+  if (!result || !result.purchase) return next();
+
+  if (result.credited) {
+    req.flash(
+      'success',
+      `Pago de prueba aprobado. Se agregaron ${result.purchase.credits} ${
+        result.purchase.credits === 1 ? 'memorial' : 'memoriales'
+      } a tu cuenta.`
+    );
+  } else {
+    req.flash('info', 'Ese pago de prueba ya estaba aprobado.');
+  }
+  return res.redirect(receiptPath(result.purchase));
+});
+
+router.post('/pago/demo/:reference/cancelar', requireAuth, csrfProtect, (req, res, next) => {
+  const purchase = demoPurchase(req, res);
+  if (!purchase) return next();
+
+  store.updatePurchaseStatus(purchase.reference, 'anulado');
+  req.flash('info', 'Pago de prueba cancelado. No se agregaron memoriales.');
+  return res.redirect('/panel/planes');
+});
+
 router.get('/pago/estado', (req, res) => {
   const activa = config.paymentProvider;
   res.json({

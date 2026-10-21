@@ -248,8 +248,12 @@ La pasarela recomendada es **Mercado Pago Checkout Pro**: alta online, sin contr
 abono mensual, panel en español y credenciales de prueba inmediatas. Flow queda disponible
 como alternativa si ya tienes comercio ahí.
 
-El comprador paga en el sitio de la pasarela y los cupos se acreditan **solo** cuando la
-API confirma el pago:
+Sin credenciales, la compra pasa por una **pasarela de prueba** dentro de la app
+(`/pago/demo/…`): muestra el paso de pago, no pide tarjeta y permite aprobar o cancelar la
+compra para ver el recorrido completo. No cobra dinero real.
+
+Con credenciales, el comprador paga en el sitio de la pasarela y los cupos se acreditan
+**solo** cuando la API confirma el pago:
 
 1. La app crea la orden (Mercado Pago: `POST /checkout/preferences`; Flow:
    `POST /payment/create`) con la referencia `JM-…`, el monto del plan en CLP, el correo
