@@ -1,0 +1,36 @@
+# Caddy obtiene y renueva los certificados TLS automáticamente.
+# Los dominios llegan como variables desde docker-compose.yml (.env).
+
+{
+	email {$ACME_EMAIL}
+}
+
+# ---------------------------------------------------------------- WordPress
+{$WORDPRESS_DOMAIN} {
+	encode zstd gzip
+
+	# Cabeceras de seguridad del sitio principal. La app ya envía las suyas.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	reverse_proxy wordpress:80
+}
+
+# ------------------------------------------------------------ App memoriales
+{$APP_DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		-Server
+	}
+
+	# Caddy no limita el cuerpo de la petición por omisión; los límites de
+	# fotos (15 MB) y video (120 MB) los aplica la propia app.
+
+	reverse_proxy app:3000
+}

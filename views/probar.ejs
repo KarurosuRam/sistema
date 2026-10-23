@@ -1,0 +1,79 @@
+<section class="section section--tight">
+  <div class="container">
+    <div class="text-center">
+      <p class="eyebrow eyebrow--center reveal">Acceso de prueba</p>
+      <h1 class="reveal">Prueba <span class="display-italic">Jardín Memorial</span> sin crear cuenta</h1>
+      <p class="lede reveal" style="margin: 0 auto;">
+        Este es el enlace fijo de la demostración: ábrelo cuando quieras, en el computador o en el
+        teléfono. Incluye una cuenta con memoriales de ejemplo, créditos disponibles y mensajes
+        en el libro de visitas.
+      </p>
+    </div>
+
+    <div class="probar-grid">
+      <div class="probar-card probar-card--qr reveal">
+        <span class="probar-card__tag">Ábrelo en tu teléfono</span>
+        <div class="probar-qr">
+          <img src="<%= qr %>" alt="Código QR del enlace de prueba de Jardín Memorial" width="260" height="260">
+        </div>
+        <p class="probar-hint">Apunta la cámara al código para entrar desde otro dispositivo.</p>
+        <div class="probar-url">
+          <span id="probar-url"><%= demoUrl %></span>
+          <button class="icon-btn" type="button" data-copy="#probar-url" aria-label="Copiar enlace de prueba" title="Copiar enlace"><%- icon('copy', 15) %></button>
+        </div>
+      </div>
+
+      <div class="probar-card reveal">
+        <p class="eyebrow">La cuenta de demostración</p>
+        <h2 style="font-size: clamp(1.5rem, 3vw, 2rem);">Entra sin crear cuenta</h2>
+        <p>
+          La demo funciona sin crear cuenta y sin salir de la pantalla: enciende velas, deja mensajes,
+          cambia el tema o crea un memorial de prueba. También puedes entrar como
+          <strong><%= demoUser ? demoUser.name : 'la cuenta de ejemplo' %></strong> para ver el panel completo.
+        </p>
+
+        <div class="probar-actions">
+          <a class="btn btn--lg btn--block" href="/demo"><%- icon('play', 16) %> Probar la demo aquí mismo</a>
+          <a class="btn btn--ghost btn--block" href="/probar?entrar=1"><%- icon('user', 16) %> Entrar con la cuenta de ejemplo</a>
+        </div>
+
+        <div class="probar-creds">
+          <span><strong>Correo</strong> demo@jardinmemorial.cl</span>
+          <span><strong>Contraseña</strong> jardin2026</span>
+        </div>
+        <p class="probar-hint">
+          También puedes ingresar por <a href="/ingresar">la página de acceso</a> con estos datos.
+        </p>
+      </div>
+    </div>
+
+    <div class="probar-steps">
+      <div class="probar-step reveal">
+        <span class="probar-step__num">01</span>
+        <h3>Recorre el jardín público</h3>
+        <p>Busca memoriales por nombre y filtra entre personas y mascotas.</p>
+        <a class="link-arrow" href="/memoriales">Ver memoriales <%- icon('arrow-right', 14) %></a>
+      </div>
+      <div class="probar-step reveal">
+        <span class="probar-step__num">02</span>
+        <h3>Administra un memorial</h3>
+        <p>Cambia fotos, música, privacidad y descarga el certificado, la tarjeta o un respaldo.</p>
+        <a class="link-arrow" href="/panel">Ir a mi jardín <%- icon('arrow-right', 14) %></a>
+      </div>
+      <div class="probar-step reveal">
+        <span class="probar-step__num">03</span>
+        <h3>Crea uno desde cero</h3>
+        <p>La cuenta de prueba tiene créditos disponibles para completar el flujo sin pagar.</p>
+        <a class="link-arrow" href="/panel/nuevo">Crear un memorial <%- icon('arrow-right', 14) %></a>
+      </div>
+    </div>
+
+    <div class="probar-note">
+      <%- icon('shield', 18) %>
+      <p>
+        Esta es una demostración: los pagos son simulados y los datos pueden restablecerse.
+        El acceso de prueba se desactiva automáticamente cuando el sitio pasa a modo de producción.
+      </p>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,567 @@
+<section class="panel-shell">
+  <div class="container">
+    <% if (creado) { %>
+      <div class="card" style="border-color: var(--sage-soft); background: linear-gradient(120deg, var(--sage-wash), var(--paper)); margin-bottom: 28px;">
+        <div class="edit-grid" style="grid-template-columns: 1fr 150px; align-items: center;">
+          <div>
+            <span class="badge" style="margin-bottom: 10px;"><%- icon('sparkles', 12) %> Memorial creado</span>
+            <h2 style="font-size: 1.9rem; margin-bottom: 6px;"><%= memorial.full_name %> ya tiene su lugar</h2>
+            <p class="muted small">Generamos automáticamente su enlace, código QR y certificado de propiedad. Compártelos con tu familia.</p>
+            <div class="share-grid" style="margin-top: 16px;">
+              <a class="share-btn" href="/panel/memoriales/<%= memorial.id %>/compartir"><%- icon('qr', 17) %> Ver QR y enlace</a>
+              <a class="share-btn" href="/panel/memoriales/<%= memorial.id %>/certificado"><%- icon('download', 17) %> Descargar certificado</a>
+              <a class="share-btn" href="/m/<%= memorial.slug %>"><%- icon('external-link', 17) %> Visitar memorial</a>
+            </div>
+          </div>
+          <div class="qr-card__image" style="margin: 0;">
+            <img src="<%= qrInline %>" alt="Código QR del memorial de <%= memorial.full_name %>">
+          </div>
+        </div>
+      </div>
+    <% } %>
+
+    <div class="edit-head">
+      <div class="edit-head__id">
+        <div class="edit-head__avatar">
+          <% if (memorial.main_thumb || memorial.main_photo) { %>
+            <img src="/uploads/<%= memorial.main_thumb || memorial.main_photo %>" alt="Retrato de <%= memorial.full_name %>">
+          <% } else { %>
+            <%= helpers.initials(memorial.full_name) %>
+          <% } %>
+        </div>
+        <div>
+          <p class="eyebrow" style="margin-bottom: 6px;">Administrar memorial</p>
+          <h1><%= memorial.full_name %></h1>
+          <div class="edit-head__meta">
+            <span><%= span || 'Sin fechas' %></span>
+            <% if (memorial.is_public) { %><span class="badge"><%- icon('globe', 12) %> Público</span><% } else { %><span class="badge badge--ink"><%- icon('lock', 12) %> Privado</span><% } %>
+            <% if (memorial.kind === 'mascota') { %><span class="badge badge--clay">Mascota</span><% } %>
+            <span class="mono tiny"><%= memorial.certificate_code %></span>
+          </div>
+        </div>
+      </div>
+      <div class="edit-head__actions">
+        <a class="btn btn--ghost btn--sm" href="/m/<%= memorial.slug %>"><%- icon('eye', 15) %> Ver memorial</a>
+        <a class="btn btn--ghost btn--sm" href="/panel/memoriales/<%= memorial.id %>/compartir"><%- icon('share', 15) %> Compartir</a>
+        <a class="btn btn--sm" href="/panel/memoriales/<%= memorial.id %>/certificado"><%- icon('download', 15) %> Certificado</a>
+      </div>
+    </div>
+
+    <nav class="subnav" aria-label="Secciones del memorial">
+      <div class="subnav__inner">
+        <a href="#detalles" class="is-active">Detalles</a>
+        <a href="#fotos">Fotos</a>
+        <a href="#video">Video</a>
+        <a href="#musica">Música</a>
+        <a href="#libro">Libro de visitas</a>
+        <a href="#compartir">Compartir y QR</a>
+        <a href="#ajustes">Ajustes</a>
+      </div>
+    </nav>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <span class="stat-card__icon"><%- icon('image', 17) %></span>
+        <div><span class="stat-card__value"><%= photos.length %><span class="tiny muted"> /10</span></span><span class="stat-card__label">Fotos</span></div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card__icon"><%- icon('eye', 17) %></span>
+        <div><span class="stat-card__value"><%= helpers.formatNumber(views) %></span><span class="stat-card__label">Visitas</span></div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card__icon"><%- icon('message', 17) %></span>
+        <div><span class="stat-card__value"><%= messageCount %></span><span class="stat-card__label">Mensajes</span></div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card__icon"><%- icon('flame', 17) %></span>
+        <div><span class="stat-card__value"><%= candleCount %></span><span class="stat-card__label">Velas</span></div>
+      </div>
+    </div>
+
+    <!-- ------------------------------------------------------------ detalles -->
+    <section class="edit-section" id="detalles">
+      <div class="edit-section__head">
+        <div>
+          <h2>Detalles del memorial</h2>
+          <p>El nombre, las fechas y la historia que verán tus visitantes.</p>
+        </div>
+      </div>
+
+      <div class="edit-grid">
+        <form class="form-card" action="/panel/memoriales/<%= memorial.id %>" method="post">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="field-grid">
+            <div class="field">
+              <label for="full_name">Nombre completo</label>
+              <input class="input" type="text" id="full_name" name="full_name" value="<%= memorial.full_name %>" maxlength="90" required>
+            </div>
+            <div class="field">
+              <label for="relationship">Relación</label>
+              <input class="input" type="text" id="relationship" name="relationship" value="<%= memorial.relationship || '' %>" maxlength="70" placeholder="Mi abuela, mi mejor amigo…">
+            </div>
+          </div>
+
+          <div class="field">
+            <span class="field-label">Tipo</span>
+            <div class="segmented" style="margin-top: 8px;">
+              <input type="radio" id="kind-persona" name="kind" value="persona" <%= memorial.kind !== 'mascota' ? 'checked' : '' %>>
+              <label for="kind-persona"><%- icon('user', 14) %> Persona</label>
+              <input type="radio" id="kind-mascota" name="kind" value="mascota" <%= memorial.kind === 'mascota' ? 'checked' : '' %>>
+              <label for="kind-mascota"><%- icon('heart', 14) %> Mascota</label>
+            </div>
+          </div>
+
+          <div class="field-grid">
+            <div class="field">
+              <label for="birth_date">Fecha de nacimiento</label>
+              <input class="input" type="date" id="birth_date" name="birth_date" value="<%= memorial.birth_date || '' %>">
+            </div>
+            <div class="field">
+              <label for="death_date">Fecha de partida</label>
+              <input class="input" type="date" id="death_date" name="death_date" value="<%= memorial.death_date || '' %>">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="epitaph">Frase de recuerdo</label>
+            <input class="input" type="text" id="epitaph" name="epitaph" value="<%= memorial.epitaph || '' %>" maxlength="160" data-counter="#edit-epitaph-count">
+            <span class="counter" id="edit-epitaph-count">0 / 160</span>
+          </div>
+
+          <div class="field">
+            <label for="biography">Su historia</label>
+            <textarea class="textarea" id="biography" name="biography" rows="10" maxlength="6000" data-counter="#edit-bio-count"><%= memorial.biography || '' %></textarea>
+            <span class="counter" id="edit-bio-count">0 / 6000</span>
+          </div>
+
+          <div class="field">
+            <span class="field-label">Paleta del memorial</span>
+            <div class="theme-picker" style="margin-top: 8px;">
+              <% Object.keys(config.themes).forEach(function (key) { %>
+                <label class="theme-option">
+                  <input type="radio" name="theme" value="<%= key %>" <%= memorial.theme === key ? 'checked' : '' %>>
+                  <span class="theme-option__inner">
+                    <span class="theme-option__dot" style="--swatch: <%= config.themes[key].accent %>;"></span>
+                    <%= config.themes[key].name %>
+                  </span>
+                </label>
+              <% }); %>
+            </div>
+          </div>
+
+          <div class="switch-row">
+            <div>
+              <strong>Memorial público</strong>
+              <p>Visible en la galería y en buscadores. Desactívalo para que solo se acceda con el enlace.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" name="is_public" <%= memorial.is_public ? 'checked' : '' %>>
+              <span class="switch__track"></span>
+            </label>
+          </div>
+
+          <div class="switch-row">
+            <div>
+              <strong>Libro de visitas abierto</strong>
+              <p>Permite que los visitantes dejen mensajes y enciendan velas.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" name="allow_guestbook" <%= memorial.allow_guestbook ? 'checked' : '' %>>
+              <span class="switch__track"></span>
+            </label>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+            <button class="btn" type="submit">Guardar detalles</button>
+          </div>
+        </form>
+
+        <div class="side-stack">
+          <div class="info-tile">
+            <h4>Enlace del memorial</h4>
+            <p class="serif" style="font-size: 1rem; color: var(--ink); word-break: break-all;">/m/<%= memorial.slug %></p>
+            <a class="link-arrow" href="/panel/memoriales/<%= memorial.id %>/compartir" style="margin-top: 10px; font-size: 0.64rem;">Compartir y QR <%- icon('arrow-right', 14) %></a>
+          </div>
+          <div class="info-tile">
+            <h4>Certificado de propiedad</h4>
+            <p class="serif" style="font-size: 1rem; color: var(--ink);"><%= memorial.certificate_code %></p>
+            <p class="tiny" style="margin-top: 6px;">Emitido el <%= helpers.formatTimestamp(memorial.created_at) %>.</p>
+            <a class="btn btn--ghost btn--sm" href="/panel/memoriales/<%= memorial.id %>/certificado" style="margin-top: 10px;"><%- icon('download', 14) %> Descargar PDF</a>
+          </div>
+          <div class="info-tile">
+            <h4>Así lo ve tu familia</h4>
+            <p>Los cambios se publican al instante. Puedes revisar el memorial público cuando quieras.</p>
+            <a class="btn btn--ghost btn--sm" href="/m/<%= memorial.slug %>" style="margin-top: 10px;"><%- icon('external-link', 14) %> Abrir memorial</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- --------------------------------------------------------------- fotos -->
+    <section class="edit-section" id="fotos">
+      <div class="edit-section__head">
+        <div>
+          <h2>Fotos</h2>
+          <p>Una foto principal y hasta 10 imágenes en la galería. Puedes elegir cuál se muestra primero.</p>
+        </div>
+        <span class="limit-pill <%= photos.length >= 10 ? 'is-full' : '' %>">
+          <%- icon('image', 14) %> <%= photos.length %> de 10 fotos
+        </span>
+      </div>
+
+      <% if (photos.length) { %>
+        <div class="photo-manager" style="margin-bottom: 22px;">
+          <% photos.forEach(function (photo, index) { %>
+            <div class="photo-tile <%= photo.filename === memorial.main_photo ? 'photo-tile--main' : '' %>">
+              <div class="photo-tile__img">
+                <img src="/uploads/<%= photo.thumb %>" alt="<%= photo.caption || 'Foto del memorial' %>" loading="lazy">
+                <% if (photo.filename === memorial.main_photo) { %><span class="photo-tile__flag">Principal</span><% } %>
+              </div>
+              <div class="photo-tile__body">
+                <div class="photo-tile__actions">
+                  <% if (index > 0) { %>
+                    <form action="/panel/memoriales/<%= memorial.id %>/fotos/<%= photo.id %>/mover" method="post">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <input type="hidden" name="direction" value="up">
+                      <button class="icon-btn" type="submit" title="Mover antes" aria-label="Mover la foto hacia arriba"><%- icon('chevron-up', 14) %></button>
+                    </form>
+                  <% } else { %>
+                    <button class="icon-btn" type="button" disabled title="Ya es la primera" aria-label="Ya es la primera"><%- icon('chevron-up', 14) %></button>
+                  <% } %>
+                  <% if (index < photos.length - 1) { %>
+                    <form action="/panel/memoriales/<%= memorial.id %>/fotos/<%= photo.id %>/mover" method="post">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <input type="hidden" name="direction" value="down">
+                      <button class="icon-btn" type="submit" title="Mover después" aria-label="Mover la foto hacia abajo"><%- icon('chevron-down', 14) %></button>
+                    </form>
+                  <% } else { %>
+                    <button class="icon-btn" type="button" disabled title="Ya es la última" aria-label="Ya es la última"><%- icon('chevron-down', 14) %></button>
+                  <% } %>
+                  <% if (photo.filename !== memorial.main_photo) { %>
+                    <form action="/panel/memoriales/<%= memorial.id %>/fotos/<%= photo.id %>/principal" method="post">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <button class="icon-btn" type="submit" title="Usar como foto principal" aria-label="Usar como foto principal"><%- icon('star', 14) %></button>
+                    </form>
+                  <% } else { %>
+                    <button class="icon-btn" type="button" disabled title="Foto principal" aria-label="Foto principal"><%- icon('star', 14) %></button>
+                  <% } %>
+                  <form action="/panel/memoriales/<%= memorial.id %>/fotos/<%= photo.id %>/eliminar" method="post" data-confirm="¿Eliminar esta foto del memorial? Esta acción no se puede deshacer.">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button class="icon-btn icon-btn--danger" type="submit" title="Eliminar foto" aria-label="Eliminar foto"><%- icon('trash', 14) %></button>
+                  </form>
+                </div>
+                <form class="photo-caption-form" action="/panel/memoriales/<%= memorial.id %>/fotos/<%= photo.id %>/descripcion" method="post">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <input type="text" name="caption" value="<%= photo.caption || '' %>" maxlength="140" placeholder="Descripción…" aria-label="Descripción de la foto">
+                  <button type="submit" aria-label="Guardar descripción"><%- icon('check', 13) %></button>
+                </form>
+              </div>
+            </div>
+          <% }); %>
+
+          <% if (photos.length < 10) { %>
+            <label class="add-photo-tile" for="photos-input">
+              <%- icon('plus', 22) %>
+              <span>Agregar fotos</span>
+            </label>
+          <% } %>
+        </div>
+      <% } %>
+
+      <% if (photos.length < 10) { %>
+        <form action="/panel/memoriales/<%= memorial.id %>/fotos" method="post" enctype="multipart/form-data" id="photos-form">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <label class="dropzone" data-file-zone="#photos-submit" data-preview="#photos-preview">
+            <input type="file" name="photos" id="photos-input" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" multiple>
+            <span class="dropzone__icon"><%- icon('upload', 20) %></span>
+            <strong>Sube hasta <%= 10 - photos.length %> fotos más</strong>
+            <span>JPG, PNG, WEBP o HEIC · hasta 15 MB cada una</span>
+            <span class="dropzone__button btn btn--ghost btn--sm">Elegir archivos</span>
+            <span class="file-selected" data-file-name></span>
+          </label>
+          <div class="upload-actions">
+            <button class="btn" type="submit" id="photos-submit">Subir fotos</button>
+          </div>
+        </form>
+      <% } else { %>
+        <div class="warning-note" style="margin-top: 0;">
+          <%- icon('info', 17) %>
+          <span>Alcanzaste el máximo de 10 fotos. Para subir otra, elimina primero una de la galería.</span>
+        </div>
+      <% } %>
+    </section>
+
+    <!-- --------------------------------------------------------------- video -->
+    <section class="edit-section" id="video">
+      <div class="edit-section__head">
+        <div>
+          <h2>Video</h2>
+          <p>Un video de su voz, una celebración o un momento juntos. Máximo 60 segundos.</p>
+        </div>
+        <span class="limit-pill"><%- icon('video', 14) %> MP4 o MOV · 60 s · 120 MB</span>
+      </div>
+
+      <div class="media-block">
+        <div>
+          <% if (memorial.video_path) { %>
+            <div class="media-frame">
+              <video controls preload="metadata" src="/uploads/<%= memorial.video_path %>" <% if (memorial.main_photo) { %>poster="/uploads/<%= memorial.main_photo %>"<% } %>></video>
+            </div>
+            <div class="media-meta">
+              <span><%- icon('clock', 13) %> <%= memorial.video_duration ? Math.round(memorial.video_duration) + ' segundos' : 'Duración verificada' %></span>
+              <span><%- icon('check-circle', 13) %> Se muestra en el memorial</span>
+            </div>
+            <form action="/panel/memoriales/<%= memorial.id %>/video/eliminar" method="post" style="margin-top: 10px;" data-confirm="¿Quitar el video del memorial?">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button class="btn btn--danger btn--sm" type="submit"><%- icon('trash', 14) %> Quitar video</button>
+            </form>
+          <% } else { %>
+            <div class="media-frame">
+              <div class="media-frame__empty">
+                <div>
+                  <%- icon('video', 32) %>
+                  <span>Sin video todavía</span>
+                </div>
+              </div>
+            </div>
+          <% } %>
+        </div>
+
+        <div>
+          <form action="/panel/memoriales/<%= memorial.id %>/video" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <label class="dropzone" data-file-zone="#video-submit">
+              <input type="file" name="video" accept="video/mp4,video/quicktime,.mp4,.mov">
+              <span class="dropzone__icon"><%- icon('upload', 20) %></span>
+              <strong><%= memorial.video_path ? 'Reemplazar el video' : 'Sube el video del memorial' %></strong>
+              <span>MP4 o MOV · máximo 60 segundos · hasta 120 MB</span>
+              <span class="dropzone__button btn btn--ghost btn--sm">Elegir video</span>
+              <span class="file-selected" data-file-name></span>
+            </label>
+            <div class="upload-actions">
+              <button class="btn" type="submit" id="video-submit"><%= memorial.video_path ? 'Reemplazar video' : 'Subir video' %></button>
+            </div>
+          </form>
+          <div class="warning-note">
+            <%- icon('info', 17) %>
+            <span>Verificamos la duración del archivo al subirlo. Para grabar un video de 60 segundos, la mayoría de los celulares tiene un temporizador en la cámara.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- -------------------------------------------------------------- música -->
+    <section class="edit-section" id="musica">
+      <div class="edit-section__head">
+        <div>
+          <h2>Música</h2>
+          <p>La canción que suena al abrir el memorial, como una bienvenida.</p>
+        </div>
+        <span class="limit-pill"><%- icon('music', 14) %> MP3 · 20 MB</span>
+      </div>
+
+      <div class="media-block">
+        <div class="music-frame">
+          <span class="music-frame__disc"><%- icon('music', 22) %></span>
+          <div class="music-frame__text">
+            <strong><%= hasCustomMusic ? 'Música personalizada' : 'Melodía por defecto' %></strong>
+            <span><%= hasCustomMusic ? 'Esta es la música del memorial.' : 'Ambiente instrumental suave de Jardín Memorial.' %></span>
+            <audio controls preload="none" src="<%= hasCustomMusic ? '/uploads/' + memorial.music_path : '/audio/jardin-ambiente.mp3' %>"></audio>
+          </div>
+        </div>
+
+        <div>
+          <form action="/panel/memoriales/<%= memorial.id %>/musica" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <label class="dropzone" data-file-zone="#music-submit">
+              <input type="file" name="music" accept="audio/mpeg,audio/mp3,.mp3">
+              <span class="dropzone__icon"><%- icon('music', 20) %></span>
+              <strong><%= hasCustomMusic ? 'Cambiar la música' : 'Sube una canción en MP3' %></strong>
+              <span>Solo archivos MP3 · hasta 20 MB</span>
+              <span class="dropzone__button btn btn--ghost btn--sm">Elegir MP3</span>
+              <span class="file-selected" data-file-name></span>
+            </label>
+            <div class="upload-actions">
+              <button class="btn" type="submit" id="music-submit"><%= hasCustomMusic ? 'Cambiar música' : 'Subir música' %></button>
+            </div>
+          </form>
+
+          <% if (hasCustomMusic) { %>
+            <form action="/panel/memoriales/<%= memorial.id %>/musica/eliminar" method="post" style="margin-top: 10px;" data-confirm="¿Quitar la música personalizada? Se usará la melodía por defecto.">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button class="btn btn--danger btn--sm" type="submit"><%- icon('trash', 14) %> Quitar música personalizada</button>
+            </form>
+          <% } %>
+
+          <div class="warning-note">
+            <%- icon('info', 17) %>
+            <span>Algunos navegadores bloquean el audio automático hasta que la persona interactúa con la página. En ese caso mostramos un botón para activar la música.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- -------------------------------------------------------- libro visitas -->
+    <section class="edit-section" id="libro">
+      <div class="edit-section__head">
+        <div>
+          <h2>Libro de visitas</h2>
+          <p>Modera los mensajes que dejan tus visitantes. Los ocultos no se muestran en el memorial.</p>
+        </div>
+        <span class="limit-pill <%= memorial.allow_guestbook ? '' : 'is-full' %>">
+          <%- icon(memorial.allow_guestbook ? 'book' : 'lock', 14) %>
+          <%= memorial.allow_guestbook ? 'Abierto' : 'Cerrado' %>
+        </span>
+      </div>
+
+      <% if (!guestbook.length) { %>
+        <div class="empty-state" style="padding: 40px 24px;">
+          <%- icon('book', 36) %>
+          <h3>Aún no hay mensajes</h3>
+          <p>Comparte el memorial con tu familia para empezar a recibir palabras de cariño.</p>
+          <a class="btn btn--sm" href="/panel/memoriales/<%= memorial.id %>/compartir">Compartir memorial</a>
+        </div>
+      <% } else { %>
+        <div class="GB-list">
+          <% guestbook.forEach(function (entry) { %>
+            <div class="GB-row <%= entry.hidden ? 'GB-row--hidden' : '' %>">
+              <span class="avatar <%= entry.candle ? 'avatar--gold' : '' %>"><%= helpers.initials(entry.name) %></span>
+              <div>
+                <div class="GB-row__head">
+                  <strong><%= entry.name %></strong>
+                  <% if (entry.city) { %><span><%= entry.city %></span><% } %>
+                  <span><%= helpers.timeAgo(entry.created_at) %></span>
+                  <% if (entry.candle) { %><span class="badge badge--gold" style="font-size: 0.55rem;"><%- icon('flame', 10) %> Vela</span><% } %>
+                </div>
+                <p class="GB-row__message"><%= entry.message %></p>
+                <% if (entry.hidden) { %><span class="GB-row__state"><%- icon('eye-off', 12) %> Oculto en el memorial</span><% } %>
+              </div>
+              <div class="GB-row__actions">
+                <form action="/panel/memoriales/<%= memorial.id %>/libro/<%= entry.id %>/<%= entry.hidden ? 'mostrar' : 'ocultar' %>" method="post">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button class="icon-btn" type="submit" title="<%= entry.hidden ? 'Mostrar mensaje' : 'Ocultar mensaje' %>" aria-label="<%= entry.hidden ? 'Mostrar mensaje' : 'Ocultar mensaje' %>"><%- icon(entry.hidden ? 'eye' : 'eye-off', 14) %></button>
+                </form>
+                <form action="/panel/memoriales/<%= memorial.id %>/libro/<%= entry.id %>/eliminar" method="post" data-confirm="¿Eliminar definitivamente este mensaje?">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button class="icon-btn icon-btn--danger" type="submit" title="Eliminar mensaje" aria-label="Eliminar mensaje"><%- icon('trash', 14) %></button>
+                </form>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } %>
+    </section>
+
+    <!-- ------------------------------------------------------------ compartir -->
+    <section class="edit-section" id="compartir">
+      <div class="edit-section__head">
+        <div>
+          <h2>Compartir y QR</h2>
+          <p>Todo lo que necesitas para invitar a tu familia al memorial.</p>
+        </div>
+        <a class="btn btn--ghost btn--sm" href="/panel/memoriales/<%= memorial.id %>/compartir"><%- icon('external-link', 14) %> Página completa</a>
+      </div>
+
+      <div class="share-layout">
+        <div class="qr-card">
+          <div class="qr-card__image">
+            <img src="<%= qrInline %>" alt="Código QR del memorial de <%= memorial.full_name %>">
+          </div>
+          <h3>Código QR</h3>
+          <p>Imprímelo en tarjetas o recordatorios.</p>
+          <a class="btn btn--block btn--sm" href="/panel/memoriales/<%= memorial.id %>/qr.png"><%- icon('download', 14) %> Descargar PNG</a>
+        </div>
+
+        <div class="share-block">
+          <div>
+            <span class="field-label">Enlace del memorial</span>
+            <div class="copy-field" style="margin-top: 8px;">
+              <input type="text" id="public-url" value="<%= publicUrl %>" readonly aria-label="Enlace público del memorial">
+              <button class="btn btn--ghost btn--sm" type="button" data-copy="#public-url"><%- icon('copy', 14) %> <span class="copy-label">Copiar</span></button>
+            </div>
+          </div>
+
+          <div class="share-grid">
+            <a class="share-btn" href="https://wa.me/?text=<%= encodeURIComponent('Te comparto el memorial de ' + memorial.full_name + ': ' + publicUrl) %>"><%- icon('whatsapp', 17) %> WhatsApp</a>
+            <a class="share-btn" href="mailto:?subject=<%= encodeURIComponent('Memorial de ' + memorial.full_name) %>&body=<%= encodeURIComponent('Quiero compartir contigo el memorial de ' + memorial.full_name + ':\n' + publicUrl) %>"><%- icon('mail', 17) %> Correo</a>
+            <a class="share-btn" href="/m/<%= memorial.slug %>"><%- icon('external-link', 17) %> Abrir memorial</a>
+            <a class="share-btn" href="/certificado/<%= memorial.certificate_code %>"><%- icon('award', 17) %> Ver certificado</a>
+          </div>
+
+          <div class="cert-preview">
+            <span class="cert-preview__seal"><%- icon('award', 24) %></span>
+            <div style="flex: 1;">
+              <strong>Certificado de propiedad</strong>
+              <span><%= memorial.certificate_code %> · descárgalo en PDF</span>
+            </div>
+            <a class="btn btn--ghost btn--sm" href="/panel/memoriales/<%= memorial.id %>/certificado"><%- icon('download', 14) %> PDF</a>
+          </div>
+
+          <div class="cert-preview" style="background: linear-gradient(135deg, var(--sage-wash), var(--paper));">
+            <span class="cert-preview__seal" style="border-color: var(--sage); color: var(--sage-deep); background: var(--sage-soft);"><%- icon('qr', 24) %></span>
+            <div style="flex: 1;">
+              <strong>Tarjeta conmemorativa</strong>
+              <span>A5 lista para imprimir, con su retrato y el QR del memorial.</span>
+            </div>
+            <a class="btn btn--ghost btn--sm" href="/panel/memoriales/<%= memorial.id %>/tarjeta"><%- icon('download', 14) %> PDF</a>
+          </div>
+
+          <div class="form-card" style="box-shadow: none;">
+            <div class="form-card__head" style="margin-bottom: 14px; padding-bottom: 12px;">
+              <h3 style="font-size: 1.1rem;">Personalizar enlace</h3>
+              <span>Opcional</span>
+            </div>
+            <form action="/panel/memoriales/<%= memorial.id %>/enlace" method="post">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <div class="copy-field">
+                <input type="text" name="slug" value="<%= memorial.slug %>" maxlength="64" aria-label="Enlace personalizado" pattern="[a-z0-9-]+">
+                <button class="btn btn--ghost btn--sm" type="submit">Actualizar</button>
+              </div>
+              <p class="hint" style="margin-top: 8px;">Solo minúsculas, números y guiones. Si cambias el enlace, el QR anterior dejará de funcionar.</p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- --------------------------------------------------------------- ajustes -->
+    <section class="edit-section" id="ajustes">
+      <div class="edit-section__head">
+        <div>
+          <h2>Ajustes y eliminación</h2>
+          <p>Opciones avanzadas del memorial.</p>
+        </div>
+      </div>
+
+      <div class="edit-grid">
+        <div class="form-card">
+          <div class="form-card__head">
+            <h3>Datos del memorial</h3>
+            <span>Información</span>
+          </div>
+          <div class="order-row"><span>Identificador</span><span class="mono">#<%= memorial.id %></span></div>
+          <div class="order-row"><span>Enlace</span><span class="mono">/m/<%= memorial.slug %></span></div>
+          <div class="order-row"><span>Certificado</span><span class="mono"><%= memorial.certificate_code %></span></div>
+          <div class="order-row"><span>Creado</span><span><%= helpers.formatTimestamp(memorial.created_at) %></span></div>
+          <div class="order-row" style="border-bottom: 0;"><span>Última edición</span><span><%= helpers.formatTimestamp(memorial.updated_at) %></span></div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px;">
+            <a class="btn btn--ghost btn--sm" href="/panel/memoriales/<%= memorial.id %>/exportar"><%- icon('download', 14) %> Respaldar (JSON)</a>
+            <a class="btn btn--ghost btn--sm" href="/panel/memoriales/<%= memorial.id %>/tarjeta"><%- icon('qr', 14) %> Tarjeta con QR</a>
+            <a class="btn btn--ghost btn--sm" href="/panel/memoriales/<%= memorial.id %>/certificado"><%- icon('award', 14) %> Certificado</a>
+          </div>
+          <p class="hint" style="margin-top: 10px;">El respaldo incluye los datos del memorial, las descripciones de las fotos y todos los mensajes recibidos.</p>
+        </div>
+
+        <div class="danger-zone">
+          <h3>Eliminar memorial</h3>
+          <p>Se eliminarán de forma permanente el memorial, sus fotos, video, música y todos los mensajes del libro de visitas. Esta acción no se puede deshacer y no devuelve el cupo utilizado.</p>
+          <form action="/panel/memoriales/<%= memorial.id %>/eliminar" method="post" data-confirm="¿Estás seguro? El memorial y todos sus recuerdos se eliminarán para siempre.">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <input class="input" type="text" name="confirmation" placeholder="Escribe: <%= memorial.full_name %>" aria-label="Escribe el nombre para confirmar" autocomplete="off">
+            <button class="btn btn--danger" type="submit"><%- icon('trash', 15) %> Eliminar</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </div>
+</section>

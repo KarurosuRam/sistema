@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8">
+  <meta name="color-scheme" content="light only">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= pageTitle %> · <%= site.name %></title>
+  <meta name="description" content="<%= metaDescription %>">
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/base.css?v=<%= assetVersion %>">
+  <link rel="stylesheet" href="/css/pages.css?v=<%= assetVersion %>">
+</head>
+<body class="<%= bodyClass %><%= typeof embeddedView !== 'undefined' && embeddedView ? ' is-embedded' : '' %><%= typeof chromeless !== 'undefined' && chromeless ? ' is-chromeless' : '' %>">
+  <main id="main">
+    <%- body %>
+  </main>
+  <%- include('../partials/flash') %>
+  <script src="/js/main.js?v=<%= assetVersion %>" defer></script>
+</body>
+</html>

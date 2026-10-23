@@ -1,0 +1,70 @@
+<section class="panel-shell">
+  <div class="container">
+    <div class="dash-head">
+      <div>
+        <p class="eyebrow">Libro de visitas</p>
+        <h1>Mensajes recibidos</h1>
+        <p>Todos los mensajes que dejaron en tus memoriales, en un solo lugar.</p>
+      </div>
+      <div class="edit-head__actions">
+        <a class="btn btn--ghost" href="/panel">Volver a mi jardín</a>
+      </div>
+    </div>
+
+    <div class="stat-grid" style="grid-template-columns: repeat(3, 1fr);">
+      <div class="stat-card">
+        <span class="stat-card__icon"><%- icon('message', 17) %></span>
+        <div><span class="stat-card__value"><%= total %></span><span class="stat-card__label">Mensajes totales</span></div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card__icon"><%- icon('eye', 17) %></span>
+        <div><span class="stat-card__value"><%= total - hidden %></span><span class="stat-card__label">Visibles</span></div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card__icon"><%- icon('eye-off', 17) %></span>
+        <div><span class="stat-card__value"><%= hidden %></span><span class="stat-card__label">Ocultos</span></div>
+      </div>
+    </div>
+
+    <% if (!entries.length) { %>
+      <div class="empty-state">
+        <%- icon('book', 42) %>
+        <h3>Aún no hay mensajes</h3>
+        <p>Cuando compartas tus memoriales, aquí verás todas las palabras que dejen tus visitantes.</p>
+        <a class="btn" href="/panel">Ir a mis memoriales</a>
+      </div>
+    <% } else { %>
+      <div class="form-card" style="padding: 8px 24px;">
+        <div class="msg-list">
+          <% entries.forEach(function (entry) { %>
+            <div class="msg-row" style="<%= entry.hidden ? 'opacity: .62;' : '' %>">
+              <span class="avatar avatar--sm <%= entry.candle ? 'avatar--gold' : '' %>"><%= helpers.initials(entry.name) %></span>
+              <div class="msg-row__body">
+                <div class="msg-row__top">
+                  <strong><%= entry.name %></strong>
+                  <% if (entry.city) { %><span><%= entry.city %></span><% } %>
+                  <span><%= helpers.timeAgo(entry.created_at) %></span>
+                  <a class="msg-row__link" href="/panel/memoriales/<%= entry.memorial_id %>#libro"><%= entry.full_name %></a>
+                  <% if (entry.hidden) { %><span class="badge badge--ink" style="font-size: 0.55rem;"><%- icon('eye-off', 10) %> Oculto</span><% } %>
+                  <% if (entry.candle) { %><span class="badge badge--gold" style="font-size: 0.55rem;"><%- icon('flame', 10) %> Vela</span><% } %>
+                </div>
+                <p class="msg-row__text" style="display: block; -webkit-line-clamp: unset;"><%= entry.message %></p>
+              </div>
+              <div class="GB-row__actions">
+                <form action="/panel/mensajes/<%= entry.id %>/ocultar" method="post">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button class="icon-btn" type="submit" title="<%= entry.hidden ? 'Mostrar mensaje' : 'Ocultar mensaje' %>" aria-label="<%= entry.hidden ? 'Mostrar mensaje' : 'Ocultar mensaje' %>"><%- icon(entry.hidden ? 'eye' : 'eye-off', 14) %></button>
+                </form>
+                <form action="/panel/mensajes/<%= entry.id %>/eliminar" method="post" data-confirm="¿Eliminar definitivamente este mensaje?">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button class="icon-btn icon-btn--danger" type="submit" title="Eliminar mensaje" aria-label="Eliminar mensaje"><%- icon('trash', 14) %></button>
+                </form>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+      <p class="price-note" style="text-align: left;">Se muestran los últimos <%= entries.length %> mensajes. Los mensajes ocultos no aparecen en el memorial público.</p>
+    <% } %>
+  </div>
+</section>

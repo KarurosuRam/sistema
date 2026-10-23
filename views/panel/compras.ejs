@@ -1,0 +1,76 @@
+<section class="panel-shell">
+  <div class="container">
+    <div class="dash-head">
+      <div>
+        <p class="eyebrow">Mi cuenta</p>
+        <h1>Historial de compras</h1>
+        <p>Todos los pagos y memoriales acreditados en tu cuenta.</p>
+      </div>
+      <div class="edit-head__actions">
+        <a class="btn btn--ghost" href="/cuenta">Mi cuenta</a>
+        <a class="btn" href="/panel/planes">Comprar memoriales</a>
+      </div>
+    </div>
+
+    <div class="balance">
+      <div>
+        <span class="balance__label">Memoriales disponibles</span>
+        <div class="balance__value"><%= user.credits %> <span>cupos</span></div>
+        <p class="balance__hint">Los cupos no vencen. Puedes comprar más cuando lo necesites.</p>
+      </div>
+      <div class="balance__actions">
+        <a class="btn btn--light" href="/panel/planes">Ver planes</a>
+      </div>
+    </div>
+
+    <% if (!purchases.length) { %>
+      <div class="empty-state">
+        <%- icon('card', 42) %>
+        <h3>Aún no hay compras</h3>
+        <p>Cuando adquieras un plan, aquí encontrarás el comprobante y el detalle de cada pago.</p>
+        <a class="btn" href="/panel/planes">Elegir un plan</a>
+      </div>
+    <% } else { %>
+      <div class="table-wrap">
+        <div class="table-scroll">
+
+          <table class="table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Plan</th>
+              <th>Memoriales</th>
+              <th>Monto</th>
+              <th>Estado</th>
+              <th>Referencia</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% purchases.forEach(function (purchase) { %>
+              <tr>
+                <td><%= helpers.formatDateShort(purchase.created_at.slice(0, 10)) %></td>
+                <td><%= purchase.plan_name %></td>
+                <td><%= purchase.credits %></td>
+                <td><strong><%= helpers.formatCLP(purchase.amount) %></strong></td>
+                <td>
+                  <% if (purchase.status === 'pagado') { %>
+                    <span class="badge"><%- icon('check', 12) %> Pagado</span>
+                  <% } else if (purchase.status === 'pendiente') { %>
+                    <span class="badge badge--gold"><%- icon('clock', 12) %> Pendiente</span>
+                  <% } else { %>
+                    <span class="badge badge--clay"><%- icon('alert-circle', 12) %> <%= purchase.status === 'anulado' ? 'Anulado' : 'Rechazado' %></span>
+                  <% } %>
+                </td>
+                <td class="mono"><%= purchase.reference %></td>
+                <td><a class="text-link" href="/panel/compra/<%= purchase.reference %>">Ver</a></td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+
+        </div>
+      </div>
+    <% } %>
+  </div>
+</section>
