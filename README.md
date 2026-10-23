@@ -286,6 +286,10 @@ Guía paso a paso, credenciales y tarjetas de prueba:
 **[`docs/mercadopago.md`](docs/mercadopago.md)**. Alternativa con Webpay/MACH:
 **[`docs/flow.md`](docs/flow.md)**.
 
+Para recorrer la aplicación como un cliente real, sin tocar los datos del sitio, existe un
+**entorno de prueba** con base propia: `scripts/entorno-prueba.sh` (ver
+[`docs/entorno-prueba.md`](docs/entorno-prueba.md)).
+
 > **La vista previa de este proyecto no tiene salida a internet hacia Mercado Pago ni
 > Flow**, así que ahí los cobros siempre serán simulados y «Probar credenciales» dirá que
 > no puede conectarse. Para cobrar de verdad hay que publicar la app en un servidor con
