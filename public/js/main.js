@@ -101,50 +101,6 @@
     }
   })();
 
-  /* --------------------------------------------------- visor de la demo */
-  (function () {
-    var viewer = $('[data-demo-viewer]');
-    var triggers = $$('[data-demo-open]');
-    if (!viewer || !triggers.length || typeof viewer.showModal !== 'function') return;
-
-    var frame = $('[data-demo-frame]', viewer);
-    var closeBtn = $('[data-demo-close]', viewer);
-
-    var open = function (event) {
-      if (event) event.preventDefault();
-      if (viewer.open) return;
-      viewer.showModal();
-      // El iframe se carga recién al abrir el visor: así no se pide la demo
-      // sin que nadie la haya abierto y el navegador no la difiere por estar oculta.
-      if (frame && !frame.getAttribute('src')) {
-        frame.setAttribute('src', frame.getAttribute('data-src'));
-      }
-      document.body.classList.add('demo-open');
-      if (closeBtn) closeBtn.focus();
-    };
-
-    triggers.forEach(function (trigger) {
-      trigger.addEventListener('click', open);
-    });
-
-    var close = function () {
-      if (viewer.open) viewer.close();
-    };
-
-    if (closeBtn) closeBtn.addEventListener('click', close);
-
-    // Clic fuera del cuadro (sobre el fondo) cierra la vista.
-    viewer.addEventListener('click', function (event) {
-      if (event.target === viewer) close();
-    });
-
-    // Al cerrar se descarga el iframe: detiene la música y libera memoria.
-    viewer.addEventListener('close', function () {
-      document.body.classList.remove('demo-open');
-      if (frame) frame.removeAttribute('src');
-    });
-  })();
-
   /* ------------------------------------------------------------ confirm */
   $$('form[data-confirm]').forEach(function (form) {
     form.addEventListener('submit', function (event) {

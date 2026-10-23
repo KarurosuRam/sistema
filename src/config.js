@@ -257,9 +257,6 @@ Object.defineProperties(config, {
 });
 
 config.embedMode = config.embedOrigins.length > 0;
-// Acceso de prueba de un clic: solo existe mientras los pagos sean simulados.
-// Se puede apagar con DEMO_ACCESS=off incluso en modo demo.
-config.demoAccess = config.paymentsMode === 'demo' && process.env.DEMO_ACCESS !== 'off';
 config.uploadsDir = path.join(config.dataDir, 'uploads');
 config.tmpDir = path.join(config.dataDir, 'tmp');
 

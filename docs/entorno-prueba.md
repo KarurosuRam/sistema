@@ -1,15 +1,14 @@
 # Entorno de prueba (staging)
 
-Un segundo Jardín Memorial, aparte del sitio real y del contenido de ejemplo, para
-recorrer la aplicación **como la usaría una familia**: crear cuenta, comprar, armar el
-memorial y compartirlo.
+Un segundo Jardín Memorial, aparte del sitio real, para recorrer la aplicación **como la
+usaría una familia**: crear cuenta, comprar, armar el memorial y compartirlo.
 
 ## Qué lo hace distinto
 
-| | Demostración (`/probar`, datos de ejemplo) | Entorno de prueba | Producción |
+| | Vista previa (`./data`) | Entorno de prueba | Producción |
 | --- | --- | --- | --- |
 | Base de datos | `./data` | `~/jardin-ensayo` (configurable) | `DATA_DIR` del servidor |
-| Contenido | 5 memoriales de ejemplo y cuenta demo | **vacío**: se empieza desde cero | los memoriales de los clientes |
+| Contenido | el que crees al probar | **vacío**: se empieza desde cero | los memoriales de los clientes |
 | `NODE_ENV` | desarrollo | `production` | `production` |
 | Cobros | simulados | simulados (pasarela de prueba) | reales (Mercado Pago o Flow) |
 | Riesgo | ninguno | ninguno | cobros reales |

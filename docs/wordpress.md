@@ -133,7 +133,6 @@ PAYMENTS_MODE=mercadopago
 MP_ENV=production
 MP_ACCESS_TOKEN=APP_USR-...
 SEED_DEMO=false
-DEMO_ACCESS=off
 ```
 
 > Guía de pagos: [`mercadopago.md`](mercadopago.md) (recomendada) o
@@ -256,7 +255,6 @@ MP_ENV=production
 MP_ACCESS_TOKEN=APP_USR-...
 
 SEED_DEMO=false
-DEMO_ACCESS=off
 ```
 
 > `DATA_DIR` guarda `jardin.sqlite` y `uploads/`: es lo que hay que respaldar y lo que
@@ -330,7 +328,6 @@ formulario, así que en Docker conviene seguir usando `docker-compose.yml`.
 | `FLOW_API_KEY` / `FLOW_SECRET_KEY` | Credenciales del comercio Flow | — |
 | `DATA_DIR` | Carpeta de la base y los archivos subidos | `/var/lib/jardin-memorial` |
 | `SEED_DEMO` | Sembrar contenido de ejemplo en una base vacía | `false` |
-| `DEMO_ACCESS` | `off` desactiva `/probar` y el acceso de un clic | `off` |
 | `ADMIN_EMAILS` | Correo(s) con acceso a `/panel/admin/pagos` | `dueno@tudominio.cl` |
 | `COOKIE_DOMAIN` | Dominio de la cookie de sesión, para compartirla entre subdominios | `.tudominio.cl` |
 | `PORT` | Puerto interno de la app | `3000` |
@@ -397,8 +394,8 @@ la cuenta de Mercado Pago sin crear cobros. Es la forma más rápida de confirma
    (`MP_ENV=production`, token `APP_USR-…`; ver [`mercadopago.md`](mercadopago.md)) o
    Flow (`FLOW_ENV=production`; ver [`flow.md`](flow.md)).
 2. `PAYMENTS_MODE=mercadopago` (o `flow`) y `SITE_URL` con el dominio definitivo.
-3. `SEED_DEMO=false`, `DEMO_ACCESS=off`.
-4. Si la base ya venía con la demo (`demo@jardinmemorial.cl`):
+3. `SEED_DEMO` sin definir (o `false`).
+4. Si la base ya venía con contenido de ejemplo (`demo@jardinmemorial.cl`):
 
    ```bash
    npm run purge-demo       # o: docker compose exec app node --experimental-sqlite scripts/purge-demo.js
@@ -451,8 +448,9 @@ Los eventos de pago se registran con el prefijo `[flow]`.
 
 ### Cambiar de pasarela o pasar a demo (solo pruebas)
 
-`PAYMENTS_MODE=demo DEMO_ACCESS=on` y reinicia. Nunca dejes el modo demo en un sitio
-público: los memoriales se acreditarían sin cobrar.
+`PAYMENTS_MODE=demo` y reinicia. Nunca dejes el modo demo en un sitio público: los
+memoriales se acreditarían sin cobrar. La pasarela de prueba (`/pago/demo/…`) sirve
+para recorrer el circuito completo sin tarjeta.
 
 ---
 

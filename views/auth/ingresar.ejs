@@ -31,20 +31,6 @@
         <button class="btn btn--block btn--lg" type="submit">Ingresar <%- icon('arrow-right', 16) %></button>
       </form>
 
-      <% if (config.paymentsMode === 'demo') { %>
-        <div class="demo-note" style="margin-top: 20px; text-align: left;">
-          <%- icon('info', 16) %>
-          <div>
-            <strong style="display: block; color: var(--sage-deep); font-weight: 500;">Cuenta de demostración</strong>
-            Correo: <span class="serif">demo@jardinmemorial.cl</span><br>
-            Contraseña: <span class="serif">jardin2026</span>
-          </div>
-        </div>
-      <% } %>
-
-      <% if (demoAccess) { %>
-        <p class="auth__alt"><a href="/probar?entrar=1">Entrar directo a la demo</a> sin escribir la contraseña</p>
-      <% } %>
       <p class="auth__alt">¿Aún no tienes cuenta? <a href="/registro">Crea tu cuenta gratis</a></p>
 
       <div class="auth__trust">
@@ -55,7 +41,7 @@
   </div>
 
   <aside class="auth__visual" aria-hidden="true">
-    <img src="/img/demo-tea.jpg" alt="">
+    <img src="/img/te-recuerdos.jpg" alt="">
     <div class="auth__quote">
       <p>“Volver a este lugar es volver a sentir que sigue cerca.”</p>
       <span>Una familia de Jardín Memorial</span>

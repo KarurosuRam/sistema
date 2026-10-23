@@ -7,7 +7,7 @@
       certificado de propiedad, galería, video, música y libro de visitas.
     </p>
     <% if (payment.provider === 'demo') { %>
-      <p class="payment-note reveal" style="margin-top: 22px;"><%- icon('info', 14) %> Entorno de demostración: el pago se simula y el saldo se acredita al instante.</p>
+      <p class="payment-note reveal" style="margin-top: 22px;"><%- icon('info', 14) %> Pagos de prueba: este entorno no realiza cargos reales y los memoriales se acreditan al confirmar.</p>
     <% } else { %>
       <p class="payment-note reveal" style="margin-top: 22px;"><%- icon('shield', 14) %> Pago único y seguro con <%= payment.name %>. No guardamos datos de tarjeta.</p>
     <% } %>
@@ -107,7 +107,7 @@
     <div class="faq-list">
       <details class="faq-item" open>
         <summary>¿Cómo se realiza el pago? <span class="faq-icon" aria-hidden="true"></span></summary>
-        <div class="faq-item__body"><p>Desde tu panel eliges el plan y pagas en línea. En esta versión de demostración el pago es simulado: al confirmar, los memoriales se acreditan de inmediato en tu cuenta para que puedas probar todo el flujo.</p></div>
+        <div class="faq-item__body"><p>Desde tu panel eliges el plan y pagas en línea con tarjeta de crédito o débito. Cuando la pasarela confirma el pago, los memoriales quedan disponibles en tu cuenta al instante.</p></div>
       </details>
       <details class="faq-item">
         <summary>¿Puedo comprar el pack y usarlo más adelante? <span class="faq-icon" aria-hidden="true"></span></summary>

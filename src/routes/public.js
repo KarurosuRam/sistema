@@ -4,9 +4,8 @@ const express = require('express');
 const config = require('../config');
 const store = require('../store');
 const util = require('../util');
-const { qrSvg, qrDataUrl } = require('../qr');
-const { createRateLimiter } = require('../security');
-const { startSession, afterLogin, requireAuth } = require('../auth');
+const { qrSvg } = require('../qr');
+const { requireAuth } = require('../auth');
 
 const router = express.Router();
 
@@ -114,54 +113,6 @@ router.get('/certificado/:code', requireAuth, (req, res, next) => {
         qrSvg: svg,
         issuedLabel: util.formatTimestamp(memorial.created_at),
         span: util.yearsLabel(memorial)
-      });
-    })
-    .catch(next);
-});
-
-const demoLimiter = createRateLimiter({
-  windowMs: 15 * 60 * 1000,
-  max: 40,
-  message: 'Demasiados accesos de prueba. Espera unos minutos y vuelve a intentarlo.',
-  keyPrefix: 'probar'
-});
-
-/**
- * Enlace fijo de prueba: muestra la URL pública de esta instalación, su QR y
- * un acceso de un clic a la cuenta de demostración. Solo existe en modo demo.
- */
-router.get('/probar', demoLimiter, (req, res, next) => {
-  // Si la demo está apagada no se muestra un 404: se lleva a los memoriales.
-  if (!config.demoAccess) return res.redirect('/memoriales');
-  const demo = store.findUserByEmail(config.demoAccount.email);
-
-  if (req.query.entrar === '1') {
-    if (!demo) {
-      req.flash('error', 'La cuenta de demostración no está disponible en esta instalación.');
-      return res.redirect('/probar');
-    }
-    const token = startSession(req, res, demo.id);
-    demoLimiter.reset(req);
-    req.flash(
-      'success',
-      'Ya estás dentro de la cuenta de demostración. Pulsa “Mi jardín” para ver el panel con memoriales de ejemplo.'
-    );
-    return afterLogin(req, res, token, '/');
-  }
-
-  const demoUrl = util.baseUrl(req);
-  qrDataUrl(demoUrl, { margin: 2, width: 560 })
-    .then((qr) => {
-      res.render('probar', {
-        pageTitle: 'Acceso de prueba',
-        metaDescription:
-          'Enlace fijo y código QR para probar Jardín Memorial con una cuenta de demostración.',
-        bodyClass: 'page-probar',
-        activeNav: '',
-        demoUrl,
-        qr,
-        demoUser: demo || null,
-        stats: store.siteStats()
       });
     })
     .catch(next);

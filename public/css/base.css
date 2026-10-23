@@ -2,7 +2,6 @@
    Jardín Memorial — sistema de diseño
    ========================================================================== */
 
-
 :root {
   color-scheme: light only;
 
@@ -1346,71 +1345,6 @@ h4 {
   }
 }
 
-/* ---------------------------------------------------------- demo ribbon */
-.demo-ribbon {
-  background: var(--jade-soft);
-  color: var(--ink);
-  border-bottom: 1px solid rgba(var(--jade-rgb), 0.25);
-  font-family: var(--sans);
-  font-size: 0.82rem;
-  letter-spacing: 0.01em;
-}
-
-.demo-ribbon__inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  min-height: 38px;
-  padding-top: 8px;
-  padding-bottom: 8px;
-}
-
-.demo-ribbon span {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  flex-wrap: wrap;
-  opacity: 0.92;
-}
-
-.demo-ribbon strong {
-  font-weight: 700;
-  color: var(--ink);
-}
-
-.demo-ribbon i {
-  font-style: normal;
-  opacity: 0.55;
-}
-
-.demo-ribbon a {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--ink);
-  font-weight: 700;
-  text-decoration: underline;
-  text-decoration-color: rgba(var(--ink-rgb), 0.4);
-  text-underline-offset: 3px;
-  white-space: nowrap;
-}
-
-.demo-ribbon a:hover {
-  color: var(--jade-deep);
-  text-decoration-color: currentColor;
-}
-
-@media (max-width: 640px) {
-  .demo-ribbon__inner {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 4px;
-    padding-top: 9px;
-    padding-bottom: 9px;
-  }
-}
-
 /* ==========================================================================
    Legibilidad y adaptabilidad
    Texto negro sobre fondos claros, cuerpos grandes y objetivos táctiles
@@ -1557,8 +1491,7 @@ svg {
   .cta-final__actions .btn,
   .auth__inner form .btn,
   .checkout-layout .btn,
-  .price-card .btn,
-  .probar-actions .btn {
+  .price-card .btn {
     width: 100%;
   }
 
@@ -1645,9 +1578,8 @@ svg {
   color: var(--cream);
 }
 
-
 /* ==========================================================================
-   Encabezado y aviso de demo en pantallas pequeñas
+   Encabezado en pantallas pequeñas
    ========================================================================== */
 
 @media (max-width: 960px) {
@@ -1688,12 +1620,6 @@ svg {
     height: 44px;
   }
 
-  .demo-ribbon__inner {
-    flex-wrap: wrap;
-    justify-content: center;
-    row-gap: 2px;
-    text-align: center;
-  }
 }
 
 @media (max-width: 420px) {
@@ -1748,7 +1674,6 @@ svg {
    incrusta en una página normal del tema se pide `?chrome=0` y se oculta. */
 .is-chromeless .site-header,
 .is-chromeless .site-footer,
-.is-chromeless .demo-ribbon,
 .is-chromeless .skip-link {
   display: none !important;
 }

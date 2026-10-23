@@ -16,7 +16,6 @@ const assets = require('./assets');
 const media = require('./media');
 const { icon, brandMark } = require('./icons');
 
-const demoRoutes = require('./routes/demo');
 const publicRoutes = require('./routes/public');
 const authRoutes = require('./routes/auth');
 const panelRoutes = require('./routes/panel');
@@ -149,7 +148,6 @@ app.use((req, res, next) => {
   res.locals.brandMark = brandMark;
   res.locals.config = config;
   res.locals.assetVersion = assets.version;
-  res.locals.demoAccess = config.demoAccess;
   res.locals.activeNav = '';
   res.locals.hideFooter = false;
 
@@ -210,7 +208,6 @@ app.get('/healthz', (req, res) => {
   res.json({ ok: true, service: 'jardin-memorial', time: new Date().toISOString() });
 });
 
-app.use('/', demoRoutes);
 app.use('/', publicRoutes);
 app.use('/', authRoutes);
 app.use('/', paymentsRoutes);

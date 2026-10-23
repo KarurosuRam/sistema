@@ -2172,8 +2172,7 @@
     gap: 6px;
   }
 
-  .copy-field,
-  .probar-url {
+  .copy-field {
     flex-direction: column;
     align-items: stretch;
     gap: 8px;

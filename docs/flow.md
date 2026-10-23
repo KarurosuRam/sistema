@@ -120,7 +120,7 @@ inválida, `-7` tarjeta bloqueada, `-8` tarjeta vencida, `-11` demasiados reinte
 - [ ] Credenciales de **producción** (`FLOW_ENV=production`).
 - [ ] `SITE_URL` con el dominio definitivo y certificado válido (sin `www`/`http` de más).
 - [ ] `PAYMENTS_MODE=flow`.
-- [ ] `SEED_DEMO=false`, `DEMO_ACCESS=off` y `npm run purge-demo` si la base venía con
+- [ ] `SEED_DEMO` sin definir (o `false`) y `npm run purge-demo` si la base venía con
       contenido de ejemplo.
 - [ ] Hacer una compra real de $6.990 y confirmar que el cargo aparece en Flow y el
       memorial se crea; anular la compra desde Flow y revisar que no se dupliquen cupos.

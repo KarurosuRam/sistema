@@ -35,7 +35,7 @@ segundos, música MP3 y un libro de visitas con velas virtuales.
 Extras: **tarjeta conmemorativa A5 imprimible** con retrato y QR, **presentación de recuerdos**
 (slideshow del lightbox), reordenamiento de la galería, **búsqueda y filtros en el jardín público**,
 **moderación global de mensajes**, **respaldo JSON** por memorial, diseño editorial responsive,
-memoriales públicos o privados, sitemap/SEO, página de demo, centro de ayuda, términos, privacidad
+memoriales públicos o privados, sitemap/SEO, centro de ayuda, términos, privacidad
 y comprobantes de compra.
 
 ## 🚀 Puesta en marcha
@@ -51,32 +51,9 @@ npm start          # incluye --experimental-sqlite
 Para configurar correo, pagos y dominio, copia `.env.example` a `.env` y edítalo: la app
 lee ese archivo sola al arrancar (lo que ya exista en el entorno tiene prioridad).
 
-En el primer arranque, si la base está vacía **y los pagos están en modo demostración**, se crea
-automáticamente el **contenido de demostración** (cuenta, 5 memoriales, galerías, mensajes y velas).
-En una instalación con pagos reales no se siembra nada: hay que pedirlo con `SEED_DEMO=true` y,
-antes de abrir al público, retirarlo con `npm run purge-demo`.
-
-**Cuenta de demostración**
-
-```
-Correo:      demo@jardinmemorial.cl
-Contraseña:  jardin2026
-```
-
-Para regenerar la demo:
-
-```bash
-npm run seed
-```
-
-Para empezar sin datos de ejemplo:
-
-```bash
-SEED_DEMO=false npm start
-```
-
-Para retirar la demo de una base que ya la tenía (cuenta, memoriales, archivos y compras
-simuladas):
+La base parte **vacía**: el sitio no siembra cuentas, memoriales ni compras de ejemplo. El primer
+registro desde `/registro` crea la primera cuenta real. Si alguna vez cargaste el contenido de
+ejemplo para desarrollo (`SEED_DEMO=true`), retíralo con:
 
 ```bash
 npm run purge-demo
@@ -112,7 +89,7 @@ Todas las variables están documentadas en `.env.example`. Las principales:
 | `FLOW_ENV` | `sandbox` o `production` (alternativa Flow) |
 | `FLOW_API_KEY` / `FLOW_SECRET_KEY` | Credenciales del comercio en Flow |
 | `DATA_DIR` | Carpeta de la base SQLite y los uploads (por omisión `./data`) |
-| `SEED_DEMO` / `DEMO_ACCESS` | Contenido de ejemplo y acceso de un clic (`off`) |
+| `SEED_DEMO` | Siembra contenido de ejemplo solo en desarrollo (`true`); por omisión no siembra nada |
 | `EMBED_ORIGINS` | Dominios autorizados a mostrar la app en iframe |
 | `COOKIE_DOMAIN` | Cookie compartida entre subdominios (opcional) |
 | `ADMIN_EMAILS` | Correo(s) con acceso a `/panel/admin/pagos` (estado de pagos) |
@@ -155,21 +132,11 @@ servidor la reconoce aunque no reciba cookies.
 - En producción sin `EMBED_ORIGINS` esta ruta no existe: todo sigue con cookies y CSRF de
   doble envío.
 
-### Enlace fijo de prueba
-
-En modo demostración existe **`/probar`**: muestra la URL pública de la instalación con su código
-QR y permite entrar al panel de demo con un clic (`/probar?entrar=1`). Es la forma más rápida de
-probar la plataforma en el computador o en el teléfono sin escribir credenciales. La ruta se
-desactiva sola cuando hay una pasarela real configurada (o con `DEMO_ACCESS=off`) y responde 404 en producción.
-
-Además, mientras no haya sesión, todas las páginas muestran una franja de **modo demostración** con
-acceso directo al panel.
-
 > **Sobre el enlace en entornos de preview:** si el sitio corre en un sandbox de E2B con tráfico
 > restringido, su URL `*.e2b.app` exige la cabecera `e2b-traffic-access-token`. Ningún navegador
 > puede enviarla al abrir un enlace, así que el sitio solo se ve a través del panel de vista previa
 > de la plataforma (que inyecta el token). Al desplegar en un dominio propio esta restricción
-> desaparece y `/probar` funciona como cualquier URL pública.
+> desaparece.
 
 ## 🧭 Recorrido del producto
 
@@ -348,29 +315,9 @@ problemas frecuentes): **[`docs/wordpress.md`](docs/wordpress.md)**.
   **system-ui / Segoe UI / Roboto** para texto). No se descargan fuentes: la página carga
   más rápido y se lee nítida en cualquier dispositivo y tamaño de pantalla.
 - Melodía ambiente generada con síntesis propia (`scripts/generate_music.py`, 128 kbps).
-- Fotografía de demostración generada para este proyecto.
+- Fotografía de portada generada para este proyecto.
 
-## 🎮 Demo interactiva (`/demo`)
-
-La demo no depende de una cuenta ni de cookies, porque el sitio se muestra dentro de una
-vista previa embebida donde el navegador puede bloquearlas. Todo ocurre en la misma pantalla:
-
-- elegir cualquiera de los memoriales de ejemplo;
-- encender una vela y dejar un mensaje en el libro de visitas;
-- cambiar el tema, la visibilidad y el estado del libro de visitas;
-- crear un memorial de prueba, que nace privado como en el panel real, y quitarlo
-  cuando ya lo probaste (hasta 8 memoriales en la cuenta de ejemplo).
-
-Los formularios de la demo envían a `/demo/*` y vuelven a `/demo`, sin abrir pestañas ni
-depender de la sesión. Los enlaces que salen de la demo (inicio, memorial completo, registro)
-se resuelven en la misma pantalla, sin abrir pestañas. Los POST comprueban el origen y están
-limitados por IP y navegador. Cuando el sitio pasa a producción (`DEMO_ACCESS=off`) todo `/demo` redirige a `/memoriales`.
-
-La portada abre esta demo en un visor dentro de la misma página: los botones «Visitar un
-ejemplo», «Recorrer un memorial» y «Ver un memorial de ejemplo» cargan `/demo` en el visor,
-que se cierra con la ✕, con Escape o tocando fuera.
-
-## 🔑 Ingreso, demo y creación de cuenta
+## 🔑 Ingreso y creación de cuenta
 
 - No se abren pestañas nuevas: los enlaces internos (memorial, certificado, compartir) se
   resuelven en la misma pantalla. Los enlaces externos (WhatsApp, Instagram) también se abren
@@ -378,8 +325,6 @@ que se cierra con la ✕, con Escape o tocando fuera.
 - Al ingresar (o crear una cuenta) se vuelve a la **página principal**, no al panel:
   la portada muestra una barra con el nombre, los memoriales disponibles, «Mi jardín»
   y «Cerrar sesión». El panel queda a un clic.
-- La demo (`/probar?entrar=1`) hace lo mismo: deja la sesión de ejemplo activa en la
-  portada y muestra la cinta «Cuenta de demostración».
 - Si ya hay una sesión abierta, `/ingresar` y `/registro` no rebotan al panel: vuelven
   a la portada con un aviso que invita a cerrar sesión primero.
 - Los formularios con error llevan el foco al aviso de validación.

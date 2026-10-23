@@ -19,15 +19,15 @@ const { hashPassword } = require('../src/security');
 const media = require('../src/media');
 
 const PHOTO_SOURCES = {
-  rosa: 'demo-rosa.jpg',
+  rosa: 'retrato-jardin.jpg',
   oscar: 'demo-oscar.jpg',
   camila: 'demo-madre.jpg',
   nala: 'demo-nala.jpg',
   michi: 'demo-gato.jpg',
   garden: 'hero-garden.jpg',
-  tea: 'demo-tea.jpg',
-  hands: 'demo-hands.jpg',
-  beach: 'demo-beach.jpg'
+  tea: 'te-recuerdos.jpg',
+  hands: 'manos-fotografia.jpg',
+  beach: 'costa-atardecer.jpg'
 };
 
 function daysAgo(days, hours = 0) {

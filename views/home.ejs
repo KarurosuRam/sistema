@@ -32,7 +32,7 @@
           <a class="btn btn--ghost btn--lg" href="/panel">Ir a mi jardín</a>
         <% } else { %>
           <a class="btn btn--lg" href="/registro">Crear un memorial <%- icon('arrow-right', 16) %></a>
-          <a class="btn btn--ghost btn--lg" href="/demo" data-demo-open>Visitar un ejemplo</a>
+          <a class="btn btn--ghost btn--lg" href="/memoriales">Ver memoriales</a>
         <% } %>
       </div>
       <ul class="hero__trust">
@@ -124,7 +124,7 @@
 <section class="section section--cream" id="asi-se-ve">
   <div class="container showcase">
     <div class="showcase__media reveal">
-      <img src="/img/demo-tea.jpg" alt="Taza de té sobre un mantel de encaje, junto a flores blancas" loading="lazy">
+      <img src="/img/te-recuerdos.jpg" alt="Taza de té sobre un mantel de encaje, junto a flores blancas" loading="lazy">
       <div class="showcase__quote">
         <p>«Sus tardes de té eran su manera de decir que siempre había lugar para uno más.»</p>
         <span>Un recuerdo de familia</span>
@@ -144,7 +144,7 @@
         <li><%- icon('check-circle', 20) %><span><strong>Su galería y su video:</strong> hasta 10 fotos y un video de 60 segundos.</span></li>
         <li><%- icon('check-circle', 20) %><span><strong>La voz de los demás:</strong> un libro de visitas moderado por ti.</span></li>
       </ul>
-      <a class="btn btn--ghost" href="/demo" data-demo-open>Recorrer un memorial <%- icon('arrow-right', 16) %></a>
+      <a class="btn btn--ghost" href="/memoriales">Ver los memoriales <%- icon('arrow-right', 16) %></a>
     </div>
   </div>
 </section>
@@ -338,31 +338,9 @@
       </div>
       <div class="cta-final__actions">
         <a class="btn btn--light btn--block" href="/registro">Crear mi cuenta</a>
-        <a class="btn btn--ghost btn--block" href="/demo" data-demo-open>Ver un memorial de ejemplo</a>
+        <a class="btn btn--ghost btn--block" href="/memoriales">Ver memoriales públicos</a>
       </div>
     </div>
   </div>
 </section>
 
-<dialog class="demo-viewer" data-demo-viewer aria-labelledby="demo-viewer-title">
-  <div class="demo-viewer__head">
-    <div class="demo-viewer__title">
-      <span class="demo-viewer__eyebrow">Demo interactiva</span>
-      <strong id="demo-viewer-title">Jardín Memorial</strong>
-    </div>
-    <div class="demo-viewer__tools">
-      <button type="button" class="demo-viewer__close" data-demo-close aria-label="Cerrar la demo">
-        <%- icon('close', 16) %>
-      </button>
-    </div>
-  </div>
-  <div class="demo-viewer__body">
-    <iframe
-      class="demo-viewer__frame"
-      data-demo-frame
-      data-src="/demo"
-      title="Demo interactiva de Jardín Memorial: memoriales de ejemplo"
-    ></iframe>
-  </div>
-  <p class="demo-viewer__hint">Todo ocurre aquí mismo: enciende velas, deja un mensaje o crea un memorial de prueba.</p>
-</dialog>

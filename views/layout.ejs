@@ -28,21 +28,6 @@
 </head>
 <body class="<%= bodyClass %><%= typeof embeddedView !== 'undefined' && embeddedView ? ' is-embedded' : '' %><%= typeof chromeless !== 'undefined' && chromeless ? ' is-chromeless' : '' %>">
   <a class="skip-link" href="#main">Saltar al contenido</a>
-  <% if (demoAccess && !user) { %>
-    <div class="demo-ribbon">
-      <div class="container demo-ribbon__inner">
-        <span><strong>Modo demostración</strong><i>·</i>datos de ejemplo, pagos simulados</span>
-        <a href="/probar?entrar=1">Entrar al panel de demo <%- icon('arrow-right', 14) %></a>
-      </div>
-    </div>
-  <% } else if (demoAccess && user && config.demoAccount && user.email === config.demoAccount.email) { %>
-    <div class="demo-ribbon">
-      <div class="container demo-ribbon__inner">
-        <span><strong>Cuenta de demostración</strong><i>·</i>estás probando con datos de ejemplo</span>
-        <a href="/panel">Ir al panel de la demo <%- icon('arrow-right', 14) %></a>
-      </div>
-    </div>
-  <% } %>
   <%- include('partials/header') %>
   <%- include('partials/flash') %>
   <main id="main">

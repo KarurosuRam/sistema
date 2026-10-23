@@ -174,7 +174,8 @@ devuelve `500` para que la pasarela reintente (lo hace durante varios días).
 - [ ] `MP_ENV=production`.
 - [ ] `PAYMENTS_MODE=mercadopago`.
 - [ ] `SITE_URL` con el dominio definitivo y certificado válido.
-- [ ] `SEED_DEMO=false`, `DEMO_ACCESS=off` y `npm run purge-demo` si la base tenía la demo.
+- [ ] `SEED_DEMO` sin definir (o `false`) y `npm run purge-demo` si la base tenía contenido
+      de ejemplo.
 - [ ] Compra real de prueba (puedes comprar $6.990 y luego devolverte el dinero desde el
       panel de Mercado Pago): confirma que el cupo aparece una sola vez.
 - [ ] Revisa `https://TU-DOMINIO/pago/estado`: `"ambiente": "production"` y
