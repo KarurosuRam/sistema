@@ -328,7 +328,10 @@ formulario, así que en Docker conviene seguir usando `docker-compose.yml`.
 | `FLOW_API_KEY` / `FLOW_SECRET_KEY` | Credenciales del comercio Flow | — |
 | `DATA_DIR` | Carpeta de la base y los archivos subidos | `/var/lib/jardin-memorial` |
 | `SEED_DEMO` | Sembrar contenido de ejemplo en una base vacía | `false` |
-| `ADMIN_EMAILS` | Correo(s) con acceso a `/panel/admin/pagos` | `dueno@tudominio.cl` |
+| `MAIL_HOST` / `MAIL_PORT` / `MAIL_SECURE` | SMTP para el enlace de recuperación de contraseña | `smtp.tuproveedor.cl` / `587` / `false` |
+| `MAIL_USER` / `MAIL_PASS` | Usuario y clave (o clave de aplicación) del SMTP | `no-responder@tudominio.cl` |
+| `MAIL_FROM` | Remitente que ve la persona | `Jardín Memorial <no-responder@tudominio.cl>` |
+| `ADMIN_EMAILS` | Correo(s) con acceso a `/panel/admin/pagos` y `/panel/admin/correo` | `dueno@tudominio.cl` |
 | `COOKIE_DOMAIN` | Dominio de la cookie de sesión, para compartirla entre subdominios | `.tudominio.cl` |
 | `PORT` | Puerto interno de la app | `3000` |
 
@@ -387,6 +390,21 @@ Con `ADMIN_EMAILS=dueno@tudominio.cl`, entra a la app, abre **Mi jardín → Pag
 ambiente, las URLs que hay que registrar y el botón **Probar credenciales**, que consulta
 la cuenta de Mercado Pago sin crear cobros. Es la forma más rápida de confirmar que
 `.env` quedó bien cargado antes de avisarle a los clientes.
+
+### Configurar el correo (recuperación de contraseña)
+
+Sin SMTP la app funciona igual, pero nadie puede recuperar su clave solo. Dos caminos:
+
+1. **Desde el servidor:** define `MAIL_*` en `.env` y reinicia. Es lo recomendado en
+   producción, porque la clave no queda en la base.
+2. **Desde el panel:** con una cuenta de `ADMIN_EMAILS`, abre **Mi jardín → Correo**,
+   pega los datos del SMTP y usa **Probar conexión y enviar**. La clave se guarda cifrada
+   (AES-256-GCM) en `DATA_DIR` y se aplica sin reiniciar. Lo que esté en el entorno tiene
+   prioridad sobre lo guardado.
+
+Mientras no haya correo, en esa misma página aparecen los **pedidos de recuperación** y el
+botón **Crear enlace** para entregar el enlace a mano (por teléfono o WhatsApp). Cada enlace
+sirve una sola vez, vence en 60 minutos y al usarlo cierra todas las sesiones de la cuenta.
 
 ## 7. Pasar a producción y cobrar de verdad
 
