@@ -1,0 +1,387 @@
+<section class="panel-shell">
+  <div class="container">
+    <div class="dash-head">
+      <div>
+        <p class="eyebrow">Administración</p>
+        <h1>Pagos y pasarela</h1>
+        <p>Revisa con qué pasarela están cobrando los memoriales y comprueba tus credenciales.</p>
+      </div>
+      <div class="edit-head__actions">
+        <a class="btn btn--ghost" href="/panel/admin/correo">Correo y recuperación</a>
+        <a class="btn btn--ghost" href="/panel/compras">Mis compras</a>
+        <a class="btn" href="/panel/planes">Ver planes</a>
+      </div>
+    </div>
+
+    <% if (warning) { %>
+      <div class="demo-note demo-note--warn" style="margin: 0 0 26px;">
+        <%- icon('alert-circle', 16) %>
+        <span><strong>Configuración incompleta.</strong> <%= warning %></span>
+      </div>
+    <% } %>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <span class="stat-card__icon"><%- icon('wallet', 17) %></span>
+        <div>
+          <span class="stat-card__value"><%= provider === 'mercadopago' ? 'Mercado Pago' : provider === 'flow' ? 'Flow' : 'Demostración' %></span>
+          <span class="stat-card__label">Pasarela activa</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card__icon"><%- icon(realCharges ? 'shield' : 'info', 17) %></span>
+        <div>
+          <span class="stat-card__value"><%= realCharges ? 'Activados' : 'Simulados' %></span>
+          <span class="stat-card__label">Cobros reales</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card__icon"><%- icon('card', 17) %></span>
+        <div>
+          <span class="stat-card__value"><%= helpers.formatCLP(totals.amount_paid || 0) %></span>
+          <span class="stat-card__label"><%= totals.credits_sold || 0 %> memoriales vendidos</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card__icon"><%- icon('clock', 17) %></span>
+        <div>
+          <span class="stat-card__value"><%= totals.pending || 0 %></span>
+          <span class="stat-card__label">Pagos pendientes</span>
+        </div>
+      </div>
+      <% if ((totals.refunded || 0) > 0) { %>
+        <div class="stat-card">
+          <span class="stat-card__icon"><%- icon('arrow-left', 17) %></span>
+          <div>
+            <span class="stat-card__value"><%= helpers.formatCLP(totals.amount_refunded || 0) %></span>
+            <span class="stat-card__label"><%= totals.refunded %> devueltos</span>
+          </div>
+        </div>
+      <% } %>
+    </div>
+
+    <% if (!realCharges) { %>
+      <div class="panel-section">
+        <div class="demo-note">
+          <%- icon('info', 16) %>
+          <span>
+            Ahora mismo la app registra las compras <strong>sin cobrar</strong>. Para cobrar de
+            verdad hay que conectar una pasarela y publicar el sitio en un servidor con acceso a
+            internet: la vista previa de este entorno no puede comunicarse con Mercado Pago ni
+            con Flow. La guía paso a paso está en <code>docs/mercadopago.md</code> (recomendado)
+            o <code>docs/flow.md</code>.
+            <% if (requestedMode !== 'auto' && requestedMode !== 'demo') { %>
+              El servidor pidió <code>PAYMENTS_MODE=<%= requestedMode %></code> pero no encontró sus credenciales.
+            <% } %>
+          </span>
+        </div>
+      </div>
+    <% } %>
+
+    <div class="panel-section">
+      <div class="section-head">
+        <h2>Conectar tu cuenta</h2>
+      </div>
+      <p class="hint" style="margin: 0 0 14px;">
+        Pega aquí tus credenciales si no quieres editar archivos en el servidor. Se guardan
+        cifradas en la base y se aplican al instante, sin reiniciar. Los campos se muestran
+        vacíos: déjalos así para conservar lo que ya está guardado.
+        <% if (settings.modeSource === 'env') { %>
+          <br><strong>Este servidor define el modo de pago por entorno</strong>: los cambios
+          hechos aquí no se aplican mientras <code>PAYMENTS_MODE</code> siga definido.
+        <% } %>
+      </p>
+
+      <form action="/panel/admin/pagos/guardar" method="post" class="settings-form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div class="field-grid">
+          <div class="field">
+            <label for="mode">Pasarela</label>
+            <select class="input" id="mode" name="mode"<%= settings.modeSource === 'env' ? ' disabled' : '' %>>
+              <option value="auto"<%= settings.mode === 'auto' ? ' selected' : '' %>>Automática (recomendada)</option>
+              <option value="mercadopago"<%= settings.mode === 'mercadopago' ? ' selected' : '' %>>Mercado Pago</option>
+              <option value="flow"<%= settings.mode === 'flow' ? ' selected' : '' %>>Flow</option>
+              <option value="demo"<%= settings.mode === 'demo' ? ' selected' : '' %>>Demostración (sin cobros)</option>
+            </select>
+            <span class="hint">
+              En automático se usa Mercado Pago si hay credenciales; si no, Flow; si no, demostración.
+            </span>
+          </div>
+        </div>
+
+        <h3 class="settings-form__title"><%- icon('card', 16) %> Mercado Pago</h3>
+        <div class="field-grid">
+          <div class="field">
+            <label for="mp_env">Ambiente</label>
+            <select class="input" id="mp_env" name="mp_env"<%= settings.mp.env.source === 'env' ? ' disabled' : '' %>>
+              <option value="sandbox"<%= settings.mp.env.value !== 'production' ? ' selected' : '' %>>Pruebas (sandbox)</option>
+              <option value="production"<%= settings.mp.env.value === 'production' ? ' selected' : '' %>>Producción (cobros reales)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="mp_token">Access Token</label>
+            <input class="input" type="password" id="mp_token" name="mp_token" autocomplete="off"
+                   placeholder="<%= settings.mp.token.source === 'env' ? 'Definido en el servidor' : settings.mp.token.set ? 'Guardado: ' + settings.mp.token.hint : 'TEST-… (pruebas) o APP_USR-… (producción)' %>"
+                   <%= settings.mp.token.source === 'env' ? 'disabled' : '' %>>
+            <span class="hint">
+              <% if (settings.mp.token.source === 'env') { %>
+                Lo define <code>MP_ACCESS_TOKEN</code> en el servidor.
+              <% } else if (settings.mp.token.set) { %>
+                Ya hay un token guardado. Escribe uno nuevo solo si quieres reemplazarlo.
+              <% } else { %>
+                Mercado Pago → Tus integraciones → Credenciales.
+              <% } %>
+            </span>
+          </div>
+          <div class="field">
+            <label for="mp_webhook_secret">Secreto del webhook</label>
+            <input class="input" type="password" id="mp_webhook_secret" name="mp_webhook_secret" autocomplete="off"
+                   placeholder="<%= settings.mp.webhookSecret.source === 'env' ? 'Definido en el servidor' : settings.mp.webhookSecret.set ? 'Guardado: ' + settings.mp.webhookSecret.hint : 'Opcional, pero recomendado' %>"
+                   <%= settings.mp.webhookSecret.source === 'env' ? 'disabled' : '' %>>
+            <span class="hint">Se usa para comprobar que la notificación viene de Mercado Pago.</span>
+          </div>
+        </div>
+
+        <h3 class="settings-form__title"><%- icon('wallet', 16) %> Flow <span class="muted small">(solo si lo prefieres)</span></h3>
+        <div class="field-grid">
+          <div class="field">
+            <label for="flow_env">Ambiente</label>
+            <select class="input" id="flow_env" name="flow_env"<%= settings.flow.env.source === 'env' ? ' disabled' : '' %>>
+              <option value="sandbox"<%= settings.flow.env.value !== 'production' ? ' selected' : '' %>>Pruebas (sandbox)</option>
+              <option value="production"<%= settings.flow.env.value === 'production' ? ' selected' : '' %>>Producción (cobros reales)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="flow_api_key">API Key</label>
+            <input class="input" type="password" id="flow_api_key" name="flow_api_key" autocomplete="off"
+                   placeholder="<%= settings.flow.apiKey.source === 'env' ? 'Definida en el servidor' : settings.flow.apiKey.set ? 'Guardada: ' + settings.flow.apiKey.hint : 'API Key del comercio' %>"
+                   <%= settings.flow.apiKey.source === 'env' ? 'disabled' : '' %>>
+          </div>
+          <div class="field">
+            <label for="flow_secret_key">Secret Key</label>
+            <input class="input" type="password" id="flow_secret_key" name="flow_secret_key" autocomplete="off"
+                   placeholder="<%= settings.flow.secretKey.source === 'env' ? 'Definida en el servidor' : settings.flow.secretKey.set ? 'Guardada: ' + settings.flow.secretKey.hint : 'Secret Key del comercio' %>"
+                   <%= settings.flow.secretKey.source === 'env' ? 'disabled' : '' %>>
+          </div>
+        </div>
+
+        <button class="btn" type="submit"><%- icon('check', 15) %> Guardar y aplicar</button>
+      </form>
+
+      <% if (settings.mp.token.source === 'panel' || settings.flow.apiKey.source === 'panel') { %>
+        <div class="settings-clear">
+          <span class="muted small">¿Quieres desconectar una cuenta?</span>
+          <form action="/panel/admin/pagos/quitar" method="post" data-confirm="Se borrarán las credenciales guardadas desde el panel y la app volverá a la demostración (o al entorno). ¿Continuar?">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <% if (settings.mp.token.source === 'panel' && settings.flow.apiKey.source === 'panel') { %>
+              <select class="input input--sm" name="provider" aria-label="Qué credenciales borrar">
+                <option value="mercadopago">Mercado Pago</option>
+                <option value="flow">Flow</option>
+                <option value="all">Ambas</option>
+              </select>
+            <% } else { %>
+              <input type="hidden" name="provider" value="<%= settings.mp.token.source === 'panel' ? 'mercadopago' : 'flow' %>">
+            <% } %>
+            <button class="btn btn--ghost" type="submit">Borrar guardadas</button>
+          </form>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="panel-section">
+      <div class="section-head">
+        <h2>Mercado Pago (recomendado)</h2>
+        <span class="badge <%= mp.configured ? '' : 'badge--gold' %>">
+          <%- icon(mp.configured ? 'check' : 'alert-circle', 12) %>
+          <%= mp.configured ? 'Configurado' : 'Sin credenciales' %>
+        </span>
+      </div>
+
+      <div class="admin-kv">
+        <div class="admin-kv__row">
+          <span>Ambiente</span>
+          <strong><%= mp.env === 'production' ? 'Producción (cobros reales)' : 'Pruebas (sandbox)' %></strong>
+        </div>
+        <div class="admin-kv__row">
+          <span>Access Token</span>
+          <strong><%= mp.tokenMasked || 'No definido' %><% if (mp.tokenMasked) { %> · <%= mp.tokenType %><% } %></strong>
+        </div>
+        <div class="admin-kv__row">
+          <span>Firma del webhook</span>
+          <strong><%= mp.webhookSecret ? 'MP_WEBHOOK_SECRET definido' : 'MP_WEBHOOK_SECRET sin definir' %></strong>
+        </div>
+        <div class="admin-kv__row">
+          <span>URL de notificaciones</span>
+          <div class="copy-field">
+            <input type="text" id="mp-webhook" value="<%= mp.webhookUrl %>" readonly aria-label="URL de notificaciones de Mercado Pago">
+            <button class="btn btn--ghost" type="button" data-copy="#mp-webhook"><%- icon('copy', 14) %> Copiar</button>
+          </div>
+        </div>
+        <div class="admin-kv__row">
+          <span>URL de vuelta</span>
+          <div class="copy-field">
+            <input type="text" id="mp-return" value="<%= mp.returnUrl %>" readonly aria-label="URL de vuelta de Mercado Pago">
+            <button class="btn btn--ghost" type="button" data-copy="#mp-return"><%- icon('copy', 14) %> Copiar</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="hint" style="margin-top: 12px;">
+        Registra la URL de notificaciones en <strong>Tus integraciones → Webhooks</strong> de
+        Mercado Pago, con el evento <em>payment</em>. El webhook debe ser HTTPS.
+      </p>
+    </div>
+
+    <div class="panel-section">
+      <div class="section-head">
+        <h2>Flow (alternativa)</h2>
+        <span class="badge <%= flow.configured ? '' : 'badge--gold' %>">
+          <%- icon(flow.configured ? 'check' : 'alert-circle', 12) %>
+          <%= flow.configured ? 'Configurado' : 'Sin credenciales' %>
+        </span>
+      </div>
+
+      <div class="admin-kv">
+        <div class="admin-kv__row">
+          <span>Ambiente</span>
+          <strong><%= flow.env === 'production' ? 'Producción (cobros reales)' : 'Pruebas (sandbox)' %></strong>
+        </div>
+        <div class="admin-kv__row">
+          <span>API Key</span>
+          <strong><%= flow.apiKeyMasked || 'No definida' %></strong>
+        </div>
+        <div class="admin-kv__row">
+          <span>Secret Key</span>
+          <strong><%= flow.secretMasked || 'No definida' %></strong>
+        </div>
+        <div class="admin-kv__row">
+          <span>URL de confirmación</span>
+          <div class="copy-field">
+            <input type="text" id="flow-confirm" value="<%= flow.confirmationUrl %>" readonly aria-label="URL de confirmación de Flow">
+            <button class="btn btn--ghost" type="button" data-copy="#flow-confirm"><%- icon('copy', 14) %> Copiar</button>
+          </div>
+        </div>
+        <div class="admin-kv__row">
+          <span>URL de retorno</span>
+          <div class="copy-field">
+            <input type="text" id="flow-return" value="<%= flow.returnUrl %>" readonly aria-label="URL de retorno de Flow">
+            <button class="btn btn--ghost" type="button" data-copy="#flow-return"><%- icon('copy', 14) %> Copiar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <div class="section-head">
+        <h2>Probar conexión</h2>
+      </div>
+      <p class="hint" style="margin: 0 0 14px;">
+        Consulta la cuenta de Mercado Pago con el token configurado. No crea cobros ni modifica nada.
+      </p>
+      <form action="/panel/admin/pagos/probar" method="post">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button class="btn" type="submit"><%- icon('shield', 15) %> Probar credenciales</button>
+      </form>
+    </div>
+
+    <div class="panel-section">
+      <div class="section-head">
+        <h2>Últimos movimientos</h2>
+        <a class="link-arrow" href="/pago/estado" target="_blank" rel="noopener" style="font-size: 0.66rem;">Ver estado técnico <%- icon('external-link', 14) %></a>
+      </div>
+
+      <% if (!purchases.length) { %>
+        <div class="empty-state">
+          <%- icon('card', 38) %>
+          <h3>Todavía no hay compras</h3>
+          <p>Cuando alguien compre un plan, el movimiento aparecerá aquí con su pasarela y estado.</p>
+        </div>
+      <% } else { %>
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Persona</th>
+                  <th>Plan</th>
+                  <th>Monto</th>
+                  <th>Pasarela</th>
+                  <th>Estado</th>
+                  <th>Referencia</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% purchases.forEach(function (purchase) { %>
+                  <tr>
+                    <td><%= helpers.formatDateShort(purchase.created_at.slice(0, 10)) %></td>
+                    <td>
+                      <strong><%= purchase.user_name %></strong><br>
+                      <span class="muted small"><%= purchase.user_email %></span>
+                    </td>
+                    <td><%= purchase.plan_name %></td>
+                    <td><strong><%= helpers.formatCLP(purchase.amount) %></strong></td>
+                    <td><%= purchase.mode === 'mercadopago' ? 'Mercado Pago' : purchase.mode === 'flow' ? 'Flow' : 'Demostración' %></td>
+                    <td>
+                      <% if (purchase.status === 'pagado') { %>
+                        <span class="badge"><%- icon('check', 12) %> Pagado</span>
+                      <% } else if (purchase.status === 'pendiente') { %>
+                        <span class="badge badge--gold"><%- icon('clock', 12) %> Pendiente</span>
+                      <% } else if (purchase.status === 'reembolsado') { %>
+                        <span class="badge badge--gold"><%- icon('arrow-left', 12) %> Reembolsado</span>
+                      <% } else { %>
+                        <span class="badge"><%= purchase.status %></span>
+                      <% } %>
+                    </td>
+                    <td>
+                      <span class="mono"><%= purchase.reference %></span>
+                      <% if (purchase.provider_order) { %>
+                        <br><span class="muted small"><%= purchase.provider === 'mercadopago' ? 'MP' : 'Flow' %> #<%= purchase.provider_order %></span>
+                      <% } %>
+                    </td>
+                    <td>
+                      <% if (purchase.status === 'pendiente') { %>
+                        <form action="/panel/admin/pagos/<%= encodeURIComponent(purchase.reference) %>/verificar" method="post" class="inline-form">
+                          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                          <button class="btn btn--ghost btn--sm" type="submit">Verificar</button>
+                        </form>
+                      <% } %>
+                      <% if (purchase.status === 'pagado' && purchase.provider === 'mercadopago' && purchase.mode !== 'demo') { %>
+                        <form action="/panel/admin/pagos/<%= encodeURIComponent(purchase.reference) %>/reembolsar" method="post" class="inline-form"
+                              data-confirm="Se devolverá el dinero en Mercado Pago y se quitarán los cupos sin usar. El memorial creado no se borra. ¿Continuar?">
+                          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                          <button class="btn btn--ghost btn--sm" type="submit">Reembolsar</button>
+                        </form>
+                      <% } %>
+                      <% if (purchase.status !== 'pendiente' && !(purchase.status === 'pagado' && purchase.provider === 'mercadopago' && purchase.mode !== 'demo')) { %>
+                        <span class="muted small">—</span>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="panel-section">
+      <div class="section-head">
+        <h2>Cómo cambiar las credenciales</h2>
+      </div>
+      <ol class="admin-steps">
+        <li><strong>Sin acceso al servidor:</strong> usa el formulario <em>Conectar tu cuenta</em> de esta página. Se guarda cifrado y se aplica al instante.</li>
+        <li><strong>Con acceso al servidor:</strong> edita <code>.env</code> (o las variables del contenedor/servicio) y reinicia con <code>docker compose up -d</code> o <code>sudo systemctl restart jardin-memorial</code>.</li>
+        <li>Lo que definas en el entorno tiene prioridad sobre lo guardado aquí.</li>
+        <li>Después de cualquier cambio, usa <strong>Probar credenciales</strong> para confirmar que la cuenta responde.</li>
+      </ol>
+      <p class="hint">
+        Los correos con acceso a esta página se definen en <code>ADMIN_EMAILS</code>:
+        <% if (adminEmails.length) { %><strong><%= adminEmails.join(', ') %></strong><% } else { %>sin definir<% } %>.
+      </p>
+    </div>
+  </div>
+</section>

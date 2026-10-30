@@ -1,0 +1,197 @@
+<section class="panel-shell">
+  <div class="container">
+    <% if (bienvenida) { %>
+      <div class="upgrade-card" style="margin-bottom: 26px;">
+        <div>
+          <p class="eyebrow eyebrow--plain" style="margin-bottom: 6px;">Tu cuenta está lista</p>
+          <h3>Bienvenido a tu jardín, <%= user.name.split(' ')[0] %></h3>
+          <p>El siguiente paso es elegir un plan y crear tu primer memorial. Puedes comenzar cuando quieras.</p>
+        </div>
+        <a class="btn" href="/panel/planes">Elegir mi plan <%- icon('arrow-right', 16) %></a>
+      </div>
+    <% } %>
+
+    <div class="dash-head">
+      <div>
+        <p class="eyebrow">Mi jardín</p>
+        <h1>Mis memoriales</h1>
+        <p>Un espacio para cuidar los recuerdos de quienes quieres.</p>
+      </div>
+      <div class="edit-head__actions">
+        <% if (config.isAdminEmail(user.email)) { %>
+          <a class="btn btn--ghost" href="/panel/admin/pagos"><%- icon('settings', 16) %> Pagos</a>
+          <a class="btn btn--ghost" href="/panel/admin/correo"><%- icon('mail', 16) %> Correo</a>
+        <% } %>
+        <a class="btn btn--ghost" href="/panel/mensajes">Ver mensajes</a>
+        <a class="btn btn--ghost" href="/planes">Ver planes</a>
+        <% if (user.credits > 0) { %>
+          <a class="btn" href="/panel/nuevo"><%- icon('plus', 16) %> Crear memorial</a>
+        <% } else { %>
+          <a class="btn" href="/panel/planes">Comprar memoriales</a>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="balance">
+      <div>
+        <span class="balance__label">Memoriales disponibles</span>
+        <div class="balance__value"><%= user.credits %> <span>en tu cuenta</span></div>
+        <p class="balance__hint">
+          <% if (user.credits > 0) { %>
+            Tienes cupo para crear <%= user.credits === 1 ? 'un memorial' : user.credits + ' memoriales' %>. Cada memorial incluye enlace, QR, certificado, galería, video y música.
+          <% } else { %>
+            Elige un plan para crear tu próximo memorial: uno por $6.990 o cuatro por $11.990.
+          <% } %>
+        </p>
+      </div>
+      <div class="balance__actions">
+        <% if (user.credits > 0) { %>
+          <a class="btn btn--light" href="/panel/nuevo"><%- icon('plus', 15) %> Nuevo memorial</a>
+        <% } %>
+        <a class="btn btn--ghost" href="/panel/planes">Comprar más</a>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <span class="stat-card__icon"><%- icon('flower', 17) %></span>
+        <div><span class="stat-card__value"><%= stats.memorials %></span><span class="stat-card__label">Memoriales</span></div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card__icon"><%- icon('eye', 17) %></span>
+        <div><span class="stat-card__value"><%= helpers.formatNumber(stats.views) %></span><span class="stat-card__label">Visitas totales</span></div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card__icon"><%- icon('message', 17) %></span>
+        <div><span class="stat-card__value"><%= stats.messages %></span><span class="stat-card__label">Mensajes recibidos</span></div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card__icon"><%- icon('flame', 17) %></span>
+        <div><span class="stat-card__value"><%= stats.candles %></span><span class="stat-card__label">Velas encendidas</span></div>
+      </div>
+    </div>
+
+    <section class="panel-section">
+      <div class="panel-section__head">
+        <h2>Todos mis memoriales</h2>
+        <% if (memorials.length) { %><span class="badge"><%= memorials.length %> <%= memorials.length === 1 ? 'memorial' : 'memoriales' %></span><% } %>
+      </div>
+
+      <% if (!memorials.length) { %>
+        <div class="empty-state">
+          <%- icon('flower', 42) %>
+          <h3>Tu jardín aún está vacío</h3>
+          <p>Crea tu primer memorial y reúne sus fotos, su historia y su música en un lugar para siempre.</p>
+          <% if (user.credits > 0) { %>
+            <a class="btn" href="/panel/nuevo">Crear mi primer memorial</a>
+          <% } else { %>
+            <a class="btn" href="/panel/planes">Elegir un plan</a>
+          <% } %>
+        </div>
+      <% } else { %>
+        <div class="pm-grid">
+          <% memorials.forEach(function (memorial) { %>
+            <article class="pm-card">
+              <div class="pm-card__media">
+                <% if (memorial.main_thumb || memorial.main_photo) { %>
+                  <img src="/uploads/<%= memorial.main_thumb || memorial.main_photo %>" alt="Retrato de <%= memorial.full_name %>" loading="lazy">
+                <% } else { %>
+                  <div class="pm-placeholder"><%= helpers.initials(memorial.full_name) %></div>
+                <% } %>
+                <div class="pm-card__badges">
+                  <% if (memorial.is_public) { %>
+                    <span class="badge">Público</span>
+                  <% } else { %>
+                    <span class="badge badge--private">Privado</span>
+                  <% } %>
+                  <% if (memorial.kind === 'mascota') { %><span class="badge badge--clay">Mascota</span><% } %>
+                </div>
+              </div>
+              <div class="pm-card__body">
+                <h3><%= memorial.full_name %></h3>
+                <p class="pm-card__dates"><%= helpers.yearsLabel(memorial) || 'Sin fechas' %></p>
+                <div class="pm-card__counts">
+                  <span><%- icon('image', 13) %> <%= memorial.photo_count %>/10 fotos</span>
+                  <span><%- icon('message', 13) %> <%= memorial.message_count %></span>
+                  <span><%- icon('eye', 13) %> <%= helpers.formatNumber(memorial.views) %></span>
+                </div>
+                <div class="pm-card__actions">
+                  <a class="btn btn--sm" href="/panel/memoriales/<%= memorial.id %>">Administrar</a>
+                  <a class="btn btn--ghost btn--sm" href="/m/<%= memorial.slug %>">Ver</a>
+                  <a class="icon-btn" href="/panel/memoriales/<%= memorial.id %>/compartir" title="Compartir y QR" aria-label="Compartir memorial de <%= memorial.full_name %>"><%- icon('qr', 14) %></a>
+                </div>
+              </div>
+            </article>
+          <% }); %>
+        </div>
+      <% } %>
+    </section>
+
+    <div class="edit-grid" style="grid-template-columns: 1fr 1fr;">
+      <section class="panel-section" style="margin-bottom: 0;">
+        <div class="panel-section__head">
+          <h2 style="font-size: 1.4rem;">Últimos mensajes</h2>
+        </div>
+        <div class="form-card" style="padding: 8px 22px;">
+          <% if (!recentGuestbook.length) { %>
+            <p class="muted small" style="padding: 20px 0;">Aún no hay mensajes. Cuando compartas tus memoriales, aquí verás las palabras que dejan tus visitantes.</p>
+          <% } else { %>
+            <div class="msg-list">
+              <% recentGuestbook.forEach(function (entry) { %>
+                <div class="msg-row">
+                  <span class="avatar avatar--sm <%= entry.candle ? 'avatar--gold' : '' %>"><%= helpers.initials(entry.name) %></span>
+                  <div class="msg-row__body">
+                    <div class="msg-row__top">
+                      <strong><%= entry.name %></strong>
+                      <span><%= helpers.timeAgo(entry.created_at) %></span>
+                    </div>
+                    <p class="msg-row__text"><%= entry.message %></p>
+                    <a class="msg-row__link" href="/panel/memoriales/<%= entry.memorial_id %>#libro"><%= entry.full_name %></a>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+          <% } %>
+        </div>
+      </section>
+
+      <section class="panel-section" style="margin-bottom: 0;">
+        <div class="panel-section__head">
+          <h2 style="font-size: 1.4rem;">Últimas compras</h2>
+          <a class="link-arrow" href="/panel/compras" style="font-size: 0.66rem;">Ver todo <%- icon('arrow-right', 14) %></a>
+        </div>
+        <div class="form-card" style="padding: 8px 22px;">
+          <% if (!purchases.length) { %>
+            <p class="muted small" style="padding: 20px 0;">Sin compras todavía. <a class="text-link" href="/panel/planes">Elige un plan</a> para comenzar.</p>
+          <% } else { %>
+            <div class="msg-list">
+              <% purchases.forEach(function (purchase) { %>
+                <div class="msg-row">
+                  <span class="avatar avatar--sm avatar--gold"><%- icon('card', 15) %></span>
+                  <div class="msg-row__body">
+                    <div class="msg-row__top">
+                      <strong><%= purchase.plan_name %></strong>
+                      <span><%= helpers.formatTimestamp(purchase.created_at) %></span>
+                    </div>
+                    <p class="msg-row__text" style="font-family: var(--sans); font-size: 0.8rem;"><%= purchase.credits %> memoriales · <%= helpers.formatCLP(purchase.amount) %></p>
+                    <a class="msg-row__link" href="/panel/compra/<%= purchase.reference %>">Ver comprobante</a>
+                  </div>
+                </div>
+              <% }); %>
+            </div>
+          <% } %>
+        </div>
+      </section>
+    </div>
+
+    <% if (user.credits < 1) { %>
+      <div class="upgrade-card" style="margin-top: 30px;">
+        <div>
+          <h3>Amplía tu jardín</h3>
+          <p>El pack familia incluye 4 memoriales por $11.990, con un ahorro de $15.970 frente a comprarlos por separado.</p>
+        </div>
+        <a class="btn" href="/panel/planes">Ver planes</a>
+      </div>
+    <% } %>
+  </div>
+</section>

@@ -1,0 +1,393 @@
+<%
+  const biographyParagraphs = helpers.excerptParagraphs(memorial.biography, 12);
+  const heroImage = memorial.main_photo ? '/uploads/' + memorial.main_photo : '/img/hero-garden.jpg';
+  const galleryPhotos = photos.filter(function (photo) { return photo.filename !== memorial.main_photo; });
+  const allPhotos = photos;
+  const candleShown = Math.min(candleCount, 24);
+%>
+<div class="mem" data-memorial="<%= memorial.id %>">
+  <header class="mem-top">
+    <a class="mem-brand" href="/" aria-label="Jardín Memorial">
+      <%- brandMark(26) %>
+      <span>Jardín Memorial</span>
+    </a>
+    <span class="mem-top__name"><%= memorial.full_name %></span>
+    <div class="mem-top__actions">
+      <button class="mem-icon-btn" type="button" data-share-open aria-label="Compartir este memorial" title="Compartir">
+        <%- icon('share', 16) %>
+      </button>
+      <% if (isOwner) { %>
+        <a class="mem-icon-btn" href="/panel/memoriales/<%= memorial.id %>" aria-label="Administrar memorial" title="Administrar memorial">
+          <%- icon('settings', 16) %>
+        </a>
+      <% } %>
+      <a class="mem-icon-btn" href="/" aria-label="Ir a Jardín Memorial" title="Jardín Memorial">
+        <%- icon('flower', 16) %>
+      </a>
+    </div>
+  </header>
+
+  <section class="mem-hero">
+    <div class="mem-hero__bg">
+      <img src="<%= heroImage %>" alt="" aria-hidden="true" fetchpriority="high">
+    </div>
+
+    <div class="mem-hero__inner">
+      <div class="mem-portrait">
+        <% if (memorial.main_photo) { %>
+          <img src="/uploads/<%= memorial.main_thumb || memorial.main_photo %>" alt="Retrato de <%= memorial.full_name %>">
+        <% } else { %>
+          <div class="mem-portrait__monogram"><%= helpers.initials(memorial.full_name) %></div>
+        <% } %>
+      </div>
+
+      <p class="mem-hero__eyebrow"><%= memorial.kind === 'mascota' ? 'En memoria de su mascota' : 'En memoria de' %></p>
+      <h1><%= memorial.full_name %></h1>
+      <p class="mem-hero__dates"><%= span || 'Un recuerdo eterno' %></p>
+
+      <% if (memorial.epitaph) { %>
+        <p class="mem-hero__epitaph"><%= memorial.epitaph %></p>
+      <% } else if (memorial.relationship) { %>
+        <p class="mem-hero__epitaph"><%= memorial.relationship %></p>
+      <% } %>
+
+      <div class="mem-hero__actions">
+        <a class="mem-btn mem-btn--solid" href="#historia">Conocer su historia <%- icon('arrow-right', 15) %></a>
+        <% if (memorial.allow_guestbook) { %>
+          <a class="mem-btn" href="#libro"><%- icon('book', 15) %> Dejar un mensaje</a>
+        <% } %>
+        <% if (allPhotos.length) { %>
+          <a class="mem-btn" href="#galeria"><%- icon('image', 15) %> Ver fotos</a>
+        <% } %>
+      </div>
+    </div>
+
+    <a class="mem-hero__scroll" href="#historia">Desliza <span></span></a>
+  </section>
+
+  <div class="mem-audio" data-audio-box>
+    <div class="mem-audio__hint" data-audio-hint>Toca para escuchar la música de este memorial</div>
+    <button class="mem-audio__btn" type="button" data-audio-toggle aria-pressed="false" aria-label="Reproducir la música del memorial">
+      <span class="mem-audio__bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <span class="mem-audio__label">Escuchar</span>
+    </button>
+    <audio id="mem-audio" loop preload="auto" src="<%= musicSrc %>"></audio>
+  </div>
+
+  <section class="mem-section mem-section--paper" id="historia">
+    <div class="mem-wrap mem-story__grid">
+      <div class="mem-story__aside">
+        <p class="mem-eyebrow">Su historia</p>
+        <h2 class="mem-heading">Una vida que <em>sigue floreciendo</em></h2>
+
+        <% if (lifeYears) { %>
+          <div class="mem-years"><%= lifeYears %><small>años</small></div>
+        <% } %>
+
+        <div class="mem-story__dates">
+          <% if (birthLabel) { %>
+            <div class="mem-date">
+              <span><%= memorial.kind === 'mascota' ? 'Nació' : 'Nacimiento' %></span>
+              <strong><%= birthLabel.label %></strong>
+            </div>
+          <% } %>
+          <% if (deathLabel) { %>
+            <div class="mem-date">
+              <span><%= memorial.kind === 'mascota' ? 'Nos dejó' : 'Partida' %></span>
+              <strong><%= deathLabel.label %></strong>
+            </div>
+          <% } %>
+          <% if (memorial.relationship) { %>
+            <div class="mem-date">
+              <span>En nuestras vidas</span>
+              <strong><%= memorial.relationship %></strong>
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="mem-story__text">
+        <% if (biographyParagraphs.length) { %>
+          <% biographyParagraphs.forEach(function (paragraph) { %>
+            <p><%= paragraph %></p>
+          <% }); %>
+        <% } else { %>
+          <p>
+            Este es el memorial de <%= memorial.full_name %>. Aquí se guardan sus fotos, su música
+            y los recuerdos de quienes lo quisieron. Si lo conociste, puedes dejar unas palabras
+            en el libro de visitas.
+          </p>
+        <% } %>
+      </div>
+    </div>
+  </section>
+
+  <% if (allPhotos.length) { %>
+    <section class="mem-section" id="galeria">
+      <div class="mem-wrap">
+        <div class="mem-gallery__head">
+          <div>
+            <p class="mem-eyebrow">Momentos</p>
+            <h2 class="mem-heading" style="margin-bottom: 0;">Su vida en <em>imágenes</em></h2>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <span class="limit-pill">
+              <%- icon('image', 13) %> <%= allPhotos.length %> <%= allPhotos.length === 1 ? 'foto' : 'fotos' %>
+            </span>
+            <% if (allPhotos.length > 1) { %>
+              <button class="mem-btn mem-btn--slideshow" type="button" data-slideshow>
+                <%- icon('play', 14) %> Reproducir recuerdos
+              </button>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="mem-gallery__grid <%= allPhotos.length === 1 ? 'mem-gallery__grid--single' : allPhotos.length === 2 ? 'mem-gallery__grid--pair' : 'mem-gallery__grid--mosaic' %>">
+          <% allPhotos.forEach(function (photo, index) { %>
+            <button class="mem-photo" type="button"
+              data-lightbox
+              data-src="/uploads/<%= photo.filename %>"
+              data-caption="<%= photo.caption || '' %>"
+              data-alt="<%= photo.caption || ('Foto de ' + memorial.full_name) %>"
+              aria-label="Ampliar foto <%= index + 1 %>">
+              <img src="/uploads/<%= photo.thumb %>" alt="<%= photo.caption || ('Foto ' + (index + 1) + ' de ' + memorial.full_name) %>" loading="lazy">
+              <% if (photo.caption) { %><span class="mem-photo__caption"><%= photo.caption %></span><% } %>
+              <span class="mem-photo__zoom"><%- icon('zoom-in', 14) %></span>
+            </button>
+          <% }); %>
+        </div>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (memorial.video_path) { %>
+    <section class="mem-section mem-section--deep" id="video">
+      <div class="mem-wrap">
+        <div class="mem-gallery__head" style="justify-content: center; text-align: center;">
+          <div>
+            <p class="mem-eyebrow" style="justify-content: center;">En movimiento</p>
+            <h2 class="mem-heading" style="margin-bottom: 28px;">Un instante <em>que perdura</em></h2>
+          </div>
+        </div>
+        <div class="mem-video__frame">
+          <video controls playsinline preload="metadata"
+            <% if (memorial.main_photo) { %>poster="/uploads/<%= memorial.main_photo %>"<% } %>
+            src="/uploads/<%= memorial.video_path %>">
+            Tu navegador no puede reproducir este video.
+          </video>
+        </div>
+        <% if (memorial.video_duration) { %>
+          <p class="mem-video__caption"><%= Math.round(memorial.video_duration) %> segundos de un recuerdo que no se va.</p>
+        <% } %>
+      </div>
+    </section>
+  <% } %>
+
+  <section class="mem-section mem-section--paper" id="libro">
+    <div class="mem-wrap mem-guestbook__grid">
+      <div>
+        <p class="mem-eyebrow">Libro de visitas</p>
+        <h2 class="mem-heading">Deja unas <em>palabras</em></h2>
+        <p style="color: var(--muted); font-size: 0.95rem; line-height: 1.7; max-width: 38ch;">
+          Un recuerdo, una anécdota, una oración. Cada mensaje es una caricia para quienes lo quisieron.
+        </p>
+
+        <% if (memorial.allow_guestbook) { %>
+          <form class="gb-form" action="/m/<%= memorial.slug %>/firma" method="post" style="margin-top: 24px;">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <input type="hidden" name="mensajes" value="<%= guestbook.length %>">
+            <div class="honeypot" aria-hidden="true">
+              <label for="jm_hp">Sitio web</label>
+              <input type="text" id="jm_hp" name="jm_hp" tabindex="-1" autocomplete="new-password" data-lpignore="true" aria-hidden="true">
+            </div>
+
+            <div class="field-grid">
+              <div class="field">
+                <label for="guest-name">Tu nombre</label>
+                <input class="input" type="text" id="guest-name" name="name" maxlength="60" required placeholder="María José">
+              </div>
+              <div class="field">
+                <label for="guest-city">Ciudad <span class="hint">(opcional)</span></label>
+                <input class="input" type="text" id="guest-city" name="city" maxlength="60" placeholder="Santiago">
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="guest-message">Tu mensaje</label>
+              <textarea class="textarea" id="guest-message" name="message" maxlength="1200" required placeholder="Comparte un recuerdo, una anécdota o unas palabras de cariño…" data-counter="#guest-count"></textarea>
+              <span class="counter" id="guest-count">0 / 1200</span>
+            </div>
+
+            <label class="check">
+              <input type="checkbox" name="candle" value="1">
+              <span>Encender una vela junto a mi mensaje</span>
+            </label>
+
+            <button class="btn" type="submit">Dejar mi mensaje <%- icon('send', 15) %></button>
+            <p class="tiny muted" style="text-align: center; margin: 12px 0 0;">Tu mensaje será visible para quienes visiten el memorial.</p>
+          </form>
+        <% } else { %>
+          <div class="gb-closed" style="margin-top: 24px;">
+            <%- icon('lock', 30) %>
+            <h3>El libro de visitas está cerrado</h3>
+            <p>La familia decidió cerrar el libro de visitas por ahora. Puedes recorrer su historia y su galería con calma.</p>
+          </div>
+        <% } %>
+      </div>
+
+      <div id="mensajes">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
+          <h3 style="font-family: var(--serif); font-size: 1.6rem; margin: 0;"><%= messageCount %> <%= messageCount === 1 ? 'mensaje' : 'mensajes' %></h3>
+          <% if (!memorial.allow_guestbook) { %><span class="badge badge--ink"><%- icon('lock', 11) %> Cerrado</span><% } %>
+        </div>
+
+        <% if (!guestbook.length) { %>
+          <p class="gb-empty">Todavía no hay mensajes. Sé la primera persona en dejar unas palabras para <%= memorial.full_name %>.</p>
+        <% } else { %>
+          <div class="gb-list">
+            <% guestbook.forEach(function (entry) { %>
+              <article class="gb-entry">
+                <span class="gb-entry__avatar"><%= helpers.initials(entry.name) %></span>
+                <div>
+                  <div class="gb-entry__head">
+                    <strong><%= entry.name %></strong>
+                    <% if (entry.city) { %><span>· <%= entry.city %></span><% } %>
+                    <span><%= helpers.timeAgo(entry.created_at) %></span>
+                    <% if (entry.candle) { %><span class="gb-entry__candle"><%- icon('flame', 12) %> Vela encendida</span><% } %>
+                  </div>
+                  <p class="gb-entry__text"><%= entry.message %></p>
+                </div>
+              </article>
+            <% }); %>
+          </div>
+          <% if (moreMessages) { %>
+            <div class="gb-more">
+              <a class="mem-btn" href="?mensajes=<%= nextGuestbookLimit %>#libro">
+                Ver más mensajes <%- icon('chevron-down', 14) %>
+              </a>
+              <span class="gb-more__count">Mostrando <%= guestbook.length %> de <%= messageCount %></span>
+            </div>
+          <% } %>
+        <% } %>
+      </div>
+    </div>
+  </section>
+
+  <section class="mem-section mem-section--deep mem-candles" id="velas">
+    <div class="mem-wrap mem-wrap--narrow">
+      <p class="mem-eyebrow" style="justify-content: center;">Luz y memoria</p>
+      <div class="mem-candles__count"><%= helpers.formatNumber(candleCount) %></div>
+      <p class="mem-candles__label"><%= candleCount === 1 ? 'vela encendida' : 'velas encendidas' %> en su nombre</p>
+
+      <% if (candleShown) { %>
+        <div class="candle-row" aria-hidden="true">
+          <% for (var i = 0; i < candleShown; i += 1) { %>
+            <span class="candle"><span class="candle__flame"></span><span class="candle__stick"></span></span>
+          <% } %>
+        </div>
+      <% } %>
+
+      <% if (memorial.allow_guestbook) { %>
+        <form class="mem-candles__form" action="/m/<%= memorial.slug %>/vela" method="post" data-candle-form>
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <label class="visually-hidden" for="candle-name">Tu nombre (opcional)</label>
+          <input class="input" type="text" id="candle-name" name="name" maxlength="60" placeholder="Tu nombre (opcional)">
+          <button class="btn" type="submit"><%- icon('flame', 15) %> Encender una vela</button>
+        </form>
+        <p class="tiny" style="margin-top: 16px;">Enciende una vela virtual en memoria de <%= memorial.full_name %>.</p>
+      <% } else { %>
+        <p class="tiny" style="margin-top: 16px;">La familia cerró las velas y el libro de visitas por ahora.</p>
+      <% } %>
+    </div>
+  </section>
+
+  <section class="mem-section" id="compartir">
+    <div class="mem-wrap mem-share__grid">
+      <div class="mem-share__text">
+        <p class="mem-eyebrow">Compartir su memoria</p>
+        <h2 class="mem-heading">Invita a quienes <em>lo quisieron</em></h2>
+        <p>Comparte este memorial con la familia y los amigos. Cada visita, cada mensaje y cada vela mantienen su memoria viva.</p>
+
+        <% if (isOwner) { %>
+          <a class="mem-share__cert" href="/certificado/<%= memorial.certificate_code %>">
+            <%- icon('award', 17) %>
+            Certificado de propiedad · <%= memorial.certificate_code %>
+          </a>
+        <% } %>
+      </div>
+
+      <div class="mem-share__qr">
+        <img src="<%= qrInline %>" alt="Código QR para visitar el memorial de <%= memorial.full_name %>">
+        <strong>Escanea y comparte</strong>
+        <span>jardinmemorial.cl/m/<%= memorial.slug %></span>
+        <div class="mem-share__link">
+          <input type="text" id="public-link" value="<%= publicUrl %>" readonly aria-label="Enlace del memorial">
+          <button type="button" data-copy="#public-link" aria-label="Copiar enlace"><%- icon('copy', 15) %></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="mem-footer">
+    <div class="mem-wrap">
+      <a class="mem-footer__brand" href="/">
+        <%- brandMark(26) %>
+        <span>Jardín Memorial</span>
+      </a>
+      <p>“Lo que amamos no se pierde: se transforma en memoria.”</p>
+      <div class="mem-footer__meta">
+        <% if (isOwner) { %>
+          <span>Certificado <%= memorial.certificate_code %></span>
+          <span>·</span>
+        <% } %>
+        <span><%= helpers.formatTimestamp(memorial.created_at) %></span>
+        <span>·</span>
+        <a href="/privacidad">Privacidad</a>
+      </div>
+      <div class="mem-footer__staff">
+        <% if (isOwner) { %>
+          <a href="/panel/memoriales/<%= memorial.id %>"><%- icon('settings', 13) %> Administrar este memorial</a>
+        <% } else { %>
+          <a href="/registro">Crea el memorial de tu ser querido</a>
+        <% } %>
+      </div>
+      <p class="tiny" style="margin-top: 24px; font-family: var(--sans); font-style: normal;">
+        Memorial creado y administrado por su familia en Jardín Memorial · Contenido alojado por www.jardinmemorial.cl
+      </p>
+    </div>
+  </footer>
+</div>
+
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Galería de fotos">
+  <button class="lightbox__close" type="button" data-lightbox-close aria-label="Cerrar galería"><%- icon('close', 18) %></button>
+  <button class="lightbox__btn lightbox__btn--prev" type="button" data-lightbox-prev aria-label="Foto anterior"><%- icon('chevron-left', 20) %></button>
+  <figure class="lightbox__figure">
+    <img class="lightbox__img" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="">
+    <figcaption class="lightbox__caption"></figcaption>
+    <div class="lightbox__bar">
+      <span class="lightbox__counter"></span>
+      <button class="lightbox__play" type="button" data-lightbox-play aria-label="Reproducir presentación de recuerdos">
+        <span class="lightbox__play-icon"><%- icon('play', 13) %></span>
+        <span class="lightbox__play-icon lightbox__play-icon--pause"><%- icon('pause', 13) %></span>
+        <span class="lightbox__play-label">Reproducir recuerdos</span>
+      </button>
+    </div>
+  </figure>
+  <button class="lightbox__btn lightbox__btn--next" type="button" data-lightbox-next aria-label="Foto siguiente"><%- icon('chevron-right', 20) %></button>
+</div>
+
+<div class="share-sheet" id="share-sheet" role="dialog" aria-modal="true" aria-label="Compartir memorial">
+  <div class="share-sheet__card">
+    <h3>Comparte su memoria</h3>
+    <p>Envía el enlace o el código QR a quienes quieras invitar.</p>
+    <div class="share-sheet__qr">
+      <img src="<%= qrInline %>" alt="Código QR del memorial">
+    </div>
+    <div class="share-sheet__url"><%= publicUrl %></div>
+    <div class="share-sheet__actions">
+      <button class="btn btn--ghost btn--sm" type="button" data-copy="#public-link"><%- icon('copy', 14) %> Copiar</button>
+      <a class="btn btn--sm" href="https://wa.me/?text=<%= encodeURIComponent('Te comparto el memorial de ' + memorial.full_name + ': ' + publicUrl) %>"><%- icon('whatsapp', 14) %> WhatsApp</a>
+    </div>
+    <button class="btn btn--ghost btn--sm" type="button" data-share-close style="margin-top: 10px;">Cerrar</button>
+  </div>
+</div>

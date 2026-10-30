@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="utf-8">
+  <meta name="color-scheme" content="light only">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= pageTitle ? pageTitle + ' · ' + site.name : site.name + ' · Memoriales digitales para recordar siempre' %></title>
+  <meta name="description" content="<%= metaDescription %>">
+  <meta name="theme-color" content="#0b1c1a">
+  <link rel="canonical" href="<%= site.url %><%= currentPath %>">
+  <meta property="og:site_name" content="<%= site.name %>">
+  <meta property="og:type" content="<%= typeof ogType !== 'undefined' ? ogType : 'website' %>">
+  <meta property="og:title" content="<%= pageTitle || site.name %>">
+  <meta property="og:description" content="<%= metaDescription %>">
+  <meta property="og:url" content="<%= site.url %><%= currentPath %>">
+  <meta property="og:image" content="<%= site.url %><%= ogImage %>">
+  <meta property="og:locale" content="es_CL">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="<%= pageTitle || site.name %>">
+  <meta name="twitter:description" content="<%= metaDescription %>">
+  <meta name="twitter:image" content="<%= site.url %><%= ogImage %>">
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/img/favicon.svg">
+  <link rel="stylesheet" href="/css/base.css?v=<%= assetVersion %>">
+  <link rel="stylesheet" href="/css/pages.css?v=<%= assetVersion %>">
+  <% if (typeof extraCss !== 'undefined' && extraCss) { %><link rel="stylesheet" href="<%= extraCss %>"><% } %>
+  <% if (currentPath.indexOf('/panel') === 0 || currentPath === '/cuenta') { %><link rel="stylesheet" href="/css/panel.css?v=<%= assetVersion %>"><% } %>
+</head>
+<body class="<%= bodyClass %><%= typeof embeddedView !== 'undefined' && embeddedView ? ' is-embedded' : '' %><%= typeof chromeless !== 'undefined' && chromeless ? ' is-chromeless' : '' %>">
+  <a class="skip-link" href="#main">Saltar al contenido</a>
+  <%- include('partials/header') %>
+  <%- include('partials/flash') %>
+  <main id="main">
+    <%- body %>
+  </main>
+  <% if (typeof hideFooter === 'undefined' || !hideFooter) { %><%- include('partials/footer') %><% } %>
+  <script src="/js/main.js?v=<%= assetVersion %>" defer></script>
+  <% if (typeof extraJs !== 'undefined' && extraJs) { %><script src="<%= extraJs %>?v=<%= assetVersion %>" defer></script><% } %>
+</body>
+</html>

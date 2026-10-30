@@ -1,0 +1,174 @@
+<section class="panel-shell">
+  <div class="container">
+    <div class="dash-head">
+      <div>
+        <p class="eyebrow">Nuevo memorial</p>
+        <h1>Crea un lugar para su memoria</h1>
+        <p>Completa los datos y sube su foto principal. Podrás agregar más fotos, video y música después.</p>
+      </div>
+      <a class="btn btn--ghost" href="/panel">Cancelar</a>
+    </div>
+
+    <% if (errors.length) { %>
+      <div class="form-errors" role="alert">
+        <%- icon('alert-circle', 18) %>
+        <ul><% errors.forEach(function (error) { %><li><%= error %></li><% }); %></ul>
+      </div>
+    <% } %>
+
+    <div class="warning-note" style="margin-bottom: 24px;">
+      <%- icon('info', 17) %>
+      <span>Al guardar se descontará <strong>1 memorial</strong> de tu saldo (te quedan <%= user.credits %>) y se generarán automáticamente el enlace, el código QR y el certificado de propiedad.</span>
+    </div>
+
+    <div class="create-layout">
+      <div>
+        <form action="/panel/memoriales" method="post" enctype="multipart/form-data" id="memorial-form">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+          <div class="form-card">
+            <div class="form-card__head">
+              <h2>¿A quién quieres recordar?</h2>
+              <span>Datos principales</span>
+            </div>
+
+            <div class="field">
+              <span class="field-label">Tipo de memorial</span>
+              <div class="segmented" style="margin-top: 8px;">
+                <input type="radio" id="kind-persona" name="kind" value="persona" <%= values.kind !== 'mascota' ? 'checked' : '' %>>
+                <label for="kind-persona"><%- icon('user', 14) %> Una persona</label>
+                <input type="radio" id="kind-mascota" name="kind" value="mascota" <%= values.kind === 'mascota' ? 'checked' : '' %>>
+                <label for="kind-mascota"><%- icon('heart', 14) %> Una mascota</label>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="full_name">Nombre completo</label>
+              <input class="input" type="text" id="full_name" name="full_name" required maxlength="90" value="<%= values.full_name || '' %>" placeholder="Rosa Elena Muñoz" autocomplete="off">
+              <p class="hint">Escribe el nombre como quieres que aparezca en el memorial.</p>
+            </div>
+
+            <div class="field">
+              <label for="relationship">Relación <span class="hint">(opcional)</span></label>
+              <input class="input" type="text" id="relationship" name="relationship" maxlength="70" value="<%= values.relationship || '' %>" placeholder="Mi abuela, mi mejor amigo, mi compañera de vida…">
+            </div>
+
+            <div class="field-grid">
+              <div class="field">
+                <label for="birth_date">Fecha de nacimiento</label>
+                <input class="input" type="date" id="birth_date" name="birth_date" value="<%= values.birth_date || '' %>">
+              </div>
+              <div class="field">
+                <label for="death_date">Fecha de partida</label>
+                <input class="input" type="date" id="death_date" name="death_date" value="<%= values.death_date || '' %>">
+              </div>
+            </div>
+            <p class="hint" style="margin: -8px 0 18px;">Agrega al menos una de las dos fechas. Si solo conoces el año, puedes usar el 1 de enero.</p>
+
+            <div class="field">
+              <label for="epitaph">Una frase que lo represente <span class="hint">(opcional)</span></label>
+              <input class="input" type="text" id="epitaph" name="epitaph" maxlength="160" value="<%= values.epitaph || '' %>" placeholder="Su risa era la música de nuestra casa" data-counter="#epitaph-count">
+              <span class="counter" id="epitaph-count">0 / 160</span>
+            </div>
+
+            <div class="field">
+              <label for="biography">Su historia <span class="hint">(opcional)</span></label>
+              <textarea class="textarea" id="biography" name="biography" rows="7" maxlength="6000" placeholder="Cuenta lo que quieras recordar: dónde nació, qué amaba, sus costumbres, sus historias favoritas…" data-counter="#bio-count"><%= values.biography || '' %></textarea>
+              <span class="counter" id="bio-count">0 / 6000</span>
+            </div>
+          </div>
+
+          <div class="form-card">
+            <div class="form-card__head">
+              <h2>Foto principal</h2>
+              <span>Opcional por ahora</span>
+            </div>
+
+            <label class="dropzone" data-preview="#preview-main-image">
+              <input type="file" name="main_photo" id="main_photo" accept="image/jpeg,image/png,image/webp,image/heic,image/heif">
+              <span class="dropzone__icon"><%- icon('camera', 20) %></span>
+              <strong>Arrastra una foto o haz clic para elegirla</strong>
+              <span>JPG, PNG, WEBP o HEIC · hasta 15 MB · mínimo 300 × 300 px</span>
+              <span class="dropzone__button btn btn--ghost btn--sm">Seleccionar foto</span>
+              <span class="file-selected" data-file-name></span>
+            </label>
+            <p class="hint" style="margin-top: 10px;">Si aún no tienes una foto, puedes crear el memorial y agregarla después. Mientras tanto se mostrará un diseño con sus iniciales.</p>
+          </div>
+
+          <div class="form-card">
+            <div class="form-card__head">
+              <h2>Apariencia y privacidad</h2>
+              <span>Personalización</span>
+            </div>
+
+            <div class="field">
+              <span class="field-label">Paleta del memorial</span>
+              <div class="theme-picker" style="margin-top: 8px;">
+                <% Object.keys(config.themes).forEach(function (key) { %>
+                  <label class="theme-option">
+                    <input type="radio" name="theme" value="<%= key %>" <%= (values.theme || 'jardin') === key ? 'checked' : '' %>>
+                    <span class="theme-option__inner">
+                      <span class="theme-option__dot" style="--swatch: <%= config.themes[key].accent %>;"></span>
+                      <%= config.themes[key].name %>
+                    </span>
+                  </label>
+                <% }); %>
+              </div>
+            </div>
+
+            <div class="switch-row">
+              <div>
+                <strong>Memorial público</strong>
+                <p>Aparecerá en la galería de memoriales y podrá encontrarse en buscadores. Si lo desactivas, solo quien tenga el enlace podrá visitarlo.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" name="is_public" <%= values.is_public !== false ? 'checked' : '' %>>
+                <span class="switch__track"></span>
+              </label>
+            </div>
+
+            <div class="switch-row">
+              <div>
+                <strong>Libro de visitas abierto</strong>
+                <p>Permite que familiares y amigos dejen mensajes y enciendan velas. Puedes cerrarlo cuando quieras.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" name="allow_guestbook" <%= values.allow_guestbook !== false ? 'checked' : '' %>>
+                <span class="switch__track"></span>
+              </label>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: flex-end;">
+            <a class="btn btn--ghost" href="/panel">Cancelar</a>
+            <button class="btn btn--lg" type="submit" id="memorial-submit">Crear memorial con 1 cupo</button>
+          </div>
+        </form>
+      </div>
+
+      <aside class="preview-sticky">
+        <div class="preview-label">Vista previa en vivo</div>
+        <div class="memorial-preview" data-memorial-preview data-theme="<%= values.theme || 'jardin' %>">
+          <div class="memorial-preview__media">
+            <img id="preview-main-image" class="is-hidden" alt="Vista previa de la foto principal" data-preview-image>
+            <div class="memorial-preview__placeholder" data-preview-placeholder>
+              <%- icon('camera', 46) %>
+              <span>Su foto principal</span>
+            </div>
+            <div class="memorial-preview__content">
+              <span class="memorial-preview__eyebrow" data-preview-kind>En memoria de</span>
+              <p class="memorial-preview__name" data-preview-name>Nombre de quien recuerdas</p>
+              <span class="memorial-preview__dates" data-preview-dates>Sus fechas</span>
+              <p class="memorial-preview__epitaph" data-preview-epitaph></p>
+            </div>
+          </div>
+          <div class="memorial-preview__foot">
+            <span>Jardín Memorial</span>
+            <span>Enlace + QR</span>
+          </div>
+        </div>
+        <p class="preview-note">La vista previa se actualiza mientras escribes.</p>
+      </aside>
+    </div>
+  </div>
+</section>

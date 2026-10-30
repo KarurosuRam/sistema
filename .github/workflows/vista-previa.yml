@@ -1,0 +1,198 @@
+name: Vista previa privada
+
+# Levanta Jardín Memorial en un servidor de GitHub con internet real y lo
+# publica con un túnel HTTPS de Cloudflare, protegido con usuario y contraseña.
+#
+# Para qué sirve: probar la aplicación desde cualquier navegador, fuera de la
+# vista previa de Arena (que exige un token que solo inyecta su panel).
+#
+# Cómo se usa:
+#   1. Ejecutar este workflow (Actions → «Vista previa privada» → Run workflow,
+#      o `gh workflow run vista-previa.yml --ref <rama>`).
+#   2. En el resumen del job aparecen la dirección, el usuario y la clave.
+#   3. Al terminar el trabajo (6 horas como máximo) el enlace deja de existir.
+#
+# La base de datos vive en el propio servidor temporal: cada ejecución empieza
+# vacía y, al terminar, no queda nada guardado.
+
+on:
+  workflow_dispatch:
+  # Gatillo alternativo: tocar este archivo (y hacer push) enciende la vista
+  # previa desde cualquier rama. Sirve mientras el workflow no esté en la rama
+  # principal, que es la única que GitHub indexa para el botón «Run workflow».
+  push:
+    paths:
+      - '.vista-previa/activar'
+
+concurrency:
+  group: vista-previa
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  publicar:
+    name: Publicar vista previa
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci --omit=dev --no-audit --no-fund
+
+      - name: Descargar el túnel
+        run: |
+          curl -fsSL -o cloudflared \
+            https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+          chmod +x cloudflared
+          ./cloudflared --version
+
+      - name: Generar la contraseña de acceso
+        id: clave
+        run: |
+          CLAVE=$(openssl rand -hex 12)
+          echo "valor=$CLAVE" >> "$GITHUB_OUTPUT"
+
+      - name: Abrir el túnel
+        id: tunel
+        run: |
+          ./cloudflared tunnel --url http://127.0.0.1:8080 --no-autoupdate > cloudflared.log 2>&1 &
+          echo $! > cloudflared.pid
+
+          URL=""
+          for _ in $(seq 1 60); do
+            URL=$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' cloudflared.log | head -1 || true)
+            [ -n "$URL" ] && break
+            sleep 2
+          done
+
+          if [ -z "$URL" ]; then
+            echo "No se pudo abrir el túnel. Registro:"
+            cat cloudflared.log
+            exit 1
+          fi
+
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "Túnel abierto en $URL"
+
+      - name: Crear los memoriales de ejemplo
+        run: |
+          # La instancia es efímera: se siembra el contenido de ejemplo para que
+          # el sitio no aparezca vacío al abrir el enlace.
+          DATA_DIR="$RUNNER_TEMP/datos" npm run seed-ejemplos
+
+      - name: Arrancar la aplicación
+        env:
+          URL: ${{ steps.tunel.outputs.url }}
+          CLAVE: ${{ steps.clave.outputs.valor }}
+        run: |
+          # La app se sirve detrás del túnel: BASE_URL fija la dirección pública
+          # para los enlaces absolutos (QR, certificado, notificaciones).
+          BASE_URL="$URL" \
+          SITE_URL="$URL" \
+          NODE_ENV=production \
+          PORT=3000 \
+          SEED_DEMO=false \
+          ADMIN_EMAILS=ccramireza@gmail.com \
+          MAIL_TRANSPORT=json \
+          DATA_DIR="$RUNNER_TEMP/datos" \
+          node --experimental-sqlite server.js > app.log 2>&1 &
+          echo $! > app.pid
+
+          GATE_PASSWORD="$CLAVE" GATE_USER=demo PORT=8080 APP_PORT=3000 \
+            node scripts/acceso-privado.js > puerta.log 2>&1 &
+          echo $! > puerta.pid
+
+          for _ in $(seq 1 30); do
+            if curl -fsS -o /dev/null http://127.0.0.1:3000/healthz; then break; fi
+            sleep 1
+          done
+          cat app.log
+
+      - name: Comprobar el enlace público
+        env:
+          URL: ${{ steps.tunel.outputs.url }}
+          CLAVE: ${{ steps.clave.outputs.valor }}
+        run: |
+          SIN=$(curl -s -o /dev/null -w '%{http_code}' "$URL/")
+          CON=$(curl -s -o /dev/null -w '%{http_code}' -u "demo:$CLAVE" "$URL/")
+          REG=$(curl -s -o /dev/null -w '%{http_code}' -u "demo:$CLAVE" "$URL/registro")
+          CSS=$(curl -s -o /dev/null -w '%{http_code}' -u "demo:$CLAVE" "$URL/css/base.css")
+          echo "sin clave: $SIN | con clave: $CON | registro: $REG | assets: $CSS"
+
+          # Si alguna respuesta no es la esperada, el trabajo falla y no se
+          # publica un enlace roto.
+          [ "$SIN" = "401" ] && [ "$CON" = "200" ] && [ "$REG" = "200" ] && [ "$CSS" = "200" ]
+
+          # Los cuatro memoriales de ejemplo tienen que estar publicados y
+          # abrirse; si falta alguno, no se publica el enlace.
+          LISTADO=$(curl -s -u "demo:$CLAVE" "$URL/memoriales")
+          for SLUG in rosa-elena-munoz oscar-contreras-pena camila-fuentes-rojas nala; do
+            echo "$LISTADO" | grep -q "/m/$SLUG" || { echo "Falta el memorial $SLUG"; exit 1; }
+            CODIGO=$(curl -s -o /dev/null -w '%{http_code}' -u "demo:$CLAVE" "$URL/m/$SLUG")
+            echo "  /m/$SLUG → $CODIGO"
+            [ "$CODIGO" = "200" ] || exit 1
+          done
+
+      - name: Publicar el enlace en el pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          URL: ${{ steps.tunel.outputs.url }}
+          CLAVE: ${{ steps.clave.outputs.valor }}
+        run: |
+          gh pr comment 1 --repo "$GITHUB_REPOSITORY" --body "$(cat <<TEXTO
+          ## Vista previa lista
+
+          | | |
+          | --- | --- |
+          | **Dirección** | $URL |
+          | **Usuario** | \`demo\` |
+          | **Contraseña** | \`$CLAVE\` |
+          | **Cuenta de la app** | \`ccramireza@gmail.com\` / \`jardin2026\` |
+
+          Entra desde cualquier navegador: pedirá usuario y contraseña una vez.
+          La instancia corre en un servidor de GitHub con internet real, ya trae
+          los cuatro memoriales de ejemplo y se apaga sola al terminar este trabajo.
+          TEXTO
+          )"
+
+      - name: Dejar el enlace disponible
+        env:
+          URL: ${{ steps.tunel.outputs.url }}
+          CLAVE: ${{ steps.clave.outputs.valor }}
+        run: |
+          {
+            echo "## Vista previa de Jardín Memorial"
+            echo
+            echo "| | |"
+            echo "| --- | --- |"
+            echo "| Dirección | $URL |"
+            echo "| Usuario | \`demo\` |"
+            echo "| Contraseña | \`$CLAVE\` |"
+            echo
+            echo "El navegador pedirá usuario y contraseña antes de mostrar el sitio."
+            echo "La instancia se apaga sola cuando termina este trabajo (6 horas como máximo)."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Mantener la vista previa encendida
+        run: |
+          echo "Vista previa activa hasta que se cumpla el tiempo máximo del trabajo."
+          for _ in $(seq 1 340); do
+            sleep 60
+            if ! kill -0 "$(cat app.pid)" 2>/dev/null; then
+              echo "La aplicación se detuvo. Últimas líneas:"
+              tail -40 app.log
+              exit 1
+            fi
+          done

@@ -1,0 +1,346 @@
+<% if (user) { %>
+  <div class="home-session">
+    <div class="container home-session__inner">
+      <span class="home-session__text">
+        <%- icon('leaf', 15) %>
+        Hola, <strong><%= user.name.split(' ')[0] %></strong>. Tienes
+        <strong><%= user.credits %> <%= user.credits === 1 ? 'memorial disponible' : 'memoriales disponibles' %></strong>.
+      </span>
+      <span class="home-session__actions">
+        <a class="home-session__link" href="/panel">Mi jardín <%- icon('arrow-right', 13) %></a>
+        <form action="/salir" method="post">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="home-session__logout">Cerrar sesión</button>
+        </form>
+      </span>
+    </div>
+  </div>
+<% } %>
+
+<section class="hero">
+  <div class="container hero__inner">
+    <div class="hero__copy">
+      <p class="eyebrow">Memoriales digitales · Chile</p>
+      <h1>Un jardín donde los recuerdos <em>siguen floreciendo</em></h1>
+      <p class="lede">
+        Crea un memorial digital para tu ser querido o mascota. Reúne sus fotos, sus videos,
+        su música y las palabras de quienes lo amaron en un espacio que puedes visitar cuando quieras.
+      </p>
+      <div class="hero__actions">
+        <% if (user) { %>
+          <a class="btn btn--lg" href="/panel/nuevo">Crear otro memorial <%- icon('arrow-right', 16) %></a>
+          <a class="btn btn--ghost btn--lg" href="/panel">Ir a mi jardín</a>
+        <% } else { %>
+          <a class="btn btn--lg" href="/registro">Crear un memorial <%- icon('arrow-right', 16) %></a>
+          <a class="btn btn--ghost btn--lg" href="/memoriales">Ver memoriales</a>
+        <% } %>
+      </div>
+      <ul class="hero__trust">
+        <li><%- icon('link', 17) %> Enlace único y QR</li>
+        <li><%- icon('award', 17) %> Certificado de propiedad</li>
+        <li><%- icon('shield', 17) %> Privado o público, tú decides</li>
+      </ul>
+    </div>
+
+    <div class="hero__visual">
+      <figure class="hero__frame">
+        <img src="/img/hero-garden.jpg" alt="Sendero de un jardín entre flores blancas a la luz del atardecer" fetchpriority="high">
+        <figcaption class="hero__frame-caption">“Lo que amamos no se pierde: se transforma en memoria.”</figcaption>
+      </figure>
+
+      <div class="hero__seal" aria-hidden="true">
+        <div>
+          <%- icon('certificate', 26) %>
+          <span>Certificado<br>de propiedad</span>
+        </div>
+      </div>
+      <svg class="hero__leaf hero__leaf--left" viewBox="0 0 120 220" fill="none" aria-hidden="true">
+        <path d="M60 210V30" stroke="currentColor" stroke-width="1.2"/>
+        <path d="M60 90c-32 2-48-15-50-44 30-2 48 13 50 44Z" stroke="currentColor" stroke-width="1.2"/>
+        <path d="M60 62c2-32 18-48 50-50 2 30-16 48-50 50Z" stroke="currentColor" stroke-width="1.2"/>
+        <path d="M60 150c26 1 40-11 43-35-26-2-40 11-43 35Z" stroke="currentColor" stroke-width="1.2"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="recuerdos">
+  <div class="container">
+    <div class="text-center reveal">
+      <p class="eyebrow eyebrow--center">Un lugar para la memoria</p>
+      <h2>Todo lo que un recuerdo necesita</h2>
+      <p class="lede" style="margin: 0 auto 0; max-width: 60ch;">
+        Cada memorial reúne lo esencial para celebrar una vida: su imagen, sus historias,
+        su música y la voz de quienes lo quisieron.
+      </p>
+    </div>
+
+    <div class="features">
+      <article class="feature reveal" style="--delay: 0ms">
+        <div class="feature__icon"><%- icon('link', 21) %></div>
+        <span class="feature__num">01</span>
+        <h3>Enlace único y QR</h3>
+        <p>Al crear el memorial generamos automáticamente una dirección propia y un código QR listo para compartir o imprimir.</p>
+      </article>
+
+      <article class="feature reveal" style="--delay: 70ms">
+        <div class="feature__icon"><%- icon('award', 21) %></div>
+        <span class="feature__num">02</span>
+        <h3>Certificado de propiedad</h3>
+        <p>Recibes un certificado digital que acredita que el memorial pertenece a tu cuenta y solo tú puedes verlo.</p>
+      </article>
+
+      <article class="feature reveal" style="--delay: 140ms">
+        <div class="feature__icon"><%- icon('images', 21) %></div>
+        <span class="feature__num">03</span>
+        <h3>Foto principal y galería</h3>
+        <p>Una imagen que lo representa y hasta 10 fotografías para recorrer su vida en cada etapa.</p>
+      </article>
+
+      <article class="feature reveal" style="--delay: 0ms">
+        <div class="feature__icon"><%- icon('video', 21) %></div>
+        <span class="feature__num">04</span>
+        <h3>Un video de 60 segundos</h3>
+        <p>Su voz, una risa, un momento en movimiento. Un video de hasta un minuto que vale más que mil palabras.</p>
+      </article>
+
+      <article class="feature reveal" style="--delay: 70ms">
+        <div class="feature__icon"><%- icon('music', 21) %></div>
+        <span class="feature__num">05</span>
+        <h3>La música que lo acompaña</h3>
+        <p>Sube una canción en MP3 y sonará suavemente al abrir el memorial, como una bienvenida.</p>
+      </article>
+
+      <article class="feature reveal" style="--delay: 140ms">
+        <div class="feature__icon"><%- icon('book', 21) %></div>
+        <span class="feature__num">06</span>
+        <h3>Libro de visitas y velas</h3>
+        <p>Familiares y amigos dejan mensajes, recuerdos y encienden una vela virtual en su memoria.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section section--cream" id="asi-se-ve">
+  <div class="container showcase">
+    <div class="showcase__media reveal">
+      <img src="/img/te-recuerdos.jpg" alt="Taza de té sobre un mantel de encaje, junto a flores blancas" loading="lazy">
+      <div class="showcase__quote">
+        <p>«Sus tardes de té eran su manera de decir que siempre había lugar para uno más.»</p>
+        <span>Un recuerdo de familia</span>
+      </div>
+    </div>
+
+    <div class="reveal">
+      <p class="eyebrow">Así se siente un memorial</p>
+      <h2>Como una casa abierta, siempre lista para recibir</h2>
+      <p class="lede">
+        El memorial no es una lápida digital: es un lugar cálido donde sus historias siguen vivas
+        y donde cada visita deja algo de amor.
+      </p>
+      <ul class="check-list">
+        <li><%- icon('check-circle', 20) %><span><strong>Su historia completa:</strong> fechas, epitafio y una biografía escrita como se cuenta en familia.</span></li>
+        <li><%- icon('check-circle', 20) %><span><strong>Su música al abrir:</strong> esa canción que lo representa suena apenas se entra.</span></li>
+        <li><%- icon('check-circle', 20) %><span><strong>Su galería y su video:</strong> hasta 10 fotos y un video de 60 segundos.</span></li>
+        <li><%- icon('check-circle', 20) %><span><strong>La voz de los demás:</strong> un libro de visitas moderado por ti.</span></li>
+      </ul>
+      <a class="btn btn--ghost" href="/memoriales">Ver los memoriales <%- icon('arrow-right', 16) %></a>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="text-center reveal">
+      <p class="eyebrow eyebrow--center">Sencillo de principio a fin</p>
+      <h2>Crea un memorial en tres pasos</h2>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step__num"></div>
+        <div>
+          <h3>Crea tu cuenta</h3>
+          <p>Solo tu nombre, correo y una contraseña. En un minuto tienes tu jardín listo.</p>
+        </div>
+      </div>
+      <div class="step reveal" style="--delay: 80ms">
+        <div class="step__num"></div>
+        <div>
+          <h3>Elige tu plan</h3>
+          <p>Un memorial por $6.990 o un pack de 4 por $11.990, para recordar a toda la familia.</p>
+        </div>
+      </div>
+      <div class="step reveal" style="--delay: 160ms">
+        <div class="step__num"></div>
+        <div>
+          <h3>Arma y comparte</h3>
+          <p>Sube fotos, video y música. Te entregamos el enlace, el QR y el certificado de propiedad.</p>
+        </div>
+      </div>
+    </div>
+    <div class="text-center" style="margin-top: 44px;">
+      <a class="link-arrow" href="/como-funciona">Ver el paso a paso completo <%- icon('arrow-right', 16) %></a>
+    </div>
+  </div>
+</section>
+
+<section class="section section--cream" id="planes">
+  <div class="container">
+    <div class="text-center reveal">
+      <p class="eyebrow eyebrow--center">Un pago único, un recuerdo para siempre</p>
+      <h2>Elige cuántos recuerdos quieres guardar</h2>
+      <p class="lede" style="margin: 0 auto;">Sin suscripciones ni cargos mensuales. Cada memorial incluye todo lo que necesitas.</p>
+    </div>
+
+    <div class="pricing-grid">
+      <article class="price-card reveal">
+        <h3><%= plans.single.name %></h3>
+        <p class="price-card__desc"><%= plans.single.description %></p>
+        <div class="price">
+          <span class="price__amount"><%= helpers.formatCLP(plans.single.amount) %></span>
+          <span class="price__currency">CLP</span>
+        </div>
+        <p class="price__meta">Pago único · 1 memorial digital</p>
+        <ul class="price-card__list">
+          <li><%- icon('check', 16) %> Enlace único y código QR</li>
+          <li><%- icon('check', 16) %> Certificado de propiedad en PDF</li>
+          <li><%- icon('check', 16) %> Foto principal + 10 fotos</li>
+          <li><%- icon('check', 16) %> Video de hasta 60 segundos</li>
+          <li><%- icon('check', 16) %> Música MP3 al abrir</li>
+          <li><%- icon('check', 16) %> Libro de visitas y velas</li>
+        </ul>
+        <a class="btn btn--ghost btn--block" href="/registro">Comenzar</a>
+      </article>
+
+      <article class="price-card price-card--featured reveal" style="--delay: 90ms">
+        <span class="price-card__badge"><%= plans.pack4.badge %></span>
+        <h3><%= plans.pack4.name %></h3>
+        <p class="price-card__desc"><%= plans.pack4.description %></p>
+        <div class="price">
+          <span class="price__amount"><%= helpers.formatCLP(plans.pack4.amount) %></span>
+          <span class="price__currency">CLP</span>
+        </div>
+        <p class="price__meta">Pago único · 4 memoriales · equivale a $2.998 cada uno</p>
+        <ul class="price-card__list">
+          <li><%- icon('check', 16) %> Todo lo del memorial individual</li>
+          <li><%- icon('check', 16) %> 4 memoriales para personas o mascotas</li>
+          <li><%- icon('check', 16) %> Un certificado por cada memorial</li>
+          <li><%- icon('check', 16) %> Enlaces y QR independientes</li>
+          <li><%- icon('check', 16) %> Sin fecha de expiración</li>
+          <li><%- icon('check', 16) %> Ahorras $15.970 frente a 4 individuales</li>
+        </ul>
+        <a class="btn btn--light btn--block" href="/registro">Quiero el pack</a>
+      </article>
+    </div>
+    <p class="price-note">Precios en pesos chilenos. Incluye alojamiento, respaldo y soporte por correo.</p>
+  </div>
+</section>
+
+<% if (featured && featured.length) { %>
+<section class="section">
+  <div class="container">
+    <div class="panel-heading reveal">
+      <div>
+        <p class="eyebrow">Historias que se comparten</p>
+        <h2>Memoriales recientes</h2>
+      </div>
+      <a class="link-arrow" href="/memoriales">Ver todos <%- icon('arrow-right', 16) %></a>
+    </div>
+    <div class="memorial-grid">
+      <% featured.forEach(function (memorial) { %>
+        <%- include('partials/memorial-card', { memorial: memorial }) %>
+      <% }); %>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<section class="section section--cream">
+  <div class="container">
+    <div class="text-center reveal">
+      <p class="eyebrow eyebrow--center">Voces de familias</p>
+      <h2>Lo que se siente al recordar así</h2>
+    </div>
+    <div class="quote-grid">
+      <article class="quote-card reveal">
+        <div class="quote-stars">
+          <%- icon('star', 14) %><%- icon('star', 14) %><%- icon('star', 14) %><%- icon('star', 14) %><%- icon('star', 14) %>
+        </div>
+        <p class="quote-card__text">Hicimos el memorial de mi abuela un domingo en familia. Cuando compartimos el QR en el almuerzo, todos terminamos contando historias que no sabíamos.</p>
+        <div class="quote-card__person">
+          <span class="avatar">MC</span>
+          <div><strong>María José C.</strong><span>Ñuñoa, Santiago</span></div>
+        </div>
+      </article>
+
+      <article class="quote-card reveal" style="--delay: 80ms">
+        <div class="quote-stars">
+          <%- icon('star', 14) %><%- icon('star', 14) %><%- icon('star', 14) %><%- icon('star', 14) %><%- icon('star', 14) %>
+        </div>
+        <p class="quote-card__text">Para mi perrita Nala quería algo más que una foto en el celular. Su memorial tiene su música, sus fotos y los mensajes de mis sobrinos. Nos hace bien visitarlo.</p>
+        <div class="quote-card__person">
+          <span class="avatar avatar--clay">PF</span>
+          <div><strong>Pablo F.</strong><span>Concepción</span></div>
+        </div>
+      </article>
+
+      <article class="quote-card reveal" style="--delay: 160ms">
+        <div class="quote-stars">
+          <%- icon('star', 14) %><%- icon('star', 14) %><%- icon('star', 14) %><%- icon('star', 14) %><%- icon('star', 14) %>
+        </div>
+        <p class="quote-card__text">El certificado nos dio tranquilidad: el memorial está a nombre de la familia y nadie más puede modificarlo. El pack de cuatro nos sirvió para mis dos abuelos y mis tíos.</p>
+        <div class="quote-card__person">
+          <span class="avatar avatar--gold">RC</span>
+          <div><strong>Rodrigo C.</strong><span>Valparaíso</span></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container container--narrow">
+    <div class="text-center reveal">
+      <p class="eyebrow eyebrow--center">Antes de empezar</p>
+      <h2>Preguntas frecuentes</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item" open>
+        <summary>¿Cuánto demora crear un memorial? <span class="faq-icon" aria-hidden="true"></span></summary>
+        <div class="faq-item__body"><p>Menos de 10 minutos. Crea tu cuenta, elige un plan y completa los datos. Puedes empezar con la foto principal y la historia, y agregar fotos, video y música más adelante.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>¿El memorial es público? <span class="faq-icon" aria-hidden="true"></span></summary>
+        <div class="faq-item__body"><p>Tú decides. Puede ser público y aparecer en nuestra galería, o privado: solo quienes tengan el enlace podrán visitarlo. También puedes abrir o cerrar el libro de visitas cuando quieras.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>¿Qué incluye el certificado de propiedad? <span class="faq-icon" aria-hidden="true"></span></summary>
+        <div class="faq-item__body"><p>Un documento PDF con un código único, el nombre del titular, el enlace del memorial y un código QR. Acredita que el memorial pertenece a tu cuenta, solo tú puedes administrarlo y verlo.</p></div>
+      </details>
+      <details class="faq-item">
+        <summary>¿Puedo crear memoriales para mascotas? <span class="faq-icon" aria-hidden="true"></span></summary>
+        <div class="faq-item__body"><p>Sí. Al crear el memorial eliges si es para una persona o una mascota, y la presentación se adapta: “En memoria de su mascota”, sus años juntos y sus fotos favoritas.</p></div>
+      </details>
+    </div>
+    <div class="text-center" style="margin-top: 34px;">
+      <a class="link-arrow" href="/preguntas-frecuentes">Ver todas las preguntas <%- icon('arrow-right', 16) %></a>
+    </div>
+  </div>
+</section>
+
+<section class="section section--tight">
+  <div class="container">
+    <div class="cta-final reveal">
+      <div>
+        <p class="eyebrow eyebrow--plain">Su memoria merece un lugar</p>
+        <h2>Empieza hoy su jardín de recuerdos</h2>
+        <p>Crea tu cuenta gratis, elige tu plan y arma un memorial que tu familia va a visitar por años. Nosotros nos encargamos del resto.</p>
+      </div>
+      <div class="cta-final__actions">
+        <a class="btn btn--light btn--block" href="/registro">Crear mi cuenta</a>
+        <a class="btn btn--ghost btn--block" href="/memoriales">Ver memoriales públicos</a>
+      </div>
+    </div>
+  </div>
+</section>
+

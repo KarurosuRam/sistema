@@ -1,0 +1,39 @@
+[Unit]
+Description=Jardín Memorial — app de memoriales (Node.js)
+Documentation=https://github.com/KarurosuRam/sistema
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=jm
+Group=jm
+WorkingDirectory=/opt/jardin-memorial
+
+# .env en formato CLAVE=valor (sin `export` ni comillas innecesarias).
+EnvironmentFile=/opt/jardin-memorial/.env
+Environment=NODE_ENV=production
+
+ExecStart=/usr/bin/node --experimental-sqlite server.js
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=20
+
+# Endurecimiento: el código es de solo lectura y los datos viven en DATA_DIR.
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+ReadWritePaths=/var/lib/jardin-memorial /opt/jardin-memorial/data
+
+# Límites de recursos (opcional, ajustar al servidor).
+LimitNOFILE=4096
+
+[Install]
+WantedBy=multi-user.target

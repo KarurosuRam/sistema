@@ -1,0 +1,112 @@
+# ============================================================================
+# Jardín Memorial sobre WordPress
+#
+#   WordPress  → sitio principal (www.tudominio.cl)
+#   App Node   → memoriales, panel y pagos (memoriales.tudominio.cl)
+#   Caddy      → HTTPS automático y proxy inverso para ambos
+#   MariaDB    → base de datos de WordPress
+#
+# La app y WordPress son dos servicios independientes: WordPress nunca ejecuta
+# Node, y la app nunca escribe en la base de WordPress. Se comunican por el
+# plugin de inserción (iframe) y por enlaces del menú.
+#
+# Uso:
+#   cp .env.example .env      # completa dominios, claves y contraseñas
+#   docker compose up -d --build
+# ============================================================================
+
+name: jardin-memorial
+
+services:
+  db:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${MYSQL_DATABASE:-wordpress}
+      MARIADB_USER: ${MYSQL_USER:-wordpress}
+      MARIADB_PASSWORD: ${MYSQL_PASSWORD:?define MYSQL_PASSWORD en .env}
+      MARIADB_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?define MYSQL_ROOT_PASSWORD en .env}
+      MARIADB_AUTO_UPGRADE: '1'
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  wordpress:
+    image: wordpress:php8.3-apache
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: ${MYSQL_DATABASE:-wordpress}
+      WORDPRESS_DB_USER: ${MYSQL_USER:-wordpress}
+      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
+      # Caddy termina el HTTPS: WordPress debe saber que la petición original
+      # era segura para no generar enlaces http:// ni bucles de redirección.
+      WORDPRESS_CONFIG_EXTRA: |
+        if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
+          $_SERVER['HTTPS'] = 'on';
+        }
+        define('WP_HOME', 'https://${WORDPRESS_DOMAIN}');
+        define('WP_SITEURL', 'https://${WORDPRESS_DOMAIN}');
+        define('DISALLOW_FILE_EDIT', true);
+    volumes:
+      - wp_data:/var/www/html
+
+  app:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: '3000'
+      DATA_DIR: /app/data
+      SITE_URL: https://${APP_DOMAIN}
+      EMBED_ORIGINS: https://${WORDPRESS_DOMAIN}
+      PAYMENTS_MODE: ${PAYMENTS_MODE:-mercadopago}
+      MP_ENV: ${MP_ENV:-sandbox}
+      MP_ACCESS_TOKEN: ${MP_ACCESS_TOKEN:-}
+      MP_WEBHOOK_SECRET: ${MP_WEBHOOK_SECRET:-}
+      FLOW_ENV: ${FLOW_ENV:-sandbox}
+      FLOW_API_KEY: ${FLOW_API_KEY:-}
+      FLOW_SECRET_KEY: ${FLOW_SECRET_KEY:-}
+      ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
+      SEED_DEMO: ${SEED_DEMO:-false}
+      DEMO_ACCESS: ${DEMO_ACCESS:-off}
+    volumes:
+      - app_data:/app/data
+    expose:
+      - '3000'
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - wordpress
+      - app
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    environment:
+      WORDPRESS_DOMAIN: ${WORDPRESS_DOMAIN:?define WORDPRESS_DOMAIN en .env}
+      APP_DOMAIN: ${APP_DOMAIN:?define APP_DOMAIN en .env}
+      ACME_EMAIL: ${ACME_EMAIL:?define ACME_EMAIL en .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  db_data:
+  wp_data:
+  app_data:
+  caddy_data:
+  caddy_config:
