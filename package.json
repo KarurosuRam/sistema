@@ -8,7 +8,8 @@
     "start": "node --experimental-sqlite server.js",
     "dev": "node --experimental-sqlite server.js",
     "seed": "node --experimental-sqlite scripts/seed-demo.js",
-    "purge-demo": "node --experimental-sqlite scripts/purge-demo.js"
+    "purge-demo": "node --experimental-sqlite scripts/purge-demo.js",
+    "seed-ejemplos": "node --experimental-sqlite scripts/seed-ejemplos.js"
   },
   "engines": {
     "node": ">=22.5"

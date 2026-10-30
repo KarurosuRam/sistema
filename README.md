@@ -59,6 +59,11 @@ ejemplo para desarrollo (`SEED_DEMO=true`), retíralo con:
 npm run purge-demo
 ```
 
+Para revisar el sitio con contenido realista en una instalación vacía —una vista previa temporal o
+un entorno de prueba— hay cuatro memoriales de ejemplo listos (`npm run seed-ejemplos`). Deja la
+cuenta `ccramireza@gmail.com` / `jardin2026` con un pack de 4 comprado, cuatro memoriales con foto,
+galería, música y libro de visitas, y no duplica nada si la cuenta ya existe.
+
 ### Puesta en marcha en producción
 
 ```bash

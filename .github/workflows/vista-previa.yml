@@ -86,6 +86,12 @@ jobs:
           echo "url=$URL" >> "$GITHUB_OUTPUT"
           echo "Túnel abierto en $URL"
 
+      - name: Crear los memoriales de ejemplo
+        run: |
+          # La instancia es efímera: se siembra el contenido de ejemplo para que
+          # el sitio no aparezca vacío al abrir el enlace.
+          DATA_DIR="$RUNNER_TEMP/datos" npm run seed-ejemplos
+
       - name: Arrancar la aplicación
         env:
           URL: ${{ steps.tunel.outputs.url }}
@@ -127,6 +133,16 @@ jobs:
           # publica un enlace roto.
           [ "$SIN" = "401" ] && [ "$CON" = "200" ] && [ "$REG" = "200" ] && [ "$CSS" = "200" ]
 
+          # Los cuatro memoriales de ejemplo tienen que estar publicados y
+          # abrirse; si falta alguno, no se publica el enlace.
+          LISTADO=$(curl -s -u "demo:$CLAVE" "$URL/memoriales")
+          for SLUG in rosa-elena-munoz oscar-contreras-pena camila-fuentes-rojas nala; do
+            echo "$LISTADO" | grep -q "/m/$SLUG" || { echo "Falta el memorial $SLUG"; exit 1; }
+            CODIGO=$(curl -s -o /dev/null -w '%{http_code}' -u "demo:$CLAVE" "$URL/m/$SLUG")
+            echo "  /m/$SLUG → $CODIGO"
+            [ "$CODIGO" = "200" ] || exit 1
+          done
+
       - name: Publicar el enlace en el pull request
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -141,10 +157,11 @@ jobs:
           | **Dirección** | $URL |
           | **Usuario** | \`demo\` |
           | **Contraseña** | \`$CLAVE\` |
+          | **Cuenta de la app** | \`ccramireza@gmail.com\` / \`jardin2026\` |
 
           Entra desde cualquier navegador: pedirá usuario y contraseña una vez.
-          La instancia corre en un servidor de GitHub con internet real y se
-          apaga sola al terminar este trabajo.
+          La instancia corre en un servidor de GitHub con internet real, ya trae
+          los cuatro memoriales de ejemplo y se apaga sola al terminar este trabajo.
           TEXTO
           )"
 
