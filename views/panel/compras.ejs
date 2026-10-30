@@ -56,6 +56,8 @@
                 <td>
                   <% if (purchase.status === 'pagado') { %>
                     <span class="badge"><%- icon('check', 12) %> Pagado</span>
+                  <% } else if (purchase.status === 'reembolsado') { %>
+                    <span class="badge badge--gold"><%- icon('arrow-left', 12) %> Reembolsado</span>
                   <% } else if (purchase.status === 'pendiente') { %>
                     <span class="badge badge--gold"><%- icon('clock', 12) %> Pendiente</span>
                   <% } else { %>
