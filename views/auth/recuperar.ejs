@@ -1,0 +1,88 @@
+<section class="auth">
+  <div class="auth__panel">
+    <div class="auth__inner">
+      <% if (enviado) { %>
+        <p class="eyebrow">Revisa tu correo</p>
+        <h1>Te enviamos un enlace</h1>
+        <% if (enlacePrueba) { %>
+          <p class="lede">
+            Esta instalación de prueba no envía correo, así que el enlace se muestra aquí.
+            En el sitio publicado llega a la bandeja de entrada.
+          </p>
+          <div class="form-errors" style="background: var(--jade-wash); border-color: rgba(var(--jade-rgb), 0.35);" role="status">
+            <%- icon('link', 18) %>
+            <div>
+              <strong style="display: block;">Enlace de prueba</strong>
+              <a class="text-link" href="<%= enlacePrueba %>" style="word-break: break-all;"><%= enlacePrueba %></a>
+            </div>
+          </div>
+        <% } else { %>
+          <p class="lede">
+            Si <strong><%= values.email || 'ese correo' %></strong> tiene una cuenta, recibirás un
+            enlace para elegir una nueva contraseña. Vence en 60 minutos y sirve una sola vez.
+          </p>
+        <% } %>
+
+        <p class="hint" style="margin-top: 18px;">
+          Si no llega en unos minutos, revisa la carpeta de correo no deseado. También puedes
+          volver a pedirlo.
+        </p>
+
+        <a class="btn btn--block" href="/recuperar">Pedir otro enlace</a>
+        <p class="auth__alt"><a href="/ingresar">Volver al ingreso</a></p>
+      <% } else { %>
+        <p class="eyebrow">¿Olvidaste tu contraseña?</p>
+        <h1>Recupera tu cuenta</h1>
+        <p class="lede">
+          Escribe el correo con el que te registraste y te enviamos un enlace para elegir
+          una contraseña nueva.
+        </p>
+
+        <% if (errors.length) { %>
+          <div class="form-errors" role="alert">
+            <%- icon('alert-circle', 18) %>
+            <ul>
+              <% errors.forEach(function (error) { %><li><%= error %></li><% }); %>
+            </ul>
+          </div>
+        <% } %>
+
+        <form action="/recuperar" method="post">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+          <div class="field">
+            <label for="email">Correo electrónico</label>
+            <input class="input" type="email" id="email" name="email" autocomplete="email"
+                   required value="<%= values.email || '' %>" placeholder="tu@correo.cl" autofocus>
+          </div>
+
+          <button class="btn btn--block btn--lg" type="submit">
+            Enviarme el enlace <%- icon('arrow-right', 16) %>
+          </button>
+        </form>
+
+        <% if (!correoConfigurado) { %>
+          <p class="hint" style="margin-top: 16px;">
+            Esta instalación todavía no tiene correo configurado: si el enlace no aparece en
+            pantalla, pídelo al administrador del sitio.
+          </p>
+        <% } %>
+
+        <p class="auth__alt">¿Te acordaste? <a href="/ingresar">Ingresa a tu cuenta</a></p>
+      <% } %>
+
+      <div class="auth__trust">
+        <span><%- icon('shield', 14) %> Enlace de un solo uso</span>
+        <span><%- icon('clock', 14) %> Vence en 60 minutos</span>
+      </div>
+    </div>
+  </div>
+
+  <aside class="auth__visual" aria-hidden="true">
+    <img src="/img/te-recuerdos.jpg" alt="">
+    <div class="auth__quote">
+      <p>“Volver a este lugar es volver a sentir que sigue cerca.”</p>
+      <span>Una familia de Jardín Memorial</span>
+    </div>
+  </aside>
+</section>

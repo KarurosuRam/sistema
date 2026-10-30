@@ -1,0 +1,68 @@
+<section class="auth">
+  <div class="auth__panel">
+    <div class="auth__inner">
+      <% if (!valido) { %>
+        <p class="eyebrow">Enlace no válido</p>
+        <h1>Este enlace ya no sirve</h1>
+        <p class="lede">
+          Puede que se haya usado antes o que hayan pasado más de 60 minutos. Los enlaces de
+          recuperación sirven una sola vez.
+        </p>
+        <a class="btn btn--block" href="/recuperar">Pedir un enlace nuevo</a>
+        <p class="auth__alt"><a href="/ingresar">Volver al ingreso</a></p>
+      <% } else { %>
+        <p class="eyebrow">Nueva contraseña</p>
+        <h1>Elige tu nueva contraseña</h1>
+        <p class="lede">
+          Para la cuenta <strong><%= valor %></strong>. Al guardarla se cierran las sesiones
+          abiertas en otros dispositivos.
+        </p>
+
+        <% if (errors.length) { %>
+          <div class="form-errors" role="alert">
+            <%- icon('alert-circle', 18) %>
+            <ul>
+              <% errors.forEach(function (error) { %><li><%= error %></li><% }); %>
+            </ul>
+          </div>
+        <% } %>
+
+        <form action="/restablecer/<%= encodeURIComponent(token) %>" method="post">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+          <div class="field">
+            <label for="password">Nueva contraseña</label>
+            <input class="input" type="password" id="password" name="password"
+                   autocomplete="new-password" required minlength="8"
+                   placeholder="Mínimo 8 caracteres" autofocus>
+          </div>
+
+          <div class="field">
+            <label for="password_confirm">Repite la contraseña</label>
+            <input class="input" type="password" id="password_confirm" name="password_confirm"
+                   autocomplete="new-password" required minlength="8" placeholder="Otra vez">
+          </div>
+
+          <button class="btn btn--block btn--lg" type="submit">
+            Guardar la contraseña <%- icon('arrow-right', 16) %>
+          </button>
+        </form>
+
+        <p class="auth__alt"><a href="/ingresar">Cancelar y volver al ingreso</a></p>
+      <% } %>
+
+      <div class="auth__trust">
+        <span><%- icon('lock', 14) %> Contraseña cifrada</span>
+        <span><%- icon('shield', 14) %> Sesiones reiniciadas</span>
+      </div>
+    </div>
+  </div>
+
+  <aside class="auth__visual" aria-hidden="true">
+    <img src="/img/te-recuerdos.jpg" alt="">
+    <div class="auth__quote">
+      <p>“Volver a este lugar es volver a sentir que sigue cerca.”</p>
+      <span>Una familia de Jardín Memorial</span>
+    </div>
+  </aside>
+</section>

@@ -236,7 +236,7 @@ app.get('/sitemap.xml', (req, res, next) => {
 });
 
 app.get('/robots.txt', (req, res) => {
-  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /panel\nDisallow: /ingresar\nSitemap: ${util.baseUrl(req)}/sitemap.xml\n`);
+  res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /panel\nDisallow: /ingresar\nDisallow: /recuperar\nDisallow: /restablecer\nSitemap: ${util.baseUrl(req)}/sitemap.xml\n`);
 });
 
 // 404

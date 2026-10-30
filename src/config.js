@@ -77,6 +77,26 @@ const mercadopago = {
 };
 mercadopago.configured = Boolean(mercadopago.accessToken);
 
+// --- Correo (SMTP) ----------------------------------------------------------
+// Se usa para la recuperación de contraseña y otros avisos. Lo normal es
+// configurarlo desde el panel (/panel/admin/correo); estas variables sirven
+// para instalaciones automatizadas, donde el entorno manda sobre la base.
+//   MAIL_TRANSPORT=json existe solo para pruebas automatizadas.
+const mailPortEnv = Number(process.env.MAIL_PORT) || 587;
+const mailSecureEnv =
+  ['true', '1', 'yes'].includes(String(process.env.MAIL_SECURE || '').toLowerCase()) ||
+  mailPortEnv === 465;
+const mail = {
+  host: String(process.env.MAIL_HOST || '').trim(),
+  port: mailPortEnv,
+  secure: mailSecureEnv,
+  user: String(process.env.MAIL_USER || '').trim(),
+  pass: String(process.env.MAIL_PASS || '').trim(),
+  from: String(process.env.MAIL_FROM || '').trim() || 'Jardín Memorial <no-responder@jardinmemorial.cl>',
+  transport: String(process.env.MAIL_TRANSPORT || '').trim().toLowerCase()
+};
+mail.configured = Boolean(mail.host && mail.from);
+
 const publicUrl = String(
   process.env.SITE_URL ||
     process.env.PUBLIC_URL ||
@@ -128,6 +148,11 @@ function computeWarning() {
  * Recalcula lo que depende de las credenciales. Se llama al arrancar, después
  * de que el panel guarde o borre credenciales, y al cambiar de ambiente.
  */
+function refreshMail() {
+  mail.configured = Boolean(mail.host && mail.from);
+  return mail.configured;
+}
+
 function refreshPayments() {
   mercadopago.configured = Boolean(mercadopago.accessToken);
   flow.configured = Boolean(flow.apiKey && flow.secretKey);
@@ -194,12 +219,14 @@ const config = {
   //   mercadopago | flow | demo
   flow,
   mercadopago,
+  mail,
   publicUrl,
   adminEmails,
   isAdminEmail(email) {
     return Boolean(email) && adminEmails.includes(String(email).trim().toLowerCase());
   },
   refreshPayments,
+  refreshMail,
   /** Modo fijado desde el panel; null = manda el entorno o la detección. */
   setModeOverride(mode) {
     paymentModeOverride = mode && mode !== 'auto' ? String(mode).toLowerCase() : null;

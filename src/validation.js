@@ -57,6 +57,20 @@ function validatePasswordChange(body) {
   return { errors, values: { current, password } };
 }
 
+/**
+ * Nueva contraseña elegida desde el enlace de recuperación. No pide la
+ * anterior: el token ya prueba que la persona controla el correo.
+ */
+function validatePasswordReset(body) {
+  const errors = [];
+  const password = String(body.password || '');
+  const confirm = String(body.password_confirm || '');
+  if (password.length < 8) errors.push('La nueva contraseña debe tener al menos 8 caracteres.');
+  if (password.length > 200) errors.push('La contraseña es demasiado larga.');
+  if (password !== confirm) errors.push('Las contraseñas no coinciden.');
+  return { errors, values: { password } };
+}
+
 function validateMemorial(body) {
   const errors = [];
   const kind = body.kind === 'mascota' ? 'mascota' : 'persona';
@@ -123,6 +137,7 @@ module.exports = {
   validateLogin,
   validateProfile,
   validatePasswordChange,
+  validatePasswordReset,
   validateMemorial,
   validateGuestbook
 };

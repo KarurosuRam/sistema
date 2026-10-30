@@ -1,0 +1,199 @@
+<section class="panel-shell">
+  <div class="container">
+    <div class="dash-head">
+      <div>
+        <p class="eyebrow">Administración</p>
+        <h1>Correo y recuperación</h1>
+        <p>Configura el envío de correo y entrega los enlaces de recuperación de contraseña.</p>
+      </div>
+      <div class="edit-head__actions">
+        <a class="btn btn--ghost" href="/panel/admin/pagos">Pagos y pasarela</a>
+        <a class="btn btn--ghost" href="/panel">Mi jardín</a>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <span class="stat-card__icon"><%- icon(mailReady ? 'check-circle' : 'clock', 17) %></span>
+        <div>
+          <span class="stat-card__value"><%= mailReady ? 'Activo' : 'Sin configurar' %></span>
+          <span class="stat-card__label">Envío de correo</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card__icon"><%- icon('lock', 17) %></span>
+        <div>
+          <span class="stat-card__value"><%= totalPendientes %></span>
+          <span class="stat-card__label">Pedidos de recuperación vigentes</span>
+        </div>
+      </div>
+    </div>
+
+    <% if (!mailReady) { %>
+      <div class="demo-note" style="margin: 22px 0 0;">
+        <%- icon('info', 16) %>
+        <span>
+          Sin correo configurado, los enlaces de recuperación no llegan solos. Genera el enlace
+          en «Pedidos de recuperación» y envíaselo a la persona por el medio que prefieras.
+        </span>
+      </div>
+    <% } %>
+
+    <% if (resultado) { %>
+      <div class="demo-note <%= resultado.ok ? '' : 'demo-note--warn' %>" style="margin: 16px 0 0;">
+        <%- icon(resultado.ok ? 'check-circle' : 'alert-circle', 16) %>
+        <span>
+          <strong><%= resultado.ok ? 'Conexión correcta.' : 'No pudimos conectar.' %></strong>
+          <%= resultado.detail || resultado.error %>
+          <% if (resultado.envio) { %>
+            <br>
+            <%= resultado.envio.sent ? 'Correo de prueba enviado.' : 'El envío de prueba falló: ' + (resultado.envio.error || 'sin detalle') %>
+          <% } %>
+        </span>
+      </div>
+    <% } %>
+
+    <% if (enlace) { %>
+      <div class="panel-section" style="margin-top: 22px;">
+        <div class="demo-note" style="background: var(--jade-wash); border-color: rgba(var(--jade-rgb), 0.35);">
+          <%- icon('link', 16) %>
+          <span>
+            <strong>Enlace para <%= enlace.email %></strong><br>
+            <a class="text-link" href="<%= enlace.link %>" style="word-break: break-all;"><%= enlace.link %></a><br>
+            <span class="muted small">Sirve una sola vez y vence el <%= enlace.vence %>. Envíaselo a la persona por correo o WhatsApp.</span>
+          </span>
+        </div>
+      </div>
+    <% } %>
+
+    <div class="panel-section" style="margin-top: 26px;">
+      <div class="section-head">
+        <h2>Pedidos de recuperación</h2>
+        <span class="muted small">De cada enlace se guarda solo un hash, así que no se puede volver a mostrar: «Crear enlace» genera uno nuevo y anula el anterior.</span>
+      </div>
+
+      <% if (!pendientes.length) { %>
+        <div class="empty-state">
+          <%- icon('lock', 38) %>
+          <h3>No hay pedidos pendientes</h3>
+          <p>Cuando alguien use «¿Olvidaste tu contraseña?», aparecerá aquí.</p>
+        </div>
+      <% } else { %>
+        <div class="table-wrap">
+          <div class="table-scroll">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Cuenta</th>
+                  <th>Pedido</th>
+                  <th>Vence</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% pendientes.forEach(function (item) { %>
+                  <tr>
+                    <td>
+                      <strong><%= item.name %></strong><br>
+                      <span class="muted small"><%= item.email %></span>
+                    </td>
+                    <td><%= item.pedido %></td>
+                    <td><%= item.vence %></td>
+                    <td>
+                      <form action="/panel/admin/correo/enlace/<%= item.id %>" method="post" class="inline-form">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button class="btn btn--ghost btn--sm" type="submit">Crear enlace</button>
+                      </form>
+                      <form action="/panel/admin/correo/descartar/<%= item.id %>" method="post" class="inline-form" data-confirm="¿Descartar este pedido? El enlace que ya se envió dejará de servir.">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button class="btn btn--ghost btn--sm" type="submit">Descartar</button>
+                      </form>
+                    </td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="panel-section" style="margin-top: 26px;">
+      <div class="section-head">
+        <h2>Servidor de correo (SMTP)</h2>
+        <span class="muted small">Sirve para cualquier proveedor: Gmail, Zoho, Amazon SES, el correo de tu hosting…</span>
+      </div>
+
+      <form action="/panel/admin/correo/guardar" method="post" class="form-card settings-form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div class="field-grid">
+          <div class="field">
+            <label for="mail_host">Servidor SMTP</label>
+            <input class="input" type="text" id="mail_host" name="mail_host" autocomplete="off"
+                   value="<%= settings.host.source === 'env' ? '' : (settings.host.value || '') %>"
+                   placeholder="<%= settings.host.source === 'env' ? 'Definido en el servidor' : 'smtp.tuproveedor.cl' %>"
+                   <%= settings.host.source === 'env' ? 'disabled' : '' %>>
+            <% if (settings.host.source === 'env') { %><span class="hint">Lo define <code>MAIL_HOST</code>.</span><% } %>
+          </div>
+
+          <div class="field">
+            <label for="mail_port">Puerto</label>
+            <input class="input" type="number" id="mail_port" name="mail_port" min="1" max="65535"
+                   value="<%= settings.port.source === 'env' ? '' : (settings.port.value || '587') %>"
+                   placeholder="587"
+                   <%= settings.port.source === 'env' ? 'disabled' : '' %>>
+            <span class="hint">587 con STARTTLS (lo habitual), 465 con SSL directo.</span>
+          </div>
+
+          <div class="field">
+            <label for="mail_user">Usuario</label>
+            <input class="input" type="text" id="mail_user" name="mail_user" autocomplete="off"
+                   value="<%= settings.user.source === 'env' ? '' : (settings.user.value || '') %>"
+                   placeholder="<%= settings.user.source === 'env' ? 'Definido en el servidor' : 'tu@correo.cl' %>"
+                   <%= settings.user.source === 'env' ? 'disabled' : '' %>>
+          </div>
+
+          <div class="field">
+            <label for="mail_pass">Contraseña</label>
+            <input class="input" type="password" id="mail_pass" name="mail_pass" autocomplete="off"
+                   placeholder="<%= settings.pass.source === 'env' ? 'Definida en el servidor' : settings.pass.set ? 'Guardada: ' + settings.pass.hint : 'Contraseña o clave de aplicación' %>"
+                   <%= settings.pass.source === 'env' ? 'disabled' : '' %>>
+            <span class="hint">Se guarda cifrada. Déjala vacía para conservar la actual.</span>
+          </div>
+
+          <div class="field">
+            <label for="mail_from">Remitente</label>
+            <input class="input" type="text" id="mail_from" name="mail_from" autocomplete="off"
+                   value="<%= settings.from.source === 'env' ? '' : (settings.from.value || '') %>"
+                   placeholder="Jardín Memorial &lt;hola@tudominio.cl&gt;"
+                   <%= settings.from.source === 'env' ? 'disabled' : '' %>>
+            <span class="hint">Es lo que ve la persona en su bandeja de entrada.</span>
+          </div>
+        </div>
+
+        <label class="check-line" style="display: flex; gap: 10px; align-items: center; margin-top: 14px;">
+          <input type="checkbox" name="mail_secure" <%= settings.secure.value === 'true' ? 'checked' : '' %>>
+          <span>Conexión segura desde el inicio (SSL directo, normalmente puerto 465)</span>
+        </label>
+
+        <button class="btn btn--block" type="submit" style="margin-top: 18px;">Guardar configuración</button>
+      </form>
+
+      <form action="/panel/admin/correo/probar" method="post" class="form-card" style="margin-top: 18px;">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <h3 class="settings-form__title"><%- icon('mail', 16) %> Probar el envío</h3>
+        <div class="field">
+          <label for="destino">Enviar un correo de prueba a</label>
+          <input class="input" type="email" id="destino" name="destino" value="<%= pruebaDestino %>" placeholder="tu@correo.cl">
+        </div>
+        <button class="btn btn--ghost" type="submit">Probar conexión y enviar</button>
+      </form>
+
+      <p class="hint" style="margin-top: 14px;">
+        Nota: algunos proveedores (Gmail, Outlook) no aceptan tu contraseña normal en
+        aplicaciones. Hay que generar una <strong>contraseña de aplicación</strong> y usar esa.
+      </p>
+    </div>
+  </div>
+</section>

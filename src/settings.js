@@ -29,7 +29,8 @@ const SECRET_KEYS = new Set([
   'mp.accessToken',
   'mp.webhookSecret',
   'flow.apiKey',
-  'flow.secretKey'
+  'flow.secretKey',
+  'mail.pass'
 ]);
 
 const VALID_MODES = new Set(['auto', 'mercadopago', 'flow', 'demo']);
@@ -149,6 +150,27 @@ function apply() {
   const mode = effective('payments.mode', 'PAYMENTS_MODE').value;
   config.setModeOverride(VALID_MODES.has(mode) && mode !== 'auto' ? mode : null);
 
+  // Correo: mismas reglas (entorno primero, panel después).
+  const mail = config.mail;
+  mail.host = effective('mail.host', 'MAIL_HOST').value;
+  mail.port = Number(effective('mail.port', 'MAIL_PORT').value) || 587;
+  const secure = effective('mail.secure', 'MAIL_SECURE').value;
+  mail.secure = ['true', '1', 'yes'].includes(String(secure).toLowerCase()) || mail.port === 465;
+  mail.user = effective('mail.user', 'MAIL_USER').value;
+  mail.pass = effective('mail.pass', 'MAIL_PASS').value;
+  mail.from =
+    effective('mail.from', 'MAIL_FROM').value || 'Jardín Memorial <no-responder@jardinmemorial.cl>';
+  mail.transport = effective('mail.transport', 'MAIL_TRANSPORT').value.toLowerCase();
+  config.refreshMail();
+
+  // El transporte SMTP se arma con la configuración vigente: si cambió, se
+  // descarta el anterior para que las credenciales nuevas se usen de inmediato.
+  try {
+    require('./mailer').resetTransport();
+  } catch (_) {
+    /* el correo es opcional */
+  }
+
   config.refreshPayments();
   return config.paymentProvider;
 }
@@ -177,6 +199,15 @@ function summary() {
       apiKey: describe('flow.apiKey', 'FLOW_API_KEY'),
       secretKey: describe('flow.secretKey', 'FLOW_SECRET_KEY'),
       env: effective('flow.env', 'FLOW_ENV')
+    },
+    mail: {
+      host: effective('mail.host', 'MAIL_HOST'),
+      port: effective('mail.port', 'MAIL_PORT'),
+      secure: effective('mail.secure', 'MAIL_SECURE'),
+      user: effective('mail.user', 'MAIL_USER'),
+      pass: describe('mail.pass', 'MAIL_PASS'),
+      from: effective('mail.from', 'MAIL_FROM'),
+      transport: effective('mail.transport', 'MAIL_TRANSPORT')
     },
     keyFile: KEY_FILE
   };
@@ -259,8 +290,54 @@ function save(input = {}) {
     }
   }
 
-  const provider = apply();
+  const provider = saveMail(input, changes, ignored);
   return { provider, changes, ignored };
+}
+
+/**
+ * Guarda la configuración SMTP del panel. Un campo vacío no borra lo anterior
+ * (igual que con las credenciales de pago): para quitar algo hay que usar el
+ * botón de borrar, que existe aparte.
+ */
+function saveMail(input, changes, ignored) {
+  const campos = [
+    ['mailHost', 'mail.host', 'MAIL_HOST', 'servidor SMTP'],
+    ['mailPort', 'mail.port', 'MAIL_PORT', 'puerto SMTP'],
+    ['mailUser', 'mail.user', 'MAIL_USER', 'usuario SMTP'],
+    ['mailFrom', 'mail.from', 'MAIL_FROM', 'remitente del correo']
+  ];
+
+  for (const [field, name, envName, label] of campos) {
+    const value = String(input[field] || '').trim();
+    if (!value) continue;
+    if (effective(name, envName).source === 'env') {
+      ignored.push(envName);
+      continue;
+    }
+    if (value !== effective(name, envName).value) {
+      writeValue(name, value);
+      changes.push(label);
+    }
+  }
+
+  if (input.mailSecure !== undefined) {
+    const value = input.mailSecure === 'on' || input.mailSecure === 'true' ? 'true' : 'false';
+    if (effective('mail.secure', 'MAIL_SECURE').source === 'env') ignored.push('MAIL_SECURE');
+    else if (value !== effective('mail.secure', 'MAIL_SECURE').value) {
+      writeValue('mail.secure', value);
+      changes.push('conexión segura');
+    }
+  }
+
+  if (String(input.mailPass || '').trim()) {
+    if (effective('mail.pass', 'MAIL_PASS').source === 'env') ignored.push('MAIL_PASS');
+    else {
+      writeValue('mail.pass', String(input.mailPass).trim());
+      changes.push('contraseña SMTP');
+    }
+  }
+
+  return apply();
 }
 
 /** Borra las credenciales guardadas; las del entorno no se tocan. */

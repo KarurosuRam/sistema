@@ -126,6 +126,19 @@ db.exec(`
     value TEXT NOT NULL,
     updated_at TEXT NOT NULL
   );
+
+  -- Recuperación de contraseña. Se guarda el hash del token, no el token: un
+  -- enlace solo sirve mientras no se use y hasta que expire.
+  CREATE TABLE IF NOT EXISTS password_resets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at TEXT NOT NULL,
+    used_at TEXT,
+    created_at TEXT NOT NULL,
+    requested_ip TEXT
+  );
+  CREATE INDEX IF NOT EXISTS idx_password_resets_user ON password_resets(user_id, created_at DESC);
 `);
 
 /**
@@ -144,6 +157,7 @@ ensureColumn('purchases', 'provider_token', 'TEXT');
 ensureColumn('purchases', 'provider_order', 'TEXT');
 ensureColumn('purchases', 'payer_email', 'TEXT');
 ensureColumn('purchases', 'paid_at', 'TEXT');
+ensureColumn('purchases', 'refund_id', 'TEXT');
 ensureColumn('purchases', 'updated_at', 'TEXT');
 db.exec(
   'CREATE UNIQUE INDEX IF NOT EXISTS idx_purchases_token ON purchases(provider_token) WHERE provider_token IS NOT NULL'

@@ -211,6 +211,8 @@ Con `ADMIN_EMAILS=tu@correo.cl` en el entorno, tu cuenta ve en el panel el enlac
 - si `MP_WEBHOOK_SECRET` está definido;
 - las URLs de **webhook** y **retorno** con botón para copiar;
 - ventas pagadas, memoriales vendidos y pagos pendientes;
+- la tabla de **movimientos** con cada compra y, según su estado, los botones
+  **Verificar** y **Reembolsar** (ver abajo);
 - **Probar credenciales**: consulta `GET /users/me` con el token configurado y responde
   con la cuenta y el tipo de token. No crea cobros ni modifica datos.
 
@@ -234,9 +236,30 @@ Cada compra de la app tiene una referencia `JM-…` que también se envía a Mer
 como `external_reference`; puedes buscarla en el panel para conciliar. En la app, el
 titular ve el mismo número en **Historial de compras → Ver**.
 
-**Reembolsos:** se hacen desde Mercado Pago. La app no borra memoriales ni descuenta
-cupos automáticamente al reembolsar; si necesitas revertir cupos, hazlo a mano en la
-base (`purchases` / `users.credits`) después de acordarlo con el cliente.
+### Verificar y reembolsar desde la app
+
+Dos botones de la tabla de movimientos evitan abrir Mercado Pago para las tareas del día.
+
+**Verificar** (compras *Pendientes*): consulta el pago en Mercado Pago —primero por el
+identificador guardado, después por `external_reference`— y, si está aprobado, acredita
+los cupos y marca la compra como pagada. Sirve cuando el webhook no llegó (caída,
+bloqueo de red, notificación perdida). Es seguro repetirlo: acredita una sola vez.
+
+**Reembolsar** (compras *Pagadas* con Mercado Pago real): llama a
+`POST /v1/payments/{id}/refunds` y **solo si Mercado Pago acepta la devolución** marca la
+compra como `reembolsado`, guarda el `refund_id` y descuenta de la cuenta los cupos que
+seguían sin usar (nunca por debajo de 0). Los memoriales ya creados **no** se borran.
+
+- El botón no aparece en compras de la pasarela de prueba (`demo`): esas no tienen dinero
+  real que devolver.
+- Reembolsar dos veces no hace nada la segunda vez: la compra ya está en `reembolsado`.
+- Si devuelves el dinero desde el panel de Mercado Pago, el webhook llega con el pago en
+  `refunded` (o `charged_back`, en un contracargo) y la app aplica exactamente el mismo
+  cierre: estado `reembolsado`, `refund_id` guardado y cupos sin usar descontados.
+
+> Un reembolso total devuelve el monto completo del pack; Mercado Pago acredita en la
+> tarjeta del comprador según los plazos de su banco (habitualmente 5 a 10 días hábiles).
+> La app no puede reembolsar montos parciales.
 
 ## 8. Problemas frecuentes
 

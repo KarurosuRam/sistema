@@ -7,6 +7,7 @@
         <p>Revisa con qué pasarela están cobrando los memoriales y comprueba tus credenciales.</p>
       </div>
       <div class="edit-head__actions">
+        <a class="btn btn--ghost" href="/panel/admin/correo">Correo y recuperación</a>
         <a class="btn btn--ghost" href="/panel/compras">Mis compras</a>
         <a class="btn" href="/panel/planes">Ver planes</a>
       </div>
@@ -300,6 +301,7 @@
                   <th>Pasarela</th>
                   <th>Estado</th>
                   <th>Referencia</th>
+                  <th>Acciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -318,13 +320,36 @@
                         <span class="badge"><%- icon('check', 12) %> Pagado</span>
                       <% } else if (purchase.status === 'pendiente') { %>
                         <span class="badge badge--gold"><%- icon('clock', 12) %> Pendiente</span>
-                      <% } else if (purchase.status === 'anulado') { %>
-                        <span class="badge"><%= purchase.status %></span>
+                      <% } else if (purchase.status === 'reembolsado') { %>
+                        <span class="badge badge--gold"><%- icon('arrow-left', 12) %> Reembolsado</span>
                       <% } else { %>
                         <span class="badge"><%= purchase.status %></span>
                       <% } %>
                     </td>
-                    <td><span class="mono"><%= purchase.reference %></span></td>
+                    <td>
+                      <span class="mono"><%= purchase.reference %></span>
+                      <% if (purchase.provider_order) { %>
+                        <br><span class="muted small"><%= purchase.provider === 'mercadopago' ? 'MP' : 'Flow' %> #<%= purchase.provider_order %></span>
+                      <% } %>
+                    </td>
+                    <td>
+                      <% if (purchase.status === 'pendiente') { %>
+                        <form action="/panel/admin/pagos/<%= encodeURIComponent(purchase.reference) %>/verificar" method="post" class="inline-form">
+                          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                          <button class="btn btn--ghost btn--sm" type="submit">Verificar</button>
+                        </form>
+                      <% } %>
+                      <% if (purchase.status === 'pagado' && purchase.provider === 'mercadopago' && purchase.mode !== 'demo') { %>
+                        <form action="/panel/admin/pagos/<%= encodeURIComponent(purchase.reference) %>/reembolsar" method="post" class="inline-form"
+                              data-confirm="Se devolverá el dinero en Mercado Pago y se quitarán los cupos sin usar. El memorial creado no se borra. ¿Continuar?">
+                          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                          <button class="btn btn--ghost btn--sm" type="submit">Reembolsar</button>
+                        </form>
+                      <% } %>
+                      <% if (purchase.status !== 'pendiente' && !(purchase.status === 'pagado' && purchase.provider === 'mercadopago' && purchase.mode !== 'demo')) { %>
+                        <span class="muted small">—</span>
+                      <% } %>
+                    </td>
                   </tr>
                 <% }); %>
               </tbody>

@@ -18,6 +18,8 @@ const { generatePoster } = require('../poster');
 const payments = require('../payments');
 const mercadopago = require('../mercadopago');
 const settings = require('../settings');
+const passwordReset = require('../password-reset');
+const mailer = require('../mailer');
 
 const router = express.Router();
 
@@ -383,6 +385,154 @@ router.get('/mensajes', (req, res) => {
     hidden: counters.hidden || 0
   });
 });
+
+/* ------------------------------------------- correo y recuperación de clave */
+
+function fechaCorta(value) {
+  try {
+    return new Date(value).toLocaleString('es-CL', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+      timeZone: 'America/Santiago'
+    });
+  } catch (_) {
+    return String(value || '');
+  }
+}
+
+function renderCorreo(req, res, extra = {}) {
+  const resumen = settings.summary().mail;
+  res.render('panel/correo', {
+    pageTitle: 'Correo y recuperación',
+    metaDescription: 'Configura el correo del sitio y entrega enlaces de recuperación de contraseña.',
+    bodyClass: 'page-panel',
+    mailReady: mailer.isConfigured(),
+    mail: config.mail,
+    settings: resumen,
+    pendientes: passwordReset.pendingRequests().map((item) => ({
+      ...item,
+      pedido: fechaCorta(item.created_at),
+      vence: fechaCorta(item.expires_at)
+    })),
+    totalPendientes: passwordReset.countPending(),
+    resultado: null,
+    enlace: null,
+    pruebaDestino: (req.user && req.user.email) || '',
+    ...extra
+  });
+}
+
+router.get('/admin/correo', requireAdmin, (req, res) => {
+  renderCorreo(req, res);
+});
+
+router.post('/admin/correo/guardar', requireAdmin, (req, res) => {
+  const result = settings.save({
+    mailHost: req.body.mail_host,
+    mailPort: req.body.mail_port,
+    mailUser: req.body.mail_user,
+    mailPass: req.body.mail_pass,
+    mailFrom: req.body.mail_from,
+    mailSecure: req.body.mail_secure
+  });
+
+  if (result.changes.length) {
+    req.flash('success', 'Guardamos la configuración de correo.');
+  } else if (result.ignored.length) {
+    req.flash('info', `Esos datos los define el servidor (${result.ignored.join(', ')}).`);
+  } else {
+    req.flash('info', 'No había cambios que guardar.');
+  }
+  res.redirect('/panel/admin/correo');
+});
+
+router.post('/admin/correo/probar', requireAdmin, asyncHandler(async (req, res, next) => {
+  const destino = String(req.body.destino || '').trim();
+  const resultado = await mailer.verify();
+
+  if (resultado.ok && destino) {
+    const envio = await mailer.send({
+      to: destino,
+      subject: 'Prueba de correo · Jardín Memorial',
+      text: 'Este es un correo de prueba enviado desde el panel de administración de Jardín Memorial. Si lo estás leyendo, el envío funciona.',
+      html: '<p>Este es un correo de prueba enviado desde el panel de administración de <strong>Jardín Memorial</strong>.</p><p>Si lo estás leyendo, el envío funciona.</p>'
+    });
+    resultado.envio = envio;
+  }
+
+  return renderCorreo(req, res, { resultado, pruebaDestino: destino });
+}));
+
+router.post('/admin/correo/enlace/:id', requireAdmin, (req, res, next) => {
+  const pedido = passwordReset.findRequest(req.params.id);
+  if (!pedido) {
+    req.flash('error', 'Ese pedido ya venció o se usó. Pídele a la persona que solicite uno nuevo.');
+    return res.redirect('/panel/admin/correo');
+  }
+
+  const { token, minutes } = passwordReset.createToken(pedido.user_id, { ip: req.ip });
+  const link = `${util.baseUrl(req)}/restablecer/${encodeURIComponent(token)}`;
+
+  return renderCorreo(req, res, {
+    enlace: {
+      link,
+      email: pedido.email,
+      vence: fechaCorta(new Date(Date.now() + minutes * 60000).toISOString())
+    }
+  });
+});
+
+router.post('/admin/correo/descartar/:id', requireAdmin, (req, res) => {
+  passwordReset.discard(req.params.id);
+  req.flash('info', 'Descartamos ese pedido. El enlace anterior ya no sirve.');
+  res.redirect('/panel/admin/correo');
+});
+
+/* --------------------------------------------- verificación y reembolsos -- */
+
+/** Vuelve a preguntar a la pasarela por una compra pendiente. */
+router.post('/admin/pagos/:reference/verificar', requireAdmin, asyncHandler(async (req, res, next) => {
+  const purchase = store.findPurchaseByReference(String(req.params.reference));
+  if (!purchase) return next();
+
+  try {
+    const result = await payments.syncPurchase(purchase);
+    if (result.status === 'pagado') {
+      req.flash(
+        'success',
+        `La compra ${purchase.reference} está pagada${result.credited ? ' y los cupos quedaron en la cuenta.' : ' (ya estaba acreditada).'}`
+      );
+    } else if (result.status === 'reembolsado') {
+      req.flash('info', 'Mercado Pago informa que ese pago fue devuelto. La compra quedó como reembolsada.');
+    } else {
+      req.flash('info', `La pasarela informa el estado «${result.status}» para ${purchase.reference}.`);
+    }
+  } catch (error) {
+    req.flash('error', `No pudimos consultar la pasarela: ${error.message}`);
+  }
+  res.redirect('/panel/admin/pagos');
+}));
+
+/** Devuelve el dinero desde Mercado Pago y libera los cupos sin usar. */
+router.post('/admin/pagos/:reference/reembolsar', requireAdmin, asyncHandler(async (req, res, next) => {
+  const purchase = store.findPurchaseByReference(String(req.params.reference));
+  if (!purchase) return next();
+
+  try {
+    const result = await payments.refundPurchase(purchase);
+    if (!result.ok) {
+      req.flash('error', result.error);
+    } else {
+      req.flash(
+        'success',
+        `Devolución hecha en Mercado Pago. ${result.creditsRemoved > 0 ? `Se quitaron ${result.creditsRemoved} ${result.creditsRemoved === 1 ? 'cupo' : 'cupos'} sin usar de la cuenta.` : 'La cuenta no tenía cupos de esa compra sin usar.'}`
+      );
+    }
+  } catch (error) {
+    req.flash('error', `Mercado Pago no aceptó la devolución: ${error.message}`);
+  }
+  res.redirect('/panel/admin/pagos');
+}));
 
 router.post('/mensajes/:entryId/ocultar', (req, res) => {
   const entry = store.findGuestbookEntry(Number(req.params.entryId));

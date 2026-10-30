@@ -97,7 +97,10 @@ Todas las variables están documentadas en `.env.example`. Las principales:
 | `SEED_DEMO` | Siembra contenido de ejemplo solo en desarrollo (`true`); por omisión no siembra nada |
 | `EMBED_ORIGINS` | Dominios autorizados a mostrar la app en iframe |
 | `COOKIE_DOMAIN` | Cookie compartida entre subdominios (opcional) |
-| `ADMIN_EMAILS` | Correo(s) con acceso a `/panel/admin/pagos` (estado de pagos) |
+| `MAIL_HOST` / `MAIL_PORT` / `MAIL_SECURE` | Servidor SMTP para el enlace de recuperación de contraseña |
+| `MAIL_USER` / `MAIL_PASS` / `MAIL_FROM` | Credenciales y remitente del correo saliente |
+| `MAIL_TRANSPORT` | `json` imprime los correos en consola (solo desarrollo) |
+| `ADMIN_EMAILS` | Correo(s) con acceso a `/panel/admin/pagos` y `/panel/admin/correo` |
 | `PORT` | Puerto interno (3000) |
 
 La app lee `.env` automáticamente al arrancar (`npm start`, `npm run seed`, etc.); si una
@@ -254,6 +257,13 @@ que consulta la cuenta real de Mercado Pago sin crear cobros. Ahí mismo se pued
 las credenciales** (se guardan cifradas en la base y se aplican sin reiniciar); el token se
 valida contra la API antes de aceptarlo. Las variables del entorno tienen prioridad.
 
+Desde la misma página se resuelven las dos tareas del día a día: **Verificar** una compra
+pendiente (consulta el pago real en Mercado Pago y acredita si está aprobado) y
+**Reembolsar** una compra pagada (`POST /v1/payments/{id}/refunds`; solo si Mercado Pago
+acepta, la app marca la compra como reembolsada y descuenta los cupos que seguían sin usar,
+sin borrar los memoriales creados). Si devuelves el dinero desde el panel de Mercado Pago,
+el webhook aplica el mismo cierre. Detalle en [`docs/mercadopago.md`](docs/mercadopago.md).
+
 Guía paso a paso, credenciales y tarjetas de prueba:
 **[`docs/mercadopago.md`](docs/mercadopago.md)**. Alternativa con Webpay/MACH:
 **[`docs/flow.md`](docs/flow.md)**.
@@ -313,6 +323,13 @@ problemas frecuentes): **[`docs/wordpress.md`](docs/wordpress.md)**.
 - Descargar la tarjeta conmemorativa y escanear su QR con el celular.
 - Reordenar fotos y reproducir la presentación de recuerdos desde el lightbox.
 - Con más de 30 mensajes, usar “Ver más mensajes” y confirmar que el contador avanza.
+- Pedir recuperación con un correo que no existe: la respuesta debe ser igual que con uno
+  registrado y no debe aparecer ningún enlace.
+- Abrir el enlace de recuperación, cambiar la clave e ingresar; volver a abrir el mismo
+  enlace debe responder 410. Con SMTP sin configurar el enlace aparece en pantalla (desarrollo)
+  o en `/panel/admin/correo` (producción).
+- En `/panel/admin/pagos`: **Verificar** una compra pendiente y **Reembolsar** una pagada
+  con Mercado Pago real; repetir el reembolso no debe devolver el dinero dos veces.
 
 ## 🎨 Créditos
 
@@ -337,6 +354,28 @@ problemas frecuentes): **[`docs/wordpress.md`](docs/wordpress.md)**.
   navegador no lo rellene y bloquee el registro por error.
 - Los límites de intentos se cuentan por IP **y** navegador, y se reinician al acertar,
   así una vista previa compartida no bloquea a quien intenta registrarse.
+
+### Recuperar una contraseña
+
+Solo para cuentas ya registradas: la persona escribe su correo en `/recuperar` y recibe un
+enlace de un solo uso para elegir una clave nueva en `/restablecer/<token>`.
+
+- La respuesta de `/recuperar` es **idéntica** exista o no la cuenta, así el formulario no
+  sirve para averiguar quién está registrado.
+- El token son 32 bytes aleatorios; en la base solo se guarda su hash SHA-256. Vale
+  **60 minutos**, se invalida al usarlo y anula cualquier enlace anterior de la misma cuenta.
+- Al cambiar la clave se cierran **todas las sesiones abiertas** de esa cuenta, incluida la
+  del dispositivo que hizo el cambio; después se ingresa con la clave nueva.
+- Un enlace vencido o ya usado responde `410` con un aviso y un botón para pedir otro.
+- El envío tiene límite propio (8 solicitudes por 30 minutos e IP).
+
+**Sin SMTP configurado** la app no falla: registra en el log el enlace generado y, en
+desarrollo, lo muestra en pantalla. Para enviar correo de verdad define `MAIL_*`
+(ver `.env.example`). Si quien administra no tiene acceso al servidor de correo, entra en
+**`/panel/admin/correo`** con una cuenta de `ADMIN_EMAILS`: ahí ve los pedidos pendientes,
+genera un enlace nuevo (los guardados son solo hash y no se pueden releer) y prueba la
+conexión SMTP con un correo de prueba. La contraseña del SMTP se guarda cifrada
+(AES-256-GCM) igual que los tokens de pago.
 
 ## 🧩 Diseño, accesibilidad y caché
 

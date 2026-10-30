@@ -1840,6 +1840,21 @@
   color: var(--muted);
 }
 
+/* Botones de acción dentro de una celda (verificar, reembolsar): en línea,
+   sin margen propio y con un respiro cuando conviven dos. */
+.inline-form {
+  display: inline-block;
+  margin: 0;
+}
+
+.inline-form + .inline-form {
+  margin-left: 6px;
+}
+
+.table .btn--sm {
+  white-space: nowrap;
+}
+
 /* -------------------------------------------------------------- messages */
 
 .msg-list {

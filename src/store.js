@@ -157,6 +157,62 @@ function completePendingPurchase(reference, { providerOrder, payerEmail } = {}) 
   });
 }
 
+/**
+ * Marca una compra como reembolsada y devuelve a la cuenta los cupos que
+ * todavía no se habían usado. Nunca deja el saldo en negativo: si la persona
+ * ya creó memoriales con esos cupos, solo se descuenta lo que queda.
+ *
+ * Es idempotente: dos notificaciones del mismo reembolso descuentan una vez.
+ */
+function markPurchaseRefunded(reference, { refundId = null, reason = null } = {}) {
+  return transaction(() => {
+    const purchase = findPurchaseByReference(reference);
+    if (!purchase) return { purchase: null, creditsRemoved: 0, already: false };
+    if (purchase.status === 'reembolsado') {
+      return { purchase, creditsRemoved: 0, already: true };
+    }
+
+    const now = nowIso();
+    const updated = run(
+      `UPDATE purchases
+          SET status = 'reembolsado',
+              refund_id = COALESCE(?, refund_id),
+              paid_at = COALESCE(paid_at, ?),
+              updated_at = ?
+        WHERE reference = ? AND status = 'pagado'`,
+      refundId ? String(refundId) : null,
+      now,
+      now,
+      reference
+    );
+
+    if (updated.changes !== 1) {
+      // No estaba pagada: no hay cupos que devolver, pero se deja constancia.
+      run(
+        `UPDATE purchases
+            SET status = 'reembolsado', refund_id = COALESCE(?, refund_id), updated_at = ?
+          WHERE reference = ?`,
+        refundId ? String(refundId) : null,
+        now,
+        reference
+      );
+      return { purchase: findPurchaseByReference(reference), creditsRemoved: 0, already: false };
+    }
+
+    const user = findUserById(purchase.user_id);
+    const removed = Math.max(0, Math.min(Number(user?.credits || 0), Number(purchase.credits || 0)));
+    if (removed > 0) {
+      run('UPDATE users SET credits = credits - ? WHERE id = ?', removed, purchase.user_id);
+    }
+
+    if (reason) {
+      console.log(`[pagos] Reembolso de ${reference}: ${reason}`);
+    }
+
+    return { purchase: findPurchaseByReference(reference), creditsRemoved: removed, already: false };
+  });
+}
+
 /** Estados que no acreditan cupos: pendiente, rechazado o anulado. */
 function updatePurchaseStatus(reference, status, { providerOrder, payerEmail } = {}) {
   if (!['pendiente', 'rechazado', 'anulado'].includes(status)) return findPurchaseByReference(reference);
@@ -618,6 +674,7 @@ module.exports = {
   completePendingPurchase,
   updatePurchaseStatus,
   listPurchases,
+  markPurchaseRefunded,
   findPurchaseByReference,
   listRecentPurchases,
   purchaseTotals,

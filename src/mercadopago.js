@@ -162,6 +162,18 @@ async function getAccount(accessToken = null) {
 }
 
 /**
+ * Devuelve un pago (total o parcial) desde la API.
+ *   POST /v1/payments/{id}/refunds
+ * Sin `amount` la devolución es por el monto completo.
+ */
+async function refundPayment(paymentId, { amount = null } = {}) {
+  const id = String(paymentId || '').trim();
+  if (!id) throw new MercadoPagoError('Falta el identificador del pago a devolver.');
+  const body = amount ? { amount: Number(amount) } : {};
+  return request(`/v1/payments/${encodeURIComponent(id)}/refunds`, { method: 'POST', body });
+}
+
+/**
  * Busca pagos por la referencia interna. Devuelve la lista de resultados
  * (puede venir vacía si el comprador abandonó el checkout).
  */
@@ -245,6 +257,7 @@ module.exports = {
   getPayment,
   getAccount,
   searchPayments,
+  refundPayment,
   normalizeStatus,
   verifyWebhookSignature
 };

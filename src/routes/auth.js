@@ -4,8 +4,19 @@ const express = require('express');
 const store = require('../store');
 const { hashPassword, verifyPassword, createRateLimiter, csrfProtect } = require('../security');
 const { startSession, endSession, afterLogin, requireGuest, requireAuth } = require('../auth');
+const util = require('../util');
 const { safeNextPath } = require('../util');
-const { validateRegistration, validateLogin, validateProfile, validatePasswordChange } = require('../validation');
+const config = require('../config');
+const passwordReset = require('../password-reset');
+const mailer = require('../mailer');
+const {
+  validateRegistration,
+  validateLogin,
+  validateProfile,
+  validatePasswordChange,
+  validatePasswordReset,
+  isEmail
+} = require('../validation');
 
 const router = express.Router();
 
@@ -14,6 +25,12 @@ const loginLimiter = createRateLimiter({
   max: 12,
   message: 'Demasiados intentos de ingreso. Espera 15 minutos antes de volver a intentarlo.',
   keyPrefix: 'login'
+});
+const recoveryLimiter = createRateLimiter({
+  windowMs: 30 * 60 * 1000,
+  max: 8,
+  message: 'Pediste varios enlaces de recuperación. Espera unos minutos antes de intentarlo otra vez.',
+  keyPrefix: 'recuperar'
 });
 const registerLimiter = createRateLimiter({
   windowMs: 60 * 60 * 1000,
@@ -120,6 +137,185 @@ router.post('/salir', requireAuth, csrfProtect, (req, res) => {
   endSession(req, res);
   req.flash('info', 'Tu sesión se cerró correctamente. Te esperamos pronto.');
   res.redirect('/');
+});
+
+/* ------------------------------------------------- recuperar contraseña -- */
+
+/** Enlaces absolutos: el correo y el QR se leen fuera del sitio. */
+function resetLink(req, token) {
+  return `${util.baseUrl(req)}/restablecer/${encodeURIComponent(token)}`;
+}
+
+/**
+ * Las páginas de recuperación nunca se indexan y el token no viaja como
+ * referente a ningún otro sitio (va en la URL).
+ */
+function privacidadRecuperacion(req, res, next) {
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Cache-Control', 'no-store');
+  return next();
+}
+
+router.use(['/recuperar', '/restablecer'], privacidadRecuperacion);
+
+router.get('/recuperar', (req, res) => {
+  if (req.user) return res.redirect('/cuenta');
+  res.render('auth/recuperar', {
+    pageTitle: 'Recuperar tu contraseña',
+    metaDescription: 'Pide un enlace para elegir una nueva contraseña en Jardín Memorial.',
+    bodyClass: 'page-auth',
+    activeNav: 'ingresar',
+    errors: [],
+    values: {},
+    enviado: false,
+    enlacePrueba: null,
+    correoConfigurado: mailer.isConfigured()
+  });
+});
+
+router.post('/recuperar', recoveryLimiter, csrfProtect, async (req, res, next) => {
+  if (req.user) return res.redirect('/cuenta');
+
+  const email = String(req.body.email || '').trim();
+  const errors = [];
+  if (!email) errors.push('Escribe el correo de tu cuenta.');
+  else if (!isEmail(email)) errors.push('Escribe un correo válido.');
+
+  if (errors.length) {
+    return res.status(422).render('auth/recuperar', {
+      pageTitle: 'Recuperar tu contraseña',
+      metaDescription: 'Pide un enlace para elegir una nueva contraseña en Jardín Memorial.',
+      bodyClass: 'page-auth',
+      activeNav: 'ingresar',
+      errors,
+      values: { email },
+      enviado: false,
+      enlacePrueba: null,
+      correoConfigurado: mailer.isConfigured()
+    });
+  }
+
+  const user = store.findUserByEmail(email);
+  let enlacePrueba = null;
+
+  // La respuesta es la misma exista o no la cuenta: así no se puede usar este
+  // formulario para averiguar qué correos están registrados.
+  if (user) {
+    try {
+      passwordReset.purgeOld();
+      const { token, minutes } = passwordReset.createToken(user.id, { ip: req.ip });
+      const link = resetLink(req, token);
+
+      const envio = await mailer.sendPasswordReset({ user, link, minutes });
+      // No se reinicia el límite al enviar: así nadie puede usar este formulario
+      // para llenar de correos la bandeja de otra persona.
+      if (!envio.sent) {
+        if (envio.skipped) {
+          console.log(`[recuperar] Sin correo configurado. Enlace para ${user.email}: ${link}`);
+        }
+        // En desarrollo o vista previa el enlace se muestra para poder probar el
+        // circuito completo; en producción el dueño lo genera en el panel.
+        if (process.env.NODE_ENV !== 'production') enlacePrueba = link;
+      }
+    } catch (error) {
+      console.error('[recuperar]', error.message);
+      return next(error);
+    }
+  }
+
+  return res.render('auth/recuperar', {
+    pageTitle: 'Revisa tu correo',
+    metaDescription: 'Te enviamos un enlace para elegir una nueva contraseña.',
+    bodyClass: 'page-auth',
+    activeNav: 'ingresar',
+    errors: [],
+    values: { email },
+    enviado: true,
+    enlacePrueba,
+    correoConfigurado: mailer.isConfigured()
+  });
+});
+
+router.get('/restablecer/:token', (req, res) => {
+  const row = passwordReset.findToken(req.params.token);
+  if (!row) {
+    return res.status(410).render('auth/restablecer', {
+      pageTitle: 'Enlace vencido',
+      metaDescription: 'El enlace para cambiar la contraseña ya no es válido.',
+      bodyClass: 'page-auth',
+      activeNav: 'ingresar',
+      valido: false,
+      token: '',
+      valor: '',
+      errors: []
+    });
+  }
+
+  return res.render('auth/restablecer', {
+    pageTitle: 'Elige una nueva contraseña',
+    metaDescription: 'Elige una nueva contraseña para tu cuenta de Jardín Memorial.',
+    bodyClass: 'page-auth',
+    activeNav: 'ingresar',
+    valido: true,
+    token: req.params.token,
+    valor: row.email,
+    errors: []
+  });
+});
+
+router.post('/restablecer/:token', recoveryLimiter, csrfProtect, (req, res) => {
+  const row = passwordReset.findToken(req.params.token);
+  if (!row) {
+    return res.status(410).render('auth/restablecer', {
+      pageTitle: 'Enlace vencido',
+      metaDescription: 'El enlace para cambiar la contraseña ya no es válido.',
+      bodyClass: 'page-auth',
+      activeNav: 'ingresar',
+      valido: false,
+      token: '',
+      valor: '',
+      errors: []
+    });
+  }
+
+  const { errors, values } = validatePasswordReset(req.body);
+  if (errors.length) {
+    return res.status(422).render('auth/restablecer', {
+      pageTitle: 'Elige una nueva contraseña',
+      metaDescription: 'Elige una nueva contraseña para tu cuenta de Jardín Memorial.',
+      bodyClass: 'page-auth',
+      activeNav: 'ingresar',
+      valido: true,
+      token: req.params.token,
+      valor: row.email,
+      errors
+    });
+  }
+
+  // Se gasta el token antes de cambiar la clave: si dos pestañas envían el
+  // formulario a la vez, solo la primera gana.
+  if (!passwordReset.consumeToken(row.id)) {
+    return res.status(410).render('auth/restablecer', {
+      pageTitle: 'Enlace ya utilizado',
+      metaDescription: 'El enlace para cambiar la contraseña ya fue utilizado.',
+      bodyClass: 'page-auth',
+      activeNav: 'ingresar',
+      valido: false,
+      token: '',
+      valor: '',
+      errors: []
+    });
+  }
+
+  store.updateUserPassword(row.user_id, hashPassword(values.password));
+  passwordReset.invalidateUser(row.user_id);
+  // Cualquier sesión abierta con la clave anterior deja de valer.
+  store.deleteUserSessions(row.user_id);
+
+  recoveryLimiter.reset(req);
+  req.flash('success', 'Tu contraseña se cambió. Ya puedes ingresar con la nueva.');
+  return res.redirect('/ingresar');
 });
 
 router.get('/cuenta', requireAuth, (req, res) => {

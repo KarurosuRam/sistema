@@ -247,8 +247,27 @@ async function syncFlowPayment(token) {
  */
 function applyMercadoPagoPayment(purchase, payment) {
   if (!payment || !purchase) return { purchase, status: 'desconocido' };
+
+  const original = String(payment.status || '').toLowerCase();
+
+  // Una compra ya pagada puede volver como devolución o contracargo: son los
+  // únicos estados que cambian algo después de acreditar.
   if (purchase.status === 'pagado') {
+    if (['refunded', 'charged_back'].includes(original)) {
+      const outcome = store.markPurchaseRefunded(purchase.reference, { refundId: payment.id });
+      return {
+        purchase: outcome.purchase,
+        status: 'reembolsado',
+        refunded: true,
+        creditsRemoved: outcome.creditsRemoved,
+        already: outcome.already
+      };
+    }
     return { purchase, status: 'pagado', credited: false, alreadyPaid: true };
+  }
+
+  if (purchase.status === 'reembolsado') {
+    return { purchase, status: 'reembolsado', credited: false, alreadyPaid: false };
   }
 
   const status = mercadopago.normalizeStatus(payment.status);
@@ -292,6 +311,45 @@ function applyMercadoPagoPayment(purchase, payment) {
     payerEmail
   });
   return { purchase: store.findPurchaseByReference(purchase.reference), status };
+}
+
+/**
+ * Devuelve el dinero de una compra hecha con Mercado Pago.
+ *
+ * Primero se pide la devolución a la API y solo si la pasarela responde bien se
+ * actualiza la compra: así el estado local nunca dice «reembolsado» cuando el
+ * dinero sigue en la cuenta del comercio.
+ */
+async function refundPurchase(purchase, { reason = 'solicitud del administrador' } = {}) {
+  if (!purchase) return { ok: false, error: 'No encontramos esa compra.' };
+  if (purchase.provider !== 'mercadopago') {
+    return { ok: false, error: 'Esta compra no se hizo con Mercado Pago: devuélvela desde la pasarela que corresponda.' };
+  }
+  if (purchase.mode === 'demo') {
+    return { ok: false, error: 'Fue una compra de prueba: no hay dinero que devolver.' };
+  }
+  if (purchase.status === 'reembolsado') {
+    return { ok: false, error: 'Esta compra ya está reembolsada.' };
+  }
+  if (purchase.status !== 'pagado') {
+    return { ok: false, error: 'Solo se pueden devolver compras pagadas.' };
+  }
+  if (!purchase.provider_order) {
+    return { ok: false, error: 'La compra no tiene el número de pago de Mercado Pago. Usa «Verificar» para traerlo.' };
+  }
+
+  const refund = await mercadopago.refundPayment(purchase.provider_order);
+  const outcome = store.markPurchaseRefunded(purchase.reference, {
+    refundId: refund?.id || null,
+    reason
+  });
+
+  return {
+    ok: true,
+    refund,
+    purchase: outcome.purchase,
+    creditsRemoved: outcome.creditsRemoved
+  };
 }
 
 /** Sincroniza una compra a partir del id de pago que entrega Mercado Pago. */
@@ -373,5 +431,6 @@ module.exports = {
   syncPayment: syncFlowPayment,
   syncMercadoPagoPayment,
   syncPurchase,
+  refundPurchase,
   applyMercadoPagoPayment
 };

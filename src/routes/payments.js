@@ -61,6 +61,8 @@ function flashResult(req, result, gatewayName) {
       'error',
       `${gatewayName} rechazó el pago. No se hizo ningún cargo y puedes intentarlo de nuevo.`
     );
+  } else if (result.status === 'reembolsado') {
+    req.flash('info', 'Mercado Pago devolvió el dinero de esta compra. La orden quedó como reembolsada.');
   } else if (result.status === 'anulado') {
     req.flash('error', 'El pago fue anulado. Puedes intentarlo otra vez cuando quieras.');
   } else if (result.status === 'invalido') {
