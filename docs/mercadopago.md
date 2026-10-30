@@ -176,8 +176,17 @@ devuelve `500` para que la pasarela reintente (lo hace durante varios días).
 - [ ] `SITE_URL` con el dominio definitivo y certificado válido.
 - [ ] `SEED_DEMO` sin definir (o `false`) y `npm run purge-demo` si la base tenía contenido
       de ejemplo.
-- [ ] Compra real de prueba (puedes comprar $6.990 y luego devolverte el dinero desde el
-      panel de Mercado Pago): confirma que el cupo aparece una sola vez.
+- [ ] Webhook `https://TU-DOMINIO/pago/mp/webhook` registrado en Mercado Pago, con
+      `MP_WEBHOOK_SECRET` definido.
+- [ ] `MAIL_*` configurado (o el SMTP cargado desde **Mi jardín → Correo**) para que la
+      recuperación de contraseña envíe el enlace.
+- [ ] Compra real de prueba (puedes comprar $6.990 y luego devolver el dinero): confirma que
+      el cupo aparece una sola vez y que el recibo queda en **Mis compras**.
+- [ ] Reembolso desde **`/panel/admin/pagos` → Reembolsar**: la compra queda
+      *Reembolsado*, se guarda el `refund_id` y se descuentan solo los cupos sin usar. El
+      memorial creado sigue publicado.
+- [ ] Devuelve también un pago desde el panel de Mercado Pago y comprueba que el webhook
+      llega y deja la compra en el mismo estado.
 - [ ] Revisa `https://TU-DOMINIO/pago/estado`: `"ambiente": "production"` y
       `"cobrosReales": true`.
 
