@@ -17,6 +17,12 @@ name: Vista previa privada
 
 on:
   workflow_dispatch:
+  # Gatillo alternativo: tocar este archivo (y hacer push) enciende la vista
+  # previa desde cualquier rama. Sirve mientras el workflow no esté en la rama
+  # principal, que es la única que GitHub indexa para el botón «Run workflow».
+  push:
+    paths:
+      - '.vista-previa/activar'
 
 concurrency:
   group: vista-previa
