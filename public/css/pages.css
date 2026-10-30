@@ -539,6 +539,13 @@
   border-color: rgba(var(--cream-rgb), 0.16);
 }
 
+/* La tarjeta destacada tiene fondo oscuro: los ítems necesitan un color claro
+   propio, porque la regla global de legibilidad (p, li, td, th…) fija `--ink`
+   y aquí quedarían negro sobre negro. */
+.price-card--featured .price-card__list li {
+  color: rgba(var(--cream-rgb), 0.82);
+}
+
 .price-card__list li {
   display: flex;
   gap: 10px;
