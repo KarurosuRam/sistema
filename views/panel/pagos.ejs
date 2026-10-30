@@ -49,6 +49,15 @@
           <span class="stat-card__label">Pagos pendientes</span>
         </div>
       </div>
+      <% if ((totals.refunded || 0) > 0) { %>
+        <div class="stat-card">
+          <span class="stat-card__icon"><%- icon('arrow-left', 17) %></span>
+          <div>
+            <span class="stat-card__value"><%= helpers.formatCLP(totals.amount_refunded || 0) %></span>
+            <span class="stat-card__label"><%= totals.refunded %> devueltos</span>
+          </div>
+        </div>
+      <% } %>
     </div>
 
     <% if (!realCharges) { %>

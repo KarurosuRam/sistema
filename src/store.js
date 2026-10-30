@@ -261,7 +261,9 @@ function purchaseTotals() {
        COUNT(*) AS total,
        COALESCE(SUM(CASE WHEN status = 'pagado' THEN amount ELSE 0 END), 0) AS amount_paid,
        COALESCE(SUM(CASE WHEN status = 'pagado' THEN credits ELSE 0 END), 0) AS credits_sold,
-       COALESCE(SUM(CASE WHEN status = 'pendiente' THEN 1 ELSE 0 END), 0) AS pending
+       COALESCE(SUM(CASE WHEN status = 'pendiente' THEN 1 ELSE 0 END), 0) AS pending,
+       COALESCE(SUM(CASE WHEN status = 'reembolsado' THEN 1 ELSE 0 END), 0) AS refunded,
+       COALESCE(SUM(CASE WHEN status = 'reembolsado' THEN amount ELSE 0 END), 0) AS amount_refunded
      FROM purchases`
   );
 }
