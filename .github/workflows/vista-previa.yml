@@ -104,6 +104,8 @@ jobs:
           NODE_ENV=production \
           PORT=3000 \
           SEED_DEMO=false \
+          ADMIN_EMAILS=ccramireza@gmail.com \
+          MAIL_TRANSPORT=json \
           DATA_DIR="$RUNNER_TEMP/datos" \
           node --experimental-sqlite server.js > app.log 2>&1 &
           echo $! > app.pid
