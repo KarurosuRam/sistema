@@ -30,6 +30,7 @@ concurrency:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   publicar:
@@ -61,7 +62,6 @@ jobs:
         id: clave
         run: |
           CLAVE=$(openssl rand -hex 12)
-          echo "::add-mask::$CLAVE"
           echo "valor=$CLAVE" >> "$GITHUB_OUTPUT"
 
       - name: Abrir el túnel
@@ -120,6 +120,27 @@ jobs:
           echo "Sin contraseña: $(curl -s -o /dev/null -w '%{http_code}' "$URL/")"
           echo "Con contraseña: $(curl -s -o /dev/null -w '%{http_code}' -u "demo:$CLAVE" "$URL/")"
           echo "Registro: $(curl -s -o /dev/null -w '%{http_code}' -u "demo:$CLAVE" "$URL/registro")"
+
+      - name: Publicar el enlace en el pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          URL: ${{ steps.tunel.outputs.url }}
+          CLAVE: ${{ steps.clave.outputs.valor }}
+        run: |
+          gh pr comment 1 --repo "$GITHUB_REPOSITORY" --body "$(cat <<TEXTO
+          ## Vista previa lista
+
+          | | |
+          | --- | --- |
+          | **Dirección** | $URL |
+          | **Usuario** | \`demo\` |
+          | **Contraseña** | \`$CLAVE\` |
+
+          Entra desde cualquier navegador: pedirá usuario y contraseña una vez.
+          La instancia corre en un servidor de GitHub con internet real y se
+          apaga sola al terminar este trabajo.
+          TEXTO
+          )"
 
       - name: Dejar el enlace disponible
         env:
