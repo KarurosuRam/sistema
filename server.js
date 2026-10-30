@@ -7,6 +7,14 @@ const { get } = require('./src/db');
 
 store.deleteExpiredSessions();
 
+// Higiene de la recuperación de contraseña: los enlaces usados o vencidos hace
+// más de una semana no sirven para nada y no deben quedarse en la base.
+try {
+  require('./src/password-reset').purgeOld();
+} catch (error) {
+  console.warn('[recuperar] No pudimos limpiar los enlaces vencidos:', error.message);
+}
+
 let server = null;
 
 async function bootstrap() {
