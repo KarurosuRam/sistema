@@ -117,9 +117,15 @@ jobs:
           URL: ${{ steps.tunel.outputs.url }}
           CLAVE: ${{ steps.clave.outputs.valor }}
         run: |
-          echo "Sin contraseña: $(curl -s -o /dev/null -w '%{http_code}' "$URL/")"
-          echo "Con contraseña: $(curl -s -o /dev/null -w '%{http_code}' -u "demo:$CLAVE" "$URL/")"
-          echo "Registro: $(curl -s -o /dev/null -w '%{http_code}' -u "demo:$CLAVE" "$URL/registro")"
+          SIN=$(curl -s -o /dev/null -w '%{http_code}' "$URL/")
+          CON=$(curl -s -o /dev/null -w '%{http_code}' -u "demo:$CLAVE" "$URL/")
+          REG=$(curl -s -o /dev/null -w '%{http_code}' -u "demo:$CLAVE" "$URL/registro")
+          CSS=$(curl -s -o /dev/null -w '%{http_code}' -u "demo:$CLAVE" "$URL/css/base.css")
+          echo "sin clave: $SIN | con clave: $CON | registro: $REG | assets: $CSS"
+
+          # Si alguna respuesta no es la esperada, el trabajo falla y no se
+          # publica un enlace roto.
+          [ "$SIN" = "401" ] && [ "$CON" = "200" ] && [ "$REG" = "200" ] && [ "$CSS" = "200" ]
 
       - name: Publicar el enlace en el pull request
         env:
