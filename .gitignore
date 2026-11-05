@@ -12,3 +12,5 @@ tmp/
 *.sqlite-journal
 *.sqlite-wal
 *.sqlite-shm
+
+/dist/

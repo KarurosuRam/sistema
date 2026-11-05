@@ -186,7 +186,7 @@ views/                    layout general + layout propio del memorial
 public/css|js|img|audio|fonts
 scripts/                  seed-demo.js, purge-demo.js y generate_music.py
 docs/                     mercadopago.md, flow.md y wordpress.md
-deploy/                   wordpress/ (compose, plugin), systemd/, nginx/
+deploy/                   wordpress/ (plugin PHP + build), systemd/, nginx/
 Dockerfile                imagen de producción (Node 22 + node:sqlite)
 ```
 
@@ -275,7 +275,8 @@ Para recorrer la aplicación como un cliente real, sin tocar los datos del sitio
 > **La vista previa de este proyecto no tiene salida a internet hacia Mercado Pago ni
 > Flow**, así que ahí los cobros siempre serán simulados y «Probar credenciales» dirá que
 > no puede conectarse. Para cobrar de verdad hay que publicar la app en un servidor con
-> internet (ver [`docs/wordpress.md`](docs/wordpress.md)).
+> internet, o instalar el plugin de WordPress en un hosting real (ver
+> [`docs/wordpress.md`](docs/wordpress.md)).
 
 ### ¿No cobra y sigue en demostración?
 
@@ -293,20 +294,31 @@ La app arranca en modo demostración cuando no encuentra credenciales. Revisa:
 
 ## 🧩 Instalación en WordPress
 
-La app puede publicarse dentro de un WordPress existente: corre en un subdominio propio
-(`memoriales.tudominio.cl`) y se inserta en una página con un iframe del mismo dominio
-registrable, de modo que la sesión sigue funcionando.
+La plataforma completa —memoriales, cuentas, pagos, certificados y panel de administración—
+también existe como **plugin nativo de WordPress**: PHP + MySQL, sin Node y sin servidor
+propio, pensado para **hosting compartido**.
 
-Incluido en el repositorio:
+```bash
+bash deploy/wordpress/build-plugin.sh   # → dist/jardin-memorial-2.0.0.zip
+```
 
-- `deploy/wordpress/docker-compose.yml` — WordPress + MariaDB + app + Caddy con HTTPS automático.
-- `deploy/wordpress/plugin/jardin-memorial/` y `jardin-memorial.zip` — plugin con los shortcodes
-  `[jardin_memorial]` y `[jardin_memorial_enlace]`, ajustes y plantilla de página a pantalla completa.
-- `deploy/systemd/` y `deploy/nginx/` — servicio y proxy inverso para una instalación sin Docker.
-- `Dockerfile` — imagen de la app para producción.
+Se sube en **Plugins → Añadir nuevo → Subir plugin** y al activarse crea las tablas y las
+ocho páginas del sitio (`/memoriales`, `/mi-jardin`, `/planes`, `/ingresar`, `/crear-cuenta`,
+`/recuperar-clave`, `/comprobante`, `/certificado`), además de las rutas `/m/<slug>` y
+`/certificado/<código>`. Los datos de esta app se migran con:
 
-Guía paso a paso (DNS, requisitos, las dos formas de instalación, plugin, respaldos, verificación y
-problemas frecuentes): **[`docs/wordpress.md`](docs/wordpress.md)**.
+```bash
+npm run export-wordpress                # → dist/jardin-memorial-migracion-AAAAMMDD.zip
+```
+
+y se importan desde **Jardín Memorial → Migración** dentro de WordPress.
+
+- `deploy/wordpress/plugin/jardin-memorial/` — plugin v2 (includes, plantillas y assets).
+- `deploy/wordpress/build-plugin.sh` — arma el ZIP listo para subir.
+- `scripts/export-wordpress.js` — exportador de la base SQLite y los archivos.
+
+Guía paso a paso (requisitos del hosting, instalación, cobros, migración, respaldos,
+verificación y problemas frecuentes): **[`docs/wordpress.md`](docs/wordpress.md)**.
 
 ## 🧪 Pruebas manuales sugeridas
 

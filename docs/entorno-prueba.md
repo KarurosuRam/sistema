@@ -37,8 +37,9 @@ EMBED_ORIGINS=https://www.tudominio.cl \
 ```
 
 `SITE_URL` es la dirección con la que se generan los enlaces, el QR y el certificado.
-`EMBED_ORIGINS` solo hace falta si el sitio se va a mostrar dentro de WordPress o de la
-vista previa de Arena; sin esa variable la app no se deja incrustar.
+`EMBED_ORIGINS` solo hace falta si la app se muestra dentro de un iframe (por ejemplo la
+vista previa de Arena); sin esa variable no se deja incrustar. La instalación como plugin de
+WordPress no usa iframe ni necesita esta variable.
 
 ## Recorrido sugerido
 
