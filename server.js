@@ -26,6 +26,18 @@ const PORT = Number(process.env.PORT || 3000);
 app.disable('x-powered-by');
 app.use(express.json({ limit: '256kb' }));
 
+// Registro breve de peticiones relevantes (ayuda a diagnosticar el preview).
+app.use((req, res, next) => {
+  if (!/\.(jpg|jpeg|png|svg|ico|woff2?)$/i.test(req.path)) {
+    const started = Date.now();
+    res.on('finish', () => {
+      const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+      console.log(`${res.statusCode} ${req.method} ${req.originalUrl} · ${Date.now() - started}ms · ${ip}`);
+    });
+  }
+  next();
+});
+
 // CORS abierto para la API (útil si se integra con la app móvil o el preview).
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', req.headers.origin || '*');

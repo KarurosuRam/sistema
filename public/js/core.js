@@ -533,6 +533,31 @@
   /* ---------------------------------------------------------------- */
   /* Arranque                                                          */
   /* ---------------------------------------------------------------- */
+  function showFatalError(detail) {
+    const app = document.getElementById('app');
+    if (!app) return;
+    if (app.querySelector('[data-fatal]')) return;
+    app.insertAdjacentHTML(
+      'beforeend',
+      `<div data-fatal style="max-width:600px;margin:40px auto;padding:20px;border:1px solid #eccfc6;background:#fdf0ec;border-radius:14px;font-family:system-ui,sans-serif;color:#6d2f22">
+        <strong style="display:block;margin-bottom:6px">No pudimos cargar la aplicación</strong>
+        <span style="font-size:13px">${esc(detail || 'Error inesperado.')}</span>
+        <div style="margin-top:12px"><button onclick="location.reload()" style="padding:8px 14px;border-radius:999px;border:0;background:#9a5140;color:#fff;cursor:pointer">Recargar</button></div>
+      </div>`
+    );
+  }
+
+  window.addEventListener('error', (event) => {
+    const app = document.getElementById('app');
+    if (!app || !app.children.length) showFatalError(event.message);
+    else if (app.textContent.trim().startsWith('Cargando')) showFatalError(event.message);
+  });
+  window.addEventListener('unhandledrejection', (event) => {
+    const app = document.getElementById('app');
+    if (app && app.textContent.trim().startsWith('Cargando'))
+      showFatalError(event.reason?.message || 'Error de conexión con el servidor.');
+  });
+
   async function boot() {
     bindGlobal();
     if (API.token) {
@@ -579,5 +604,10 @@
     },
   };
 
-  window.addEventListener('DOMContentLoaded', boot);
+  window.addEventListener('DOMContentLoaded', () => {
+    boot().catch((err) => {
+      console.error(err);
+      showFatalError(err.message);
+    });
+  });
 })();
