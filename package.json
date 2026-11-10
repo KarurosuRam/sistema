@@ -1,0 +1,21 @@
+{
+  "name": "amapola-salon",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistema de reservas y mensajería para peluquería con copia a WhatsApp",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test:ui": "node scripts/ui-smoke.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "express": "^4.22.3"
+  },
+  "devDependencies": {
+    "jsdom": "^31.0.0"
+  }
+}
