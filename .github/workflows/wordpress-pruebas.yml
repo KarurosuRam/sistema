@@ -288,6 +288,7 @@ jobs:
             echo "::error title=DIAG enlace: ${PROBLEMAS} :: texto: ${DETALLE}::fin"
             exit 1
           fi
+          echo "Las 9 direcciones responden 200." > .prueba-enlace
 
       - name: Publicar el enlace
         env:
@@ -336,7 +337,7 @@ jobs:
 
           NUM=$(gh issue create \
             --title "ENLACE: $URL" \
-            --body "Puerta: demo / demo-jardin-2026 · WordPress: ${WP_ADMIN_USER} / ${WP_ADMIN_PASS} · Inicio: ${RESUMEN}" \
+            --body "Puerta: demo / demo-jardin-2026 · WordPress: ${WP_ADMIN_USER} / ${WP_ADMIN_PASS} · Inicio: ${RESUMEN} (200) · $(cat .prueba-enlace 2>/dev/null || echo 'Comprobación no disponible')" \
             | grep -oE '[0-9]+$' || true)
           [ -n "$NUM" ] && echo "$NUM" > .numero-incidencia || true
           echo "Incidencia: #$NUM · inicio: ${RESUMEN}"
