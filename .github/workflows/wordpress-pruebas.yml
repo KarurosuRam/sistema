@@ -315,7 +315,9 @@ jobs:
           echo "demo-jardin-2026" >> enlace.txt
           echo "${WP_ADMIN_USER}" >> enlace.txt
           echo "${WP_ADMIN_PASS}" >> enlace.txt
-          echo "::notice title=ENLACE_WORDPRESS: $URL::demo / demo-jardin-2026 · admin ${WP_ADMIN_USER} / ${WP_ADMIN_PASS}"
+          # El título de una anotación es legible por API (los logs y los
+          # artefactos de este repositorio no lo son).
+          echo "::warning title=ENLACE: $URL::Puerta demo/demo-jardin-2026 · WP ${WP_ADMIN_USER}/${WP_ADMIN_PASS}"
 
       - name: Guardar el enlace como artefacto
         uses: actions/upload-artifact@v4
