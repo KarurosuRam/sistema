@@ -292,6 +292,7 @@ jobs:
         env:
           URL: ${{ steps.tunel.outputs.url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           {
             echo "## WordPress de pruebas"
@@ -326,8 +327,6 @@ jobs:
             -d "$(python3 -c 'import json,os;print(json.dumps({"title":"ENLACE "+os.environ["URL"],"body":"Puerta: demo / demo-jardin-2026\nWordPress: "+os.environ["WP_ADMIN_USER"]+" / "+os.environ["WP_ADMIN_PASS"]+"\nEscritorio: "+os.environ["URL"]+"/wp-admin/"}))')" \
             | python3 -c 'import json,sys;print(json.load(sys.stdin)["number"])')
           echo "Incidencia con el enlace: #$NUM"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Guardar el enlace como artefacto
         uses: actions/upload-artifact@v4
