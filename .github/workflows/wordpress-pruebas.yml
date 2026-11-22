@@ -315,9 +315,13 @@ jobs:
           echo "demo-jardin-2026" >> enlace.txt
           echo "${WP_ADMIN_USER}" >> enlace.txt
           echo "${WP_ADMIN_PASS}" >> enlace.txt
-          # El título de una anotación es legible por API (los logs y los
-          # artefactos de este repositorio no lo son).
-          echo "::warning title=ENLACE: $URL::Puerta demo/demo-jardin-2026 · WP ${WP_ADMIN_USER}/${WP_ADMIN_PASS}"
+          # El servidor publica la dirección como una etiqueta del repositorio
+          # (`prueba-wordpress`): los logs y los artefactos de Actions no se
+          # pueden leer desde fuera y las anotaciones solo aparecen al final.
+          git config user.name "Jardín Memorial"
+          git config user.email "bot@jardinmemorial.cl"
+          git tag -f prueba-wordpress -m "Enlace: $URL | puerta: demo / demo-jardin-2026 | WP: ${WP_ADMIN_USER} / ${WP_ADMIN_PASS}"
+          git push --force origin "refs/tags/prueba-wordpress"
 
       - name: Guardar el enlace como artefacto
         uses: actions/upload-artifact@v4
