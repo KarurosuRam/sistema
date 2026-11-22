@@ -167,8 +167,16 @@ jobs:
           echo "zip: $ZIP ($(du -h "$ZIP" | cut -f1))"
 
           echo "== importar =="
-          wp eval-file deploy/wordpress/cli/importar.php "$ZIP" --path=wordpress 2>&1 | tail -30 || {
-            echo "::error title=DIAG: falló la importación::fin"; exit 1; }
+          set +e
+          SALIDA=$(wp eval-file deploy/wordpress/cli/importar.php "$ZIP" --path=wordpress 2>&1)
+          CODIGO=$?
+          set -e
+          echo "$SALIDA"
+          if [ $CODIGO -ne 0 ]; then
+            MENSAJE=$(echo "$SALIDA" | tr '\n' '|' | tr -d '`' | cut -c1-850)
+            echo "::error title=DIAG importar (código $CODIGO): $MENSAJE::fin"
+            exit 1
+          fi
           wp plugin list --path=wordpress
           wp user list --path=wordpress --fields=ID,user_login,user_email,roles
 
