@@ -154,9 +154,21 @@ jobs:
           npm ci --no-audit --no-fund --ignore-scripts
           # Se exporta la base de la app Node tal como está en el repositorio
           # (memoriales de ejemplo) y se importa en WordPress.
-          DATA_DIR="$RUNNER_TEMP/datos-node" npm run seed-ejemplos
-          DATA_DIR="$RUNNER_TEMP/datos-node" npm run export-wordpress -- --salida "$RUNNER_TEMP/export"
-          wp eval-file deploy/wordpress/cli/importar.php "$(ls "$RUNNER_TEMP"/export/*.zip | head -1)" --path=wordpress
+          set -o pipefail
+          echo "== sembrar =="
+          DATA_DIR="$RUNNER_TEMP/datos-node" npm run seed-ejemplos 2>&1 | tail -20 || {
+            echo "::error title=DIAG: falló seed-ejemplos::fin"; exit 1; }
+
+          echo "== exportar =="
+          DATA_DIR="$RUNNER_TEMP/datos-node" npm run export-wordpress -- --salida "$RUNNER_TEMP/export" 2>&1 | tail -20 || {
+            echo "::error title=DIAG: falló export-wordpress::fin"; exit 1; }
+
+          ZIP="$(ls "$RUNNER_TEMP"/export/*.zip | head -1)"
+          echo "zip: $ZIP ($(du -h "$ZIP" | cut -f1))"
+
+          echo "== importar =="
+          wp eval-file deploy/wordpress/cli/importar.php "$ZIP" --path=wordpress 2>&1 | tail -30 || {
+            echo "::error title=DIAG: falló la importación::fin"; exit 1; }
           wp plugin list --path=wordpress
           wp user list --path=wordpress --fields=ID,user_login,user_email,roles
 
