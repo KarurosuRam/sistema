@@ -326,6 +326,14 @@ jobs:
 
           RESUMEN=$(curl -s --location-trusted -u 'demo:demo-jardin-2026' "$URL/" \
             | grep -oE '<title>[^<]*</title>' | head -1 | sed 's/<[^>]*>//g')
+          # Las incidencias de lanzamientos anteriores apuntan a enlaces muertos.
+          gh issue list --state open --limit 20 --json number,title \
+            --jq '.[] | select(.title | startswith("ENLACE:")) | .number' \
+            | while read -r VIEJA; do
+                gh issue close "$VIEJA" --reason completed \
+                  -c "Reemplazada por el enlace nuevo." >/dev/null || true
+              done
+
           NUM=$(gh issue create \
             --title "ENLACE: $URL" \
             --body "Puerta: demo / demo-jardin-2026 · WordPress: ${WP_ADMIN_USER} / ${WP_ADMIN_PASS} · Inicio: ${RESUMEN}" \
