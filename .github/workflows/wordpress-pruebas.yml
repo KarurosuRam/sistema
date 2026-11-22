@@ -315,13 +315,19 @@ jobs:
           echo "demo-jardin-2026" >> enlace.txt
           echo "${WP_ADMIN_USER}" >> enlace.txt
           echo "${WP_ADMIN_PASS}" >> enlace.txt
-          # El servidor publica la dirección como una etiqueta del repositorio
-          # (`prueba-wordpress`): los logs y los artefactos de Actions no se
-          # pueden leer desde fuera y las anotaciones solo aparecen al final.
-          git config user.name "Jardín Memorial"
-          git config user.email "bot@jardinmemorial.cl"
-          git tag -f prueba-wordpress -m "Enlace: $URL | puerta: demo / demo-jardin-2026 | WP: ${WP_ADMIN_USER} / ${WP_ADMIN_PASS}"
-          git push --force origin "refs/tags/prueba-wordpress"
+          # El servidor deja la dirección en el título de una incidencia del
+          # propio repositorio: los logs y los artefactos de Actions no se pueden
+          # leer desde fuera, y las anotaciones solo aparecen al terminar.
+          echo "ENLACE=$URL" > /tmp/datos-enlace.txt
+          NUM=$(curl -fsS -X POST \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/$GITHUB_REPOSITORY/issues \
+            -d "$(python3 -c 'import json,os;print(json.dumps({"title":"ENLACE "+os.environ["URL"],"body":"Puerta: demo / demo-jardin-2026\nWordPress: "+os.environ["WP_ADMIN_USER"]+" / "+os.environ["WP_ADMIN_PASS"]+"\nEscritorio: "+os.environ["URL"]+"/wp-admin/"}))')" \
+            | python3 -c 'import json,sys;print(json.load(sys.stdin)["number"])')
+          echo "Incidencia con el enlace: #$NUM"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Guardar el enlace como artefacto
         uses: actions/upload-artifact@v4
