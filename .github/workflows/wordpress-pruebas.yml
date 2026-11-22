@@ -256,7 +256,7 @@ jobs:
           URL: ${{ steps.tunel.outputs.url }}
         run: |
           for _ in $(seq 1 40); do
-            CODE=$(curl -sL -o /dev/null -w '%{http_code}' -u 'demo:demo-jardin-2026' "$URL/")
+            CODE=$(curl -s --location-trusted -u 'demo:demo-jardin-2026' -o /dev/null -w '%{http_code}' "$URL/")
             [ "$CODE" = "200" ] && break
             sleep 3
           done
@@ -264,21 +264,26 @@ jobs:
           PROBLEMAS=""
           [ "$CODE" = "200" ] || PROBLEMAS="inicio=$CODE;"
 
+          CRED='demo:demo-jardin-2026'
+          # --location-trusted conserva la autenticación en las redirecciones
+          # internas del mismo sitio (WordPress normaliza /m/x → /m/x/).
+          curl_sitio() { curl -s --location-trusted -u "$CRED" -o /dev/null -w '%{http_code}' "$@"; }
+
           for RUTA in /memoriales/ /planes/ /mi-jardin/ /crear-cuenta/; do
-            C=$(curl -sL -o /dev/null -w '%{http_code}' -u 'demo:demo-jardin-2026' "$URL$RUTA")
+            C=$(curl_sitio "$URL$RUTA")
             echo "  $RUTA → $C"
             [ "$C" = "200" ] || PROBLEMAS="${PROBLEMAS}${RUTA}=$C;"
           done
 
           for SLUG in rosa-elena-munoz oscar-contreras-pena camila-fuentes-rojas nala; do
-            C=$(curl -sL -o /dev/null -w '%{http_code}' -u 'demo:demo-jardin-2026' "$URL/m/$SLUG")
+            C=$(curl_sitio "$URL/m/$SLUG")
             echo "  /m/$SLUG → $C"
             [ "$C" = "200" ] || PROBLEMAS="${PROBLEMAS}/m/$SLUG=$C;"
           done
 
           if [ -n "$PROBLEMAS" ]; then
             # Se mira qué dice WordPress en el inicio para orientar el arreglo.
-            DETALLE=$(curl -s -u 'demo:demo-jardin-2026' "$URL/" | tr '\n' ' ' | sed 's/<[^>]*>//g' | tr -s ' ' | cut -c1-300)
+            DETALLE=$(curl -s --location-trusted -u 'demo:demo-jardin-2026' "$URL/" | tr '\n' ' ' | sed 's/<[^>]*>//g' | tr -s ' ' | cut -c1-300)
             echo "::error title=DIAG enlace: ${PROBLEMAS} :: texto: ${DETALLE}::fin"
             exit 1
           fi
