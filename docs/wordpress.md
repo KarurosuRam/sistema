@@ -10,6 +10,27 @@ siendo el mismo WordPress de siempre.
 
 ---
 
+## 0. Sitio de pruebas (temporal)
+
+Cada vez que se sube un cambio a la rama de trabajo, un trabajo de GitHub Actions
+levanta un **WordPress real** (WordPress + MariaDB en el propio servidor de
+GitHub), instala el plugin, importa el contenido y lo publica por un túnel HTTPS
+de Cloudflare. **Los cambios de la rama aparecen solos en menos de un minuto**,
+sin volver a desplegar: el trabajo vigila la rama y copia el plugin encima.
+
+- Dirección y claves: incidencia más reciente del repositorio, titulada
+  `ENLACE: https://…` (también aparecen en **Actions → WordPress de pruebas**, en
+  el resumen del trabajo).
+- La puerta de acceso pide usuario y contraseña antes de llegar a WordPress.
+- El escritorio está en `/wp-admin/` con la cuenta de administrador indicada.
+- Duración: unas 6 horas por lanzamiento. Al terminar, el enlace deja de existir;
+  se relanza subiendo cualquier cambio a `.vista-previa/wordpress`.
+
+Esto es solo para probar. El sitio de producción se instala como se explica
+abajo, en un hosting compartido normal, con su propio dominio y HTTPS.
+
+---
+
 ## 1. Qué necesita el hosting
 
 | Requisito | Detalle |
