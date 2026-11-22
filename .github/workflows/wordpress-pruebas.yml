@@ -60,7 +60,9 @@ jobs:
       - name: Comprobar versiones
         run: |
           php -v | head -1
-          php -m | grep -E '^(gd|zip|mysqli|mbstring)$'
+          for EXT in gd zip mysqli mbstring; do
+            php -m | grep -qi "^${EXT}$" && echo "  ${EXT}: sí" || echo "  ${EXT}: NO"
+          done
 
       - name: Preparar MariaDB
         run: |

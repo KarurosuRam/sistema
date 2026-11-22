@@ -38,14 +38,13 @@ class JM_Migrate
             return self::import_path($file['tmp_name'], $opciones);
         }
 
-        require_once ABSPATH . 'wp-admin/includes/file.php';
-
         $work = trailingslashit(get_temp_dir()) . 'jm-migrate-' . wp_generate_password(8, false);
         wp_mkdir_p($work);
 
-        $unzipped = unzip_file($file['tmp_name'], $work);
-        if (is_wp_error($unzipped)) {
-            return new WP_Error('jm_migrate_zip', 'No pudimos abrir el ZIP: ' . $unzipped->get_error_message());
+        $descomprimido = JP_Migrate_Helper::unzip($file['tmp_name'], $work);
+        if (is_wp_error($descomprimido)) {
+            JP_Migrate_Helper::rmdir($work);
+            return $descomprimido;
         }
 
         $json_path = $work . '/datos.json';
@@ -269,14 +268,13 @@ class JM_Migrate
     /** Igual que import_zip, pero desde una ruta en disco (WP-CLI). */
     public static function import_path($path, $opciones = array())
     {
-        require_once ABSPATH . 'wp-admin/includes/file.php';
-
         $work = trailingslashit(get_temp_dir()) . 'jm-migrate-' . wp_generate_password(8, false);
         wp_mkdir_p($work);
 
-        $unzipped = unzip_file($path, $work);
-        if (is_wp_error($unzipped)) {
-            return new WP_Error('jm_migrate_zip', 'No pudimos abrir el ZIP: ' . $unzipped->get_error_message());
+        $descomprimido = JP_Migrate_Helper::unzip($path, $work);
+        if (is_wp_error($descomprimido)) {
+            JP_Migrate_Helper::rmdir($work);
+            return $descomprimido;
         }
 
         $json_path = $work . '/datos.json';
@@ -310,6 +308,53 @@ class JP_Migrate_Helper
         if ($credits > JM_Accounts::credits($user_id)) {
             JM_Accounts::set_credits($user_id, $credits);
         }
+    }
+
+    /**
+     * Descomprime un ZIP en `$destino`.
+     *
+     * Primero intenta con WordPress (`unzip_file`). Si el hosting no declara la
+     * extensión `zip`, WordPress pide credenciales FTP y falla con «Could not
+     * access filesystem»; en ese caso se usa ZipArchive o, como último recurso,
+     * el binario `unzip`.
+     *
+     * @return true|WP_Error
+     */
+    public static function unzip($zip, $destino)
+    {
+        if (!function_exists('unzip_file')) {
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+        }
+
+        if (class_exists('ZipArchive')) {
+            $archivo = new ZipArchive();
+            if ($archivo->open($zip) === true) {
+                $ok = $archivo->extractTo($destino);
+                $archivo->close();
+                return $ok ? true : new WP_Error('jm_migrate_zip', 'No pudimos extraer el ZIP.');
+            }
+        }
+
+        if (function_exists('unzip_file')) {
+            $resultado = unzip_file($zip, $destino);
+            if (!is_wp_error($resultado)) {
+                return true;
+            }
+        }
+
+        if (function_exists('exec')) {
+            $salida = array();
+            $codigo = 1;
+            @exec('unzip -o -q ' . escapeshellarg($zip) . ' -d ' . escapeshellarg($destino) . ' 2>&1', $salida, $codigo);
+            if ($codigo === 0) {
+                return true;
+            }
+        }
+
+        return new WP_Error(
+            'jm_migrate_zip',
+            'No pudimos abrir el ZIP: el servidor no tiene forma de descomprimir archivos (extensiones «zip» o «zlib»). Pide a tu hosting que habilite ZipArchive.'
+        );
     }
 
     public static function rmdir($dir)
