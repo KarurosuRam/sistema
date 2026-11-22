@@ -26,7 +26,8 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
+  issues: write
 
 env:
   WP_URL: http://127.0.0.1:8080
@@ -292,7 +293,6 @@ jobs:
         env:
           URL: ${{ steps.tunel.outputs.url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           {
             echo "## WordPress de pruebas"
@@ -309,24 +309,21 @@ jobs:
             echo "El enlace se apaga al terminar este trabajo (~6 horas)."
           } | tee -a "$GITHUB_STEP_SUMMARY"
 
-          # La dirección también queda en un archivo y en una anotación: son las
-          # dos vías que se pueden leer por API sin depender del resumen.
-          echo "$URL" > enlace.txt
-          echo "demo" >> enlace.txt
-          echo "demo-jardin-2026" >> enlace.txt
-          echo "${WP_ADMIN_USER}" >> enlace.txt
-          echo "${WP_ADMIN_PASS}" >> enlace.txt
-          # El servidor deja la dirección en el título de una incidencia del
-          # propio repositorio: los logs y los artefactos de Actions no se pueden
-          # leer desde fuera, y las anotaciones solo aparecen al terminar.
-          echo "ENLACE=$URL" > /tmp/datos-enlace.txt
-          NUM=$(curl -fsS -X POST \
-            -H "Authorization: Bearer $GITHUB_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/$GITHUB_REPOSITORY/issues \
-            -d "$(python3 -c 'import json,os;print(json.dumps({"title":"ENLACE "+os.environ["URL"],"body":"Puerta: demo / demo-jardin-2026\nWordPress: "+os.environ["WP_ADMIN_USER"]+" / "+os.environ["WP_ADMIN_PASS"]+"\nEscritorio: "+os.environ["URL"]+"/wp-admin/"}))')" \
-            | python3 -c 'import json,sys;print(json.load(sys.stdin)["number"])')
-          echo "Incidencia con el enlace: #$NUM"
+          # El enlace se guarda en la rama y en una incidencia: el resumen del
+          # trabajo y los artefactos no se pueden consultar desde fuera.
+          printf '%s\n' "$URL" demo demo-jardin-2026 "${WP_ADMIN_USER}" "${WP_ADMIN_PASS}" > enlace.txt
+
+          git config user.name "Jardín Memorial"
+          git config user.email "bot@jardinmemorial.cl"
+          git add -f enlace.txt
+          git commit -q -m "Enlace de pruebas: $URL"
+          git push -q origin "HEAD:refs/heads/${GITHUB_REF_NAME}" || echo "No se pudo guardar enlace.txt en la rama"
+          echo "Enlace guardado en la rama ${GITHUB_REF_NAME}"
+
+          gh issue create \
+            --title "ENLACE: $URL" \
+            --body "Puerta: demo / demo-jardin-2026 · WordPress: ${WP_ADMIN_USER} / ${WP_ADMIN_PASS}" \
+            || echo "No se pudo abrir la incidencia con el enlace"
 
       - name: Guardar el enlace como artefacto
         uses: actions/upload-artifact@v4
