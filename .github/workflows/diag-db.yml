@@ -7,24 +7,19 @@ jobs:
   diag:
     runs-on: ubuntu-latest
     steps:
-      - name: Instalar MariaDB
+      - name: Instalar y arrancar MariaDB
         run: |
-          OUT=/tmp/diag.txt
-          {
-            echo "== apt update =="; sudo apt-get update -qq 2>&1 | tail -3
-            echo "== instalar =="; sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq mariadb-server 2>&1 | tail -5
-            echo "== binario =="; which mariadbd mysqld 2>&1 || true
-            echo "== datadir =="; ls -d /var/lib/mysql 2>&1; sudo ls /var/lib/mysql 2>/dev/null | head -3
-            echo "== arranque directo =="
-            sudo mkdir -p /var/run/mysqld && sudo chown mysql:mysql /var/run/mysqld
-            sudo -u mysql mysqld_safe --skip-networking=0 --bind-address=127.0.0.1 >/tmp/mysqld.log 2>&1 &
-            sleep 8
-            echo "== activo =="; systemctl is-active mariadb 2>&1 || true
-            echo "== root socket =="; sudo mysql -e "SELECT VERSION();" 2>&1 | head -3
-            echo "== root tcp =="; mysql -h 127.0.0.1 -uroot -e "SELECT VERSION();" 2>&1 | head -3
-            echo "== log mysqld =="; tail -12 /tmp/mysqld.log 2>&1
-            echo "== error log =="; sudo tail -12 /var/log/mysql/error.log 2>&1
-          } 2>&1 | tee "$OUT"
-          while IFS= read -r linea; do
-            [ -n "$linea" ] && echo "::warning title=DIAG::$linea"
-          done < "$OUT"
+          sudo apt-get update -qq >/dev/null 2>&1
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq mariadb-server >/dev/null 2>&1
+          sudo mkdir -p /var/run/mysqld && sudo chown mysql:mysql /var/run/mysqld
+          sudo -u mysql mysqld_safe >/tmp/mysqld.log 2>&1 &
+          sleep 12
+          echo "SOCKET: $(sudo mysql -e 'SELECT 1' 2>&1 | tr '\n' ' ' | cut -c1-120)" > /tmp/r1
+          echo "TCP: $(mysql -h 127.0.0.1 -uroot -e 'SELECT 1' 2>&1 | tr '\n' ' ' | cut -c1-120)" > /tmp/r2
+          echo "LOG: $(tail -6 /tmp/mysqld.log 2>&1 | tr '\n' ' ' | cut -c1-300)" > /tmp/r3
+          echo "ERR: $(sudo tail -6 /var/log/mysql/error.log 2>&1 | tr '\n' ' ' | cut -c1-300)" > /tmp/r4
+          echo "PROC: $(ps aux | grep -c '[m]ysqld')" > /tmp/r5
+      - name: Publicar resultado
+        run: |
+          TITULO=$(cat /tmp/r1 /tmp/r2 /tmp/r3 /tmp/r4 /tmp/r5 | tr '\n' '|' | tr -d '`' | cut -c1-240)
+          echo "::error title=$TITULO::fin"
