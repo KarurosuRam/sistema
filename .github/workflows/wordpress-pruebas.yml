@@ -308,6 +308,22 @@ jobs:
             echo "El enlace se apaga al terminar este trabajo (~6 horas)."
           } | tee -a "$GITHUB_STEP_SUMMARY"
 
+          # La dirección también queda en un archivo y en una anotación: son las
+          # dos vías que se pueden leer por API sin depender del resumen.
+          echo "$URL" > enlace.txt
+          echo "demo" >> enlace.txt
+          echo "demo-jardin-2026" >> enlace.txt
+          echo "${WP_ADMIN_USER}" >> enlace.txt
+          echo "${WP_ADMIN_PASS}" >> enlace.txt
+          echo "::notice title=ENLACE_WORDPRESS: $URL::demo / demo-jardin-2026 · admin ${WP_ADMIN_USER} / ${WP_ADMIN_PASS}"
+
+      - name: Guardar el enlace como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: enlace-wordpress
+          path: enlace.txt
+          retention-days: 1
+
       - name: Mantener encendido y aplicar cambios de la rama
         run: |
           RAMA="${GITHUB_REF_NAME}"
