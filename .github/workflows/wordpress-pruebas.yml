@@ -64,11 +64,28 @@ jobs:
 
       - name: Preparar MariaDB
         run: |
-          sudo systemctl start mariadb
-          sudo mariadb -e "CREATE DATABASE ${WP_DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-          sudo mariadb -e "CREATE USER '${WP_DB_USER}'@'localhost' IDENTIFIED BY '${WP_DB_PASS}';"
-          sudo mariadb -e "GRANT ALL PRIVILEGES ON ${WP_DB_NAME}.* TO '${WP_DB_USER}'@'localhost'; FLUSH PRIVILEGES;"
-          mariadb -u"${WP_DB_USER}" -p"${WP_DB_PASS}" -e "SELECT VERSION();" "${WP_DB_NAME}"
+          # Los runners de Ubuntu traen MariaDB instalada pero apagada, y el
+          # nombre del servicio depende de la imagen (mariadb o mysql).
+          sudo systemctl start mariadb 2>/dev/null \
+            || sudo systemctl start mysql 2>/dev/null \
+            || sudo service mariadb start 2>/dev/null \
+            || sudo service mysql start
+          sleep 3
+          sudo mysqladmin ping 2>/dev/null || true
+
+          # Se usa root por socket: la contraseña de root del runner es desconocida.
+          sudo mysql -e "DROP DATABASE IF EXISTS ${WP_DB_NAME};"
+          sudo mysql -e "CREATE DATABASE ${WP_DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+          sudo mysql -e "CREATE USER IF NOT EXISTS '${WP_DB_USER}'@'localhost' IDENTIFIED BY '${WP_DB_PASS}';"
+          sudo mysql -e "ALTER USER '${WP_DB_USER}'@'localhost' IDENTIFIED BY '${WP_DB_PASS}';"
+          sudo mysql -e "CREATE USER IF NOT EXISTS '${WP_DB_USER}'@'127.0.0.1' IDENTIFIED BY '${WP_DB_PASS}';"
+          sudo mysql -e "ALTER USER '${WP_DB_USER}'@'127.0.0.1' IDENTIFIED BY '${WP_DB_PASS}';"
+          sudo mysql -e "GRANT ALL PRIVILEGES ON ${WP_DB_NAME}.* TO '${WP_DB_USER}'@'localhost';"
+          sudo mysql -e "GRANT ALL PRIVILEGES ON ${WP_DB_NAME}.* TO '${WP_DB_USER}'@'127.0.0.1';"
+          sudo mysql -e "FLUSH PRIVILEGES;"
+
+          # Comprobación real: conectar con el usuario de WordPress.
+          mysql -h 127.0.0.1 -u"${WP_DB_USER}" -p"${WP_DB_PASS}" -e "SELECT VERSION() AS version;" "${WP_DB_NAME}"
 
       - name: Descargar WordPress y WP-CLI
         run: |
