@@ -7,22 +7,19 @@ jobs:
   diag:
     runs-on: ubuntu-latest
     steps:
-      - name: Estado
+      - name: Instalar MariaDB
         run: |
           OUT=/tmp/diag.txt
           {
-            echo "== imagen =="; head -3 /etc/os-release
-            echo "== unidades =="; systemctl list-unit-files 2>/dev/null | grep -iE 'maria|mysql' || echo "sin unidades"
-            echo "== paquetes =="; dpkg -l 2>/dev/null | grep -iE 'mariadb|mysql' | head -10 || echo "sin paquetes"
-            echo "== ping =="; mysqladmin ping 2>&1 | head -3 || true
-            echo "== start systemctl =="; sudo systemctl start mariadb 2>&1 | head -5 || true
-            echo "== start service =="; sudo service mariadb start 2>&1 | head -5 || true
-            sleep 3
+            echo "== apt update =="; sudo apt-get update -qq 2>&1 | tail -3
+            echo "== instalar =="; sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq mariadb-server 2>&1 | tail -5
+            echo "== binario =="; which mariadbd mysqld 2>&1 || true
+            echo "== arranque =="; sudo systemctl start mariadb 2>&1 | head -3 || true
+            sudo service mariadb start 2>&1 | head -3 || true
+            sleep 4
             echo "== activo =="; systemctl is-active mariadb 2>&1 || true
-            echo "== root =="; sudo mysql -e "SELECT VERSION();" 2>&1 | head -5
-            echo "== journal =="; sudo journalctl -u mariadb -n 15 --no-pager 2>&1 | tail -15
+            echo "== root =="; sudo mysql -e "SELECT VERSION();" 2>&1 | head -3
           } 2>&1 | tee "$OUT"
-          # Se publica como anotación: los logs del job no son legibles desde la API.
           while IFS= read -r linea; do
             [ -n "$linea" ] && echo "::warning title=DIAG::$linea"
           done < "$OUT"
