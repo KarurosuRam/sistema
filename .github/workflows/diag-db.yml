@@ -14,12 +14,15 @@ jobs:
           sudo mkdir -p /var/run/mysqld && sudo chown mysql:mysql /var/run/mysqld
           sudo -u mysql mysqld_safe >/tmp/mysqld.log 2>&1 &
           sleep 12
-          echo "SOCKET: $(sudo mysql -e 'SELECT 1' 2>&1 | tr '\n' ' ' | cut -c1-120)" > /tmp/r1
-          echo "TCP: $(mysql -h 127.0.0.1 -uroot -e 'SELECT 1' 2>&1 | tr '\n' ' ' | cut -c1-120)" > /tmp/r2
-          echo "LOG: $(tail -6 /tmp/mysqld.log 2>&1 | tr '\n' ' ' | cut -c1-300)" > /tmp/r3
-          echo "ERR: $(sudo tail -6 /var/log/mysql/error.log 2>&1 | tr '\n' ' ' | cut -c1-300)" > /tmp/r4
-          echo "PROC: $(ps aux | grep -c '[m]ysqld')" > /tmp/r5
+          sudo mysql -e "CREATE DATABASE IF NOT EXISTS wordpress CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+          sudo mysql -e "CREATE USER IF NOT EXISTS 'wordpress'@'localhost' IDENTIFIED BY 'wordpress';"
+          sudo mysql -e "CREATE USER IF NOT EXISTS 'wordpress'@'127.0.0.1' IDENTIFIED BY 'wordpress';"
+          sudo mysql -e "GRANT ALL PRIVILEGES ON wordpress.* TO 'wordpress'@'localhost';"
+          sudo mysql -e "GRANT ALL PRIVILEGES ON wordpress.* TO 'wordpress'@'127.0.0.1';"
+          sudo mysql -e "FLUSH PRIVILEGES;"
+          echo "USUARIO: $(mysql -h 127.0.0.1 -uwordpress -pwordpress -e 'SELECT DATABASE()' wordpress 2>&1 | tr '\n' ' ' | cut -c1-150)" > /tmp/r1
+          echo "TABLA: $(mysql -h 127.0.0.1 -uwordpress -pwordpress -e 'CREATE TABLE t(i int); DROP TABLE t;' wordpress 2>&1 | tr '\n' ' ' | cut -c1-150)" > /tmp/r2
       - name: Publicar resultado
         run: |
-          TITULO=$(cat /tmp/r1 /tmp/r2 /tmp/r3 /tmp/r4 /tmp/r5 | tr '\n' '|' | tr -d '`' | cut -c1-240)
+          TITULO=$(cat /tmp/r1 /tmp/r2 | tr '\n' '|' | tr -d '`' | cut -c1-240)
           echo "::error title=$TITULO::fin"
