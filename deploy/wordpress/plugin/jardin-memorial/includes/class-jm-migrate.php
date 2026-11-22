@@ -22,11 +22,20 @@ class JM_Migrate
     {
         $opciones = wp_parse_args($opciones, array('enviar_correos' => false, 'crear_usuarios' => true));
 
-        if (!isset($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
+        $desde_cli = defined('JM_MIGRATE_CLI') && JM_MIGRATE_CLI;
+        $disponible = isset($file['tmp_name'])
+            && ($desde_cli ? is_readable($file['tmp_name']) : is_uploaded_file($file['tmp_name']));
+
+        if (!$disponible) {
             return new WP_Error('jm_migrate_file', 'No recibimos el archivo.');
         }
         if ((int) $file['size'] > 500 * MB_IN_BYTES) {
             return new WP_Error('jm_migrate_size', 'El archivo supera los 500 MB.');
+        }
+
+        // Con WP-CLI no hay subida HTTP: se acepta la ruta tal cual.
+        if ($desde_cli) {
+            return self::import_path($file['tmp_name'], $opciones);
         }
 
         require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -48,6 +57,19 @@ class JM_Migrate
         if (!is_array($data)) {
             return new WP_Error('jm_migrate_json', 'datos.json no es válido.');
         }
+
+        $summary = self::import_data($data, $work, $opciones);
+        JP_Migrate_Helper::rmdir($work);
+        return $summary;
+    }
+
+    /**
+     * Cuerpo compartido por la subida del navegador y la importación por CLI.
+     * Recibe `datos.json` ya decodificado y la carpeta donde se descomprimió.
+     */
+    public static function import_data($data, $work, $opciones = array())
+    {
+        $opciones = wp_parse_args($opciones, array('enviar_correos' => false, 'crear_usuarios' => true));
 
         $summary = array(
             'usuarios_creados' => 0,
@@ -241,8 +263,37 @@ class JM_Migrate
             $summary['compras']++;
         }
 
-        JP_Migrate_Helper::rmdir($work);
         return $summary;
+    }
+
+    /** Igual que import_zip, pero desde una ruta en disco (WP-CLI). */
+    public static function import_path($path, $opciones = array())
+    {
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+
+        $work = trailingslashit(get_temp_dir()) . 'jm-migrate-' . wp_generate_password(8, false);
+        wp_mkdir_p($work);
+
+        $unzipped = unzip_file($path, $work);
+        if (is_wp_error($unzipped)) {
+            return new WP_Error('jm_migrate_zip', 'No pudimos abrir el ZIP: ' . $unzipped->get_error_message());
+        }
+
+        $json_path = $work . '/datos.json';
+        if (!file_exists($json_path)) {
+            JP_Migrate_Helper::rmdir($work);
+            return new WP_Error('jm_migrate_json', 'El ZIP no trae datos.json.');
+        }
+
+        $data = json_decode(file_get_contents($json_path), true);
+        if (!is_array($data)) {
+            JP_Migrate_Helper::rmdir($work);
+            return new WP_Error('jm_migrate_json', 'datos.json no es válido.');
+        }
+
+        $resumen = self::import_data($data, $work, $opciones);
+        JP_Migrate_Helper::rmdir($work);
+        return $resumen;
     }
 }
 
@@ -280,6 +331,7 @@ class JP_Migrate_Helper
         }
         @rmdir($dir);
     }
+
 
     /**
      * Copia un archivo del ZIP a uploads y lo registra como adjunto.

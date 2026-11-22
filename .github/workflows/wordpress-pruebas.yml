@@ -1,0 +1,250 @@
+name: WordPress de pruebas
+
+# Publica el PLUGIN en un WordPress real (WordPress + MariaDB en el runner) y
+# lo expone por un túnel HTTPS de Cloudflare. Es la prueba de verdad del plugin:
+# PHP, MySQL, temas, permalinks y pagos, no una simulación.
+#
+# Cómo se usa:
+#   1. Actions → «WordPress de pruebas» → Run workflow (rama a publicar).
+#   2. El resumen del job trae la dirección, el usuario de la puerta y las
+#      cuentas de WordPress.
+#   3. El trabajo se queda encendido ~5 h 45 min. Al terminar, el enlace muere.
+#
+# Actualización automática: cada push a la rama NO relanza el workflow, porque
+# eso mataría el enlace anterior. En su lugar, un paso comprueba el repositorio
+# cada minuto y, cuando hay commits nuevos, actualiza el plugin en el WordPress
+# en marcha. El enlace se mantiene y los cambios aparecen en menos de un minuto.
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.vista-previa/wordpress'
+
+concurrency:
+  group: wordpress-de-pruebas
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  WP_URL: http://127.0.0.1:8080
+  WP_TITULO: Jardín Memorial (pruebas)
+  WP_ADMIN_USER: admin
+  WP_ADMIN_PASS: JardinMemorial2026!
+  WP_ADMIN_EMAIL: ccramireza@gmail.com
+  WP_DB_NAME: wordpress
+  WP_DB_USER: wordpress
+  WP_DB_PASS: wordpress
+
+jobs:
+  publicar:
+    name: Publicar WordPress de pruebas
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Preparar PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, gd, zip, curl, mysqli, intl
+          coverage: none
+
+      - name: Comprobar versiones
+        run: |
+          php -v | head -1
+          php -m | grep -E '^(gd|zip|mysqli|mbstring)$'
+
+      - name: Preparar MariaDB
+        run: |
+          sudo systemctl start mariadb
+          sudo mariadb -e "CREATE DATABASE ${WP_DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+          sudo mariadb -e "CREATE USER '${WP_DB_USER}'@'localhost' IDENTIFIED BY '${WP_DB_PASS}';"
+          sudo mariadb -e "GRANT ALL PRIVILEGES ON ${WP_DB_NAME}.* TO '${WP_DB_USER}'@'localhost'; FLUSH PRIVILEGES;"
+          mariadb -u"${WP_DB_USER}" -p"${WP_DB_PASS}" -e "SELECT VERSION();" "${WP_DB_NAME}"
+
+      - name: Descargar WordPress y WP-CLI
+        run: |
+          curl -fsSL -o wordpress.tar.gz https://wordpress.org/latest.tar.gz
+          tar xzf wordpress.tar.gz
+          curl -fsSL -o wp-cli.phar https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+          chmod +x wp-cli.phar
+          sudo mv wp-cli.phar /usr/local/bin/wp
+          wp --info | head -3
+
+      - name: Instalar WordPress
+        run: |
+          wp config create \
+            --path=wordpress \
+            --dbname="${WP_DB_NAME}" \
+            --dbuser="${WP_DB_USER}" \
+            --dbpass="${WP_DB_PASS}" \
+            --dbhost=127.0.0.1 \
+            --skip-check
+          wp core install \
+            --path=wordpress \
+            --url="${WP_URL}" \
+            --title="${WP_TITULO}" \
+            --admin_user="${WP_ADMIN_USER}" \
+            --admin_password="${WP_ADMIN_PASS}" \
+            --admin_email="${WP_ADMIN_EMAIL}" \
+            --skip-email
+          # Permalinks bonitos: es lo que usa el plugin para /m/<slug>.
+          wp rewrite structure '/%postname%/' --path=wordpress --hard
+          wp theme install twentytwentyfour --activate --path=wordpress
+          wp core version --path=wordpress
+
+      - name: Instalar el plugin
+        run: |
+          mkdir -p wordpress/wp-content/plugins/jardin-memorial
+          cp -a deploy/wordpress/plugin/jardin-memorial/. wordpress/wp-content/plugins/jardin-memorial/
+          wp plugin activate jardin-memorial --path=wordpress
+          wp plugin list --path=wordpress
+
+      - name: Ajustar límites de subida
+        run: |
+          # El plugin acepta videos de hasta 120 MB; el PHP del runner trae 2 MB.
+          INI="$(php --ini | grep 'Loaded Configuration File' | sed 's/.*: //')"
+          echo "php.ini: $INI"
+          sudo sed -i 's/^upload_max_filesize.*/upload_max_filesize = 128M/' "$INI"
+          sudo sed -i 's/^post_max_size.*/post_max_size = 132M/' "$INI"
+          sudo sed -i 's/^memory_limit.*/memory_limit = 256M/' "$INI"
+          php -r 'echo "límite: ", ini_get("upload_max_filesize"), "\n";'
+          sudo chown -R www-data:www-data wordpress/wp-content
+
+      - name: Sembrar el contenido (migración de la app Node)
+        run: |
+          node --version
+          npm ci --no-audit --no-fund --ignore-scripts
+          # Se exporta la base de la app Node tal como está en el repositorio
+          # (memoriales de ejemplo) y se importa en WordPress.
+          DATA_DIR="$RUNNER_TEMP/datos-node" npm run seed-ejemplos
+          DATA_DIR="$RUNNER_TEMP/datos-node" npm run export-wordpress -- --salida "$RUNNER_TEMP/export"
+          wp eval-file deploy/wordpress/cli/importar.php "$(ls "$RUNNER_TEMP"/export/*.zip | head -1)" --path=wordpress
+          wp plugin list --path=wordpress
+          wp user list --path=wordpress --fields=ID,user_login,user_email,roles
+
+      - name: Publicar las páginas del plugin
+        run: |
+          wp eval 'JM_DB::maybe_upgrade(); JM_Frontend::create_pages(); flush_rewrite_rules();' --path=wordpress
+          wp option get jm_pages --format=json --path=wordpress
+
+      - name: Abrir el túnel
+        id: tunel
+        run: |
+          curl -fsSL -o cloudflared \
+            https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+          chmod +x cloudflared
+          ./cloudflared tunnel --url http://127.0.0.1:8080 --no-autoupdate > cloudflared.log 2>&1 &
+          echo $! > cloudflared.pid
+
+          URL=""
+          for _ in $(seq 1 60); do
+            URL=$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' cloudflared.log | head -1 || true)
+            [ -n "$URL" ] && break
+            sleep 2
+          done
+          if [ -z "$URL" ]; then
+            echo "No se pudo abrir el túnel"; cat cloudflared.log; exit 1
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "Túnel: $URL"
+
+      - name: Servir el sitio y la puerta de acceso
+        env:
+          GATE_PASSWORD: demo-jardin-2026
+        run: |
+          # El túnel apunta al puerto 8080: detrás está la puerta con usuario y
+          # contraseña y, más atrás, el WordPress real en el 8081.
+          PHP_CLI_SERVER_WORKERS=8 php -S 127.0.0.1:8081 -t wordpress > wp.log 2>&1 &
+          echo $! > wp.pid
+          GATE_PASSWORD="$GATE_PASSWORD" \
+          GATE_USER=demo APP_PORT=8081 PORT=8080 \
+            node scripts/acceso-privado.js > puerta.log 2>&1 &
+          echo $! > puerta.pid
+          sleep 3
+          curl -s -o /dev/null -w 'WP directo: %{http_code}\n' -H 'Host: 127.0.0.1:8081' http://127.0.0.1:8081/
+          cat wp.log | tail -5
+
+      - name: Comprobar el enlace público
+        env:
+          URL: ${{ steps.tunel.outputs.url }}
+        run: |
+          for _ in $(seq 1 40); do
+            CODE=$(curl -s -o /dev/null -w '%{http_code}' -u 'demo:demo-jardin-2026' "$URL/")
+            [ "$CODE" = "200" ] && break
+            sleep 3
+          done
+          echo "Inicio: $CODE"
+          [ "$CODE" = "200" ] || { echo "El sitio no responde"; exit 1; }
+
+          for RUTA in /memoriales/ /planes/ /mi-jardin/ /crear-cuenta/; do
+            C=$(curl -s -o /dev/null -w '%{http_code}' -u 'demo:demo-jardin-2026' "$URL$RUTA")
+            echo "  $RUTA → $C"
+            [ "$C" = "200" ] || exit 1
+          done
+
+          for SLUG in rosa-elena-munoz oscar-contreras-pena camila-fuentes-rojas nala; do
+            C=$(curl -s -o /dev/null -w '%{http_code}' -u 'demo:demo-jardin-2026' "$URL/m/$SLUG")
+            echo "  /m/$SLUG → $C"
+            [ "$C" = "200" ] || exit 1
+          done
+
+      - name: Publicar el enlace
+        env:
+          URL: ${{ steps.tunel.outputs.url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo "## WordPress de pruebas"
+            echo
+            echo "| | |"
+            echo "| --- | --- |"
+            echo "| **Sitio** | $URL |"
+            echo "| **Usuario de la puerta** | \`demo\` |"
+            echo "| **Contraseña de la puerta** | \`demo-jardin-2026\` |"
+            echo "| **Administrador de WordPress** | \`${WP_ADMIN_USER}\` / \`${WP_ADMIN_PASS}\` |"
+            echo "| **Escritorio** | $URL/wp-admin/ |"
+            echo
+            echo "Los cambios que se suban a la rama se aplican solos en menos de un minuto."
+            echo "El enlace se apaga al terminar este trabajo (~6 horas)."
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Mantener encendido y aplicar cambios de la rama
+        run: |
+          RAMA="${GITHUB_REF_NAME}"
+          ULTIMO="${GITHUB_SHA}"
+          echo "Vigilando la rama ${RAMA} desde ${ULTIMO}"
+
+          for _ in $(seq 1 340); do
+            sleep 60
+
+            if ! kill -0 "$(cat wp.pid)" 2>/dev/null; then
+              echo "El servidor PHP se detuvo:"; tail -40 wp.log; exit 1
+            fi
+
+            NUEVO=$(git ls-remote origin "refs/heads/${RAMA}" | cut -f1)
+            if [ -n "$NUEVO" ] && [ "$NUEVO" != "$ULTIMO" ]; then
+              echo "Cambios nuevos (${ULTIMO} → ${NUEVO}); actualizando…"
+              git fetch origin "${RAMA}" --quiet
+              git checkout --quiet FETCH_HEAD
+
+              # Plugin: se copia encima; los datos y uploads no se tocan.
+              cp -a deploy/wordpress/plugin/jardin-memorial/. \
+                wordpress/wp-content/plugins/jardin-memorial/
+              sudo chown -R www-data:www-data wordpress/wp-content
+
+              wp eval 'JM_DB::maybe_upgrade();' --path=wordpress || true
+              wp cache flush --path=wordpress || true
+
+              echo "Actualizado a ${NUEVO}."
+              ULTIMO="$NUEVO"
+            fi
+          done

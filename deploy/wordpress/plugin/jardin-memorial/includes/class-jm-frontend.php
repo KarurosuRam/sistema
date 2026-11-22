@@ -187,12 +187,23 @@ class JM_Frontend
         $guardadas = (array) get_option('jm_pages', array());
 
         foreach ($definidas as $key => $def) {
-            if (!empty($guardadas[$key]) && get_post($guardadas[$key])) {
-                continue;
+            // Página viva y a la vista (no papelera ni borrador).
+            if (!empty($guardadas[$key])) {
+                $guardada = get_post($guardadas[$key]);
+                if ($guardada && $guardada->post_status !== 'trash' && $guardada->post_status !== 'auto-draft') {
+                    continue;
+                }
             }
+
+            // Si ya existe una página con esa ruta, se reutiliza y se publica:
+            // así una reinstalación no deja el shortcode fuera de línea.
             $existing = get_page_by_path($def[1]);
             if ($existing) {
+                if ($existing->post_status !== 'publish') {
+                    wp_update_post(array('ID' => $existing->ID, 'post_status' => 'publish'));
+                }
                 $guardadas[$key] = (int) $existing->ID;
+                update_option('jm_pages', $guardadas);
                 continue;
             }
             $page_id = wp_insert_post(array(
