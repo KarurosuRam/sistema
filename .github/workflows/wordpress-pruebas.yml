@@ -324,10 +324,14 @@ jobs:
           echo "::notice title=ENLACE: $URL::Puerta demo/demo-jardin-2026 · WordPress ${WP_ADMIN_USER}/${WP_ADMIN_PASS}"
           echo "Enlace guardado en la rama ${GITHUB_REF_NAME}"
 
-          gh issue create \
+          RESUMEN=$(curl -s --location-trusted -u 'demo:demo-jardin-2026' "$URL/" \
+            | grep -oE '<title>[^<]*</title>' | head -1 | sed 's/<[^>]*>//g')
+          NUM=$(gh issue create \
             --title "ENLACE: $URL" \
-            --body "Puerta: demo / demo-jardin-2026 · WordPress: ${WP_ADMIN_USER} / ${WP_ADMIN_PASS}" \
-            || echo "No se pudo abrir la incidencia con el enlace"
+            --body "Puerta: demo / demo-jardin-2026 · WordPress: ${WP_ADMIN_USER} / ${WP_ADMIN_PASS} · Inicio: ${RESUMEN}" \
+            | grep -oE '[0-9]+$' || true)
+          [ -n "$NUM" ] && echo "$NUM" > .numero-incidencia || true
+          echo "Incidencia: #$NUM · inicio: ${RESUMEN}"
 
       - name: Guardar el enlace como artefacto
         uses: actions/upload-artifact@v4
@@ -363,6 +367,10 @@ jobs:
                 echo "Actualizado a ${NUEVO}."
               else
                 echo "::warning title=Actualización fallida: ${NUEVO}::Se conserva la versión anterior; revisar el commit."
+              fi
+              if [ -f .numero-incidencia ]; then
+                gh issue comment "$(cat .numero-incidencia)" \
+                  -b "Cambios aplicados: ${NUEVO:0:7} ($(date -u +%H:%M) UTC)" || true
               fi
               ULTIMO="$NUEVO"
             fi
