@@ -1,0 +1,22 @@
+name: Diagnóstico DB
+on:
+  push:
+    paths:
+      - '.vista-previa/diag'
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Estado
+        run: |
+          echo "== imagen =="; cat /etc/os-release | head -3
+          echo "== servicios =="; systemctl list-unit-files | grep -iE 'maria|mysql' || echo "sin unidades"
+          echo "== paquetes =="; dpkg -l | grep -iE 'mariadb|mysql' | head -10 || echo "sin paquetes"
+          echo "== ping =="; (mysqladmin ping 2>&1 | head -3) || true
+          echo "== start =="
+          sudo systemctl start mariadb 2>&1 | head -5 || true
+          sudo service mariadb start 2>&1 | head -5 || true
+          sleep 3
+          echo "== estado =="; systemctl is-active mariadb 2>&1 || true
+          echo "== root =="; sudo mysql -e "SELECT VERSION();" 2>&1 | head -5
+          echo "== logs =="; sudo journalctl -u mariadb -n 20 --no-pager 2>&1 | tail -20
