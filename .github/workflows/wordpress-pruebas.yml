@@ -64,27 +64,32 @@ jobs:
 
       - name: Preparar MariaDB
         run: |
-          # Los runners de Ubuntu traen MariaDB instalada pero apagada, y el
-          # nombre del servicio depende de la imagen (mariadb o mysql).
-          sudo systemctl start mariadb 2>/dev/null \
-            || sudo systemctl start mysql 2>/dev/null \
-            || sudo service mariadb start 2>/dev/null \
-            || sudo service mysql start
-          sleep 3
-          sudo mysqladmin ping 2>/dev/null || true
+          # El runner (Ubuntu 26.04) no trae servidor de base de datos y no usa
+          # systemd: se instala y se arranca a mano.
+          sudo apt-get update -qq
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq mariadb-server
+          sudo mkdir -p /var/run/mysqld
+          sudo chown mysql:mysql /var/run/mysqld
+          sudo -u mysql mysqld_safe > /tmp/mysqld.log 2>&1 &
+          echo $! > mysqld.pid
 
-          # Se usa root por socket: la contraseña de root del runner es desconocida.
+          for _ in $(seq 1 30); do
+            sudo mysql -e 'SELECT 1' >/dev/null 2>&1 && break
+            sleep 2
+          done
+
+          # root solo entra por socket (unix_socket); por TCP no tiene clave.
           sudo mysql -e "DROP DATABASE IF EXISTS ${WP_DB_NAME};"
           sudo mysql -e "CREATE DATABASE ${WP_DB_NAME} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-          sudo mysql -e "CREATE USER IF NOT EXISTS '${WP_DB_USER}'@'localhost' IDENTIFIED BY '${WP_DB_PASS}';"
-          sudo mysql -e "ALTER USER '${WP_DB_USER}'@'localhost' IDENTIFIED BY '${WP_DB_PASS}';"
           sudo mysql -e "CREATE USER IF NOT EXISTS '${WP_DB_USER}'@'127.0.0.1' IDENTIFIED BY '${WP_DB_PASS}';"
           sudo mysql -e "ALTER USER '${WP_DB_USER}'@'127.0.0.1' IDENTIFIED BY '${WP_DB_PASS}';"
-          sudo mysql -e "GRANT ALL PRIVILEGES ON ${WP_DB_NAME}.* TO '${WP_DB_USER}'@'localhost';"
+          sudo mysql -e "CREATE USER IF NOT EXISTS '${WP_DB_USER}'@'localhost' IDENTIFIED BY '${WP_DB_PASS}';"
+          sudo mysql -e "ALTER USER '${WP_DB_USER}'@'localhost' IDENTIFIED BY '${WP_DB_PASS}';"
           sudo mysql -e "GRANT ALL PRIVILEGES ON ${WP_DB_NAME}.* TO '${WP_DB_USER}'@'127.0.0.1';"
+          sudo mysql -e "GRANT ALL PRIVILEGES ON ${WP_DB_NAME}.* TO '${WP_DB_USER}'@'localhost';"
           sudo mysql -e "FLUSH PRIVILEGES;"
 
-          # Comprobación real: conectar con el usuario de WordPress.
+          # La prueba real: conectar como lo hará WordPress.
           mysql -h 127.0.0.1 -u"${WP_DB_USER}" -p"${WP_DB_PASS}" -e "SELECT VERSION() AS version;" "${WP_DB_NAME}"
 
       - name: Descargar WordPress y WP-CLI
@@ -152,6 +157,22 @@ jobs:
         run: |
           wp eval 'JM_DB::maybe_upgrade(); JM_Frontend::create_pages(); flush_rewrite_rules();' --path=wordpress
           wp option get jm_pages --format=json --path=wordpress
+
+      - name: Publicar diagnóstico si algo falló
+        if: failure()
+        run: |
+          # Los logs del job no siempre son legibles desde la API: se publica un
+          # resumen del estado real como anotación, que sí se puede consultar.
+          {
+            echo "mysql: $(sudo mysqladmin ping 2>&1 | head -1)"
+            echo "wp-cli: $(wp --version 2>&1 | head -1)"
+            echo "wp-dir: $(ls wordpress/wp-config.php 2>&1)"
+            echo "plugins: $(wp plugin list --path=wordpress --field=name 2>&1 | tr '\n' ',' | head -c 200)"
+            echo "mysqld: $(tail -3 /tmp/mysqld.log 2>&1 | tr '\n' ' ' | head -c 300)"
+            echo "php: $(php -v 2>&1 | head -1)"
+          } > /tmp/diag.txt
+          TITULO=$(tr '\n' '|' < /tmp/diag.txt | tr -d '`' | cut -c1-900)
+          echo "::error title=DIAG: ${TITULO}::fin"
 
       - name: Abrir el túnel
         id: tunel
