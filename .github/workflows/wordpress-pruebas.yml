@@ -133,11 +133,18 @@ jobs:
       - name: Ajustar límites de subida
         run: |
           # El plugin acepta videos de hasta 120 MB; el PHP del runner trae 2 MB.
-          INI="$(php --ini | grep 'Loaded Configuration File' | sed 's/.*: //')"
-          echo "php.ini: $INI"
-          sudo sed -i 's/^upload_max_filesize.*/upload_max_filesize = 128M/' "$INI"
-          sudo sed -i 's/^post_max_size.*/post_max_size = 132M/' "$INI"
-          sudo sed -i 's/^memory_limit.*/memory_limit = 256M/' "$INI"
+          INI="$(php --ini | sed -n 's/^Loaded Configuration File: *//p')"
+          echo "php.ini: ${INI:-ninguno}"
+          if [ -n "$INI" ] && [ -f "$INI" ]; then
+            sudo sed -i 's/^upload_max_filesize.*/upload_max_filesize = 128M/' "$INI"
+            sudo sed -i 's/^post_max_size.*/post_max_size = 132M/' "$INI"
+            sudo sed -i 's/^memory_limit.*/memory_limit = 256M/' "$INI"
+          else
+            # Sin archivo cargado, se define una configuración propia.
+            echo 'upload_max_filesize = 128M' >> /tmp/php-limites.ini
+            echo 'post_max_size = 132M' >> /tmp/php-limites.ini
+            echo 'memory_limit = 256M' >> /tmp/php-limites.ini
+          fi
           php -r 'echo "límite: ", ini_get("upload_max_filesize"), "\n";'
           sudo chown -R www-data:www-data wordpress/wp-content
 
@@ -201,7 +208,9 @@ jobs:
         run: |
           # El túnel apunta al puerto 8080: detrás está la puerta con usuario y
           # contraseña y, más atrás, el WordPress real en el 8081.
-          PHP_CLI_SERVER_WORKERS=8 php -S 127.0.0.1:8081 -t wordpress > wp.log 2>&1 &
+          LIMITES=""
+          [ -f /tmp/php-limites.ini ] && LIMITES="-c /tmp/php-limites.ini"
+          PHP_CLI_SERVER_WORKERS=8 php $LIMITES -S 127.0.0.1:8081 -t wordpress > wp.log 2>&1 &
           echo $! > wp.pid
           GATE_PASSWORD="$GATE_PASSWORD" \
           GATE_USER=demo APP_PORT=8081 PORT=8080 \
