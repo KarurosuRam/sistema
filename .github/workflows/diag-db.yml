@@ -14,9 +14,11 @@ jobs:
             echo "== apt update =="; sudo apt-get update -qq 2>&1 | tail -3
             echo "== instalar =="; sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq mariadb-server 2>&1 | tail -5
             echo "== binario =="; which mariadbd mysqld 2>&1 || true
-            echo "== arranque =="; sudo systemctl start mariadb 2>&1 | head -3 || true
-            sudo service mariadb start 2>&1 | head -3 || true
-            sleep 4
+            echo "== datadir =="; ls -d /var/lib/mysql 2>&1; sudo ls /var/lib/mysql 2>/dev/null | head -3
+            echo "== arranque directo =="
+            sudo mkdir -p /var/run/mysqld && sudo chown mysql:mysql /var/run/mysqld
+            sudo -u mysql mysqld_safe --skip-networking=0 --bind-address=127.0.0.1 >/tmp/mysqld.log 2>&1 &
+            sleep 8
             echo "== activo =="; systemctl is-active mariadb 2>&1 || true
             echo "== root =="; sudo mysql -e "SELECT VERSION();" 2>&1 | head -3
           } 2>&1 | tee "$OUT"
