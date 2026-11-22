@@ -1,0 +1,75 @@
+<section class="panel-shell page-demo-pay">
+  <div class="container container--narrow">
+    <div class="dash-head" style="justify-content: center; text-align: center; flex-direction: column; align-items: center;">
+      <p class="eyebrow eyebrow--center">Pago de prueba</p>
+      <h1>Pasarela de demostración</h1>
+      <p>
+        Llegaste al paso de pago. Esta compra es una <strong>simulación</strong>: no se cobra
+        dinero real ni se piden datos de tarjeta.
+      </p>
+    </div>
+
+    <div class="warning-note" style="margin-bottom: 24px;">
+      <%- icon('info', 17) %>
+      <span>
+        El sitio está en <strong>modo demostración</strong>. Cuando lo publiques y conectes
+        Mercado Pago o Flow, este paso será el checkout real de la pasarela y el pago sí se
+        cobrará.
+      </span>
+    </div>
+
+    <div class="checkout-layout">
+      <div class="form-card">
+        <div class="form-card__head">
+          <h2>Simulación de pago</h2>
+          <span class="badge badge--gold"><%- icon('shield', 12) %> Sin cobro</span>
+        </div>
+
+        <p class="hint" style="margin-top: 0;">
+          No hay campos de tarjeta: en demostración no se recogen ni se procesan datos de pago.
+          Elige cómo termina esta compra de prueba.
+        </p>
+
+        <div class="pay-method" style="margin-top: 16px;">
+          <%- icon('wallet', 22) %>
+          <div>
+            <strong>Pasarela: <%= payment.name %></strong>
+            <span>
+              <% if (payment.provider === 'demo') { %>
+                Compra de prueba sin cargo. Puedes aprobarla para ver el comprobante.
+              <% } else { %>
+                Cobro real mediante <%= payment.name %>.
+              <% } %>
+            </span>
+          </div>
+        </div>
+
+        <form action="/pago/demo/<%= purchase.reference %>/aprobar" method="post" style="margin-top: 20px;">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button class="btn btn--block btn--lg" type="submit">
+            <%- icon('check', 16) %> Aprobar pago de prueba
+          </button>
+        </form>
+
+        <form action="/pago/demo/<%= purchase.reference %>/cancelar" method="post" style="margin-top: 10px;">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button class="btn btn--ghost btn--block" type="submit">Cancelar y volver a los planes</button>
+        </form>
+      </div>
+
+      <aside class="order-card">
+        <h3>Resumen del pedido</h3>
+        <div class="order-row"><span>Plan</span><span><%= purchase.plan_name %></span></div>
+        <div class="order-row"><span>Memoriales</span><span><%= purchase.credits %></span></div>
+        <div class="order-row"><span>Referencia</span><span class="mono"><%= purchase.reference %></span></div>
+        <div class="order-total">
+          <span>Total</span>
+          <strong><%= helpers.formatCLP(purchase.amount) %></strong>
+        </div>
+        <p class="hint" style="margin-top: 14px;">
+          Al aprobar, los memoriales se suman a tu cuenta y verás el comprobante.
+        </p>
+      </aside>
+    </div>
+  </div>
+</section>

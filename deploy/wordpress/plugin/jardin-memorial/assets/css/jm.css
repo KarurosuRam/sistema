@@ -1,0 +1,935 @@
+/* ==========================================================================
+   Jardín Memorial para WordPress
+   Todo va dentro de .jm-page para no tocar los estilos del tema del sitio.
+   La paleta es la misma de la aplicación original.
+   ========================================================================== */
+
+.jm-page {
+  --ink: #0a0a0a;
+  --ink-soft: #1a1a1a;
+  --muted: #333333;
+  --muted-light: #4a4a4a;
+  --cream: #fff8f0;
+  --cream-deep: #fdeee1;
+  --paper: #fffcf7;
+  --jade: #0e9184;
+  --jade-deep: #076c63;
+  --jade-wash: #e6f7f3;
+  --coral: #ee6444;
+  --marigold: #e9a22c;
+  --line: #f1dfce;
+  --line-strong: #e2c9b2;
+  --danger: #a8381f;
+  --success: #0b8a68;
+  --radius: 14px;
+  --radius-sm: 10px;
+  --serif: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --shadow: 0 1px 2px rgba(10, 10, 10, 0.04), 0 12px 30px -18px rgba(10, 10, 10, 0.25);
+
+  color: var(--ink);
+  font-family: var(--sans);
+  line-height: 1.6;
+}
+
+.jm-page *,
+.jm-page *::before,
+.jm-page *::after {
+  box-sizing: border-box;
+}
+
+.jm-page img {
+  max-width: 100%;
+  height: auto;
+}
+
+.jm-page p,
+.jm-page li,
+.jm-page td,
+.jm-page th,
+.jm-page label {
+  color: var(--ink);
+}
+
+.jm-wrap {
+  width: min(1080px, calc(100% - 40px));
+  margin: 0 auto;
+}
+
+.jm-wrap--narrow {
+  width: min(720px, calc(100% - 40px));
+  margin: 0 auto;
+}
+
+.jm-eyebrow {
+  margin: 0 0 8px;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--jade-deep);
+  font-weight: 600;
+}
+
+.jm-title {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(1.9rem, 4vw, 2.8rem);
+  line-height: 1.15;
+  margin: 0 0 12px;
+  color: var(--ink);
+}
+
+.jm-lede {
+  font-size: 1.02rem;
+  color: var(--muted);
+  margin: 0 0 22px;
+}
+
+.jm-muted {
+  color: var(--muted-light);
+}
+
+.jm-small {
+  font-size: 0.82rem;
+}
+
+/* ------------------------------------------------------------------ botones */
+
+.jm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0.82em 1.5em;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: var(--jade);
+  color: #fff !important;
+  font-family: var(--sans);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.jm-btn:hover {
+  background: var(--jade-deep);
+  transform: translateY(-1px);
+}
+
+.jm-btn--ghost {
+  background: transparent;
+  color: var(--ink) !important;
+  border-color: var(--line-strong);
+}
+
+.jm-btn--ghost:hover {
+  background: var(--cream-deep);
+  border-color: var(--jade);
+}
+
+.jm-btn--danger {
+  background: transparent;
+  color: var(--danger) !important;
+  border-color: var(--danger);
+}
+
+.jm-btn--danger:hover {
+  background: var(--danger);
+  color: #fff !important;
+}
+
+.jm-btn--sm {
+  padding: 0.55em 1em;
+  font-size: 0.72rem;
+}
+
+.jm-btn--block {
+  width: 100%;
+}
+
+/* ------------------------------------------------------------------ avisos */
+
+.jm-flash {
+  margin: 0 0 20px;
+  padding: 14px 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line-strong);
+  background: var(--paper);
+  font-size: 0.92rem;
+}
+
+.jm-flash--success {
+  border-color: rgba(14, 145, 132, 0.45);
+  background: var(--jade-wash);
+}
+
+.jm-flash--error {
+  border-color: rgba(168, 56, 31, 0.4);
+  background: #fbe3dc;
+}
+
+.jm-errors {
+  margin: 0 0 20px;
+  padding: 14px 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(168, 56, 31, 0.4);
+  background: #fbe3dc;
+  font-size: 0.92rem;
+}
+
+.jm-errors ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+/* ---------------------------------------------------------------- formularios */
+
+.jm-field {
+  margin-bottom: 16px;
+}
+
+.jm-field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.jm-input,
+.jm-select,
+.jm-textarea {
+  width: 100%;
+  padding: 0.8em 0.95em;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.jm-input:focus,
+.jm-select:focus,
+.jm-textarea:focus {
+  outline: 2px solid var(--jade);
+  outline-offset: 1px;
+  border-color: var(--jade);
+}
+
+.jm-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.jm-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--muted-light);
+}
+
+.jm-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.jm-check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+
+.jm-check input {
+  margin-top: 4px;
+}
+
+.jm-hp {
+  position: absolute !important;
+  left: -9999px !important;
+}
+
+/* ---------------------------------------------------------------- tarjetas */
+
+.jm-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+  box-shadow: var(--shadow);
+}
+
+.jm-section {
+  margin: 34px 0;
+}
+
+.jm-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.jm-section-head h2,
+.jm-section-head h3 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 1.45rem;
+  margin: 0;
+  color: var(--ink);
+}
+
+/* --------------------------------------------------------------- memoriales */
+
+.jm-hero {
+  position: relative;
+  min-height: clamp(360px, 52vh, 560px);
+  display: flex;
+  align-items: flex-end;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #2b3a36;
+  margin-bottom: 30px;
+}
+
+.jm-hero__media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.85;
+}
+
+.jm-hero__shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(6, 32, 29, 0.15) 0%, rgba(6, 32, 29, 0.78) 100%);
+}
+
+.jm-hero__body {
+  position: relative;
+  padding: clamp(22px, 4vw, 44px);
+  color: #fff;
+  max-width: 760px;
+}
+
+.jm-hero__kind {
+  margin: 0 0 6px;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.jm-hero__name {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  line-height: 1.05;
+  margin: 0 0 10px;
+  color: #fff;
+}
+
+.jm-hero__dates,
+.jm-hero__epitaph {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-size: 1rem;
+}
+
+.jm-hero__epitaph {
+  margin-top: 10px;
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.15rem;
+}
+
+.jm-quote {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+
+.jm-bio {
+  white-space: pre-line;
+}
+
+/* ------------------------------------------------------------------ galería */
+
+.jm-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.jm-gallery__item {
+  margin: 0;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--cream-deep);
+  position: relative;
+}
+
+.jm-gallery__item img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  cursor: zoom-in;
+  transition: transform 0.25s ease;
+}
+
+.jm-gallery__item:hover img {
+  transform: scale(1.03);
+}
+
+.jm-gallery__item figcaption {
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.jm-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(6, 20, 18, 0.92);
+}
+
+.jm-lightbox[data-open="1"] {
+  display: flex;
+}
+
+.jm-lightbox img {
+  max-width: min(1100px, 100%);
+  max-height: 88vh;
+  border-radius: 8px;
+}
+
+.jm-lightbox__close {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+/* -------------------------------------------------------------- libro/velas */
+
+.jm-messages {
+  display: grid;
+  gap: 14px;
+}
+
+.jm-message {
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+}
+
+.jm-message__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+
+.jm-message__name {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.jm-message__text {
+  margin: 0;
+  white-space: pre-line;
+}
+
+.jm-candles {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 16px 18px;
+  border-radius: var(--radius-sm);
+  background: var(--cream-deep);
+  border: 1px solid var(--line);
+}
+
+/* -------------------------------------------------------------------- auth */
+
+.jm-auth {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 30px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.jm-auth__alt {
+  margin: 18px 0 0;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.jm-auth__alt a {
+  color: var(--jade-deep);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------- panel */
+
+.jm-dash-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.jm-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.jm-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 26px;
+}
+
+.jm-stat {
+  padding: 16px 18px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.jm-stat__value {
+  display: block;
+  font-family: var(--serif);
+  font-size: 1.7rem;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+.jm-stat__label {
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-light);
+}
+
+.jm-list {
+  display: grid;
+  gap: 12px;
+}
+
+.jm-item {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 14px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.jm-item__thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--cream-deep);
+  flex: none;
+}
+
+.jm-item__body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.jm-item__title {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  font-weight: 400;
+}
+
+.jm-item__meta {
+  margin: 2px 0 0;
+  font-size: 0.82rem;
+  color: var(--muted-light);
+}
+
+.jm-empty {
+  padding: 34px 22px;
+  text-align: center;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--muted);
+}
+
+/* -------------------------------------------------------------------- tabs */
+
+.jm-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 22px;
+}
+
+.jm-tab {
+  padding: 10px 16px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.jm-tab[aria-current="page"],
+.jm-tab:hover {
+  border-bottom-color: var(--jade);
+  color: var(--jade-deep);
+}
+
+/* ------------------------------------------------------------------ tablas */
+
+.jm-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+}
+
+.jm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+  min-width: 560px;
+}
+
+.jm-table th {
+  text-align: left;
+  padding: 12px 16px;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-light);
+  background: var(--cream-deep);
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.jm-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+.jm-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.jm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--jade-wash);
+  color: var(--jade-deep);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.jm-badge--gold {
+  background: #fcebcb;
+  color: #7a4a00;
+}
+
+.jm-badge--clay {
+  background: #fde0d6;
+  color: var(--danger);
+}
+
+/* ------------------------------------------------------------------ planes */
+
+.jm-plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.jm-plan {
+  display: flex;
+  flex-direction: column;
+  padding: 26px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  box-shadow: var(--shadow);
+}
+
+.jm-plan--featured {
+  border-color: var(--jade);
+  box-shadow: 0 18px 40px -28px rgba(14, 145, 132, 0.65);
+}
+
+.jm-plan__badge {
+  align-self: flex-start;
+  margin-bottom: 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--jade);
+  color: #fff;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.jm-plan__name {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  margin: 0 0 6px;
+  font-weight: 400;
+}
+
+.jm-plan__price {
+  font-family: var(--serif);
+  font-size: 2.2rem;
+  margin: 6px 0 4px;
+  color: var(--ink);
+}
+
+.jm-plan__meta {
+  margin: 0 0 16px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.jm-plan ul {
+  margin: 0 0 20px;
+  padding-left: 18px;
+  font-size: 0.9rem;
+  flex: 1 1 auto;
+}
+
+.jm-plan li {
+  margin-bottom: 6px;
+}
+
+/* ---------------------------------------------------------------- recibo */
+
+.jm-receipt {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  box-shadow: var(--shadow);
+}
+
+.jm-receipt__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 9px 0;
+  border-bottom: 1px dashed var(--line);
+  font-size: 0.9rem;
+}
+
+.jm-receipt__total {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 14px;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+/* ----------------------------------------------------------- certificado */
+
+.jm-certificate {
+  position: relative;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: clamp(30px, 6vw, 60px);
+  background: var(--paper);
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.jm-certificate::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border: 1px solid var(--line);
+  pointer-events: none;
+}
+
+.jm-certificate h1 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  margin: 0 0 10px;
+}
+
+.jm-certificate__name {
+  font-family: var(--serif);
+  font-size: clamp(1.6rem, 3.6vw, 2.3rem);
+  margin: 18px 0 6px;
+}
+
+.jm-certificate__code {
+  margin-top: 26px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+}
+
+/* -------------------------------------------------------------------- qr */
+
+.jm-share {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+}
+
+.jm-share__code {
+  width: 140px;
+  height: 140px;
+  flex: none;
+  background: #fff;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.jm-share__code canvas,
+.jm-share__code img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.jm-share__url {
+  word-break: break-all;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+  background: var(--cream-deep);
+  padding: 10px 12px;
+  border-radius: 8px;
+  display: block;
+  margin: 6px 0 10px;
+}
+
+/* ------------------------------------------------------------------ audio */
+
+.jm-audio {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(10, 26, 24, 0.88);
+  color: #fff;
+  font-size: 0.8rem;
+  box-shadow: var(--shadow);
+}
+
+.jm-audio button {
+  border: 0;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.jm-audio span {
+  color: #fff;
+}
+
+/* --------------------------------------------------------------- responsive */
+
+@media (max-width: 640px) {
+  .jm-wrap,
+  .jm-wrap--narrow {
+    width: calc(100% - 28px);
+  }
+
+  .jm-item {
+    flex-wrap: wrap;
+  }
+
+  .jm-table {
+    min-width: 480px;
+  }
+}
+
+/* ----------------------------------------------------------------- impresión */
+
+@media print {
+  .jm-page .jm-btn,
+  .jm-page .jm-tabs,
+  .jm-page .jm-audio,
+  .jm-page .jm-share {
+    display: none !important;
+  }
+
+  .jm-certificate {
+    box-shadow: none;
+    border: 0;
+  }
+}

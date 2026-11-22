@@ -1,0 +1,68 @@
+<section class="auth">
+  <div class="auth__panel">
+    <div class="auth__inner">
+      <p class="eyebrow">Crea tu jardín</p>
+      <h1>Tu cuenta, el comienzo de un recuerdo</h1>
+      <p class="lede">Regístrate para crear y administrar tus memoriales. Es gratis; solo pagas cuando elijas un plan.</p>
+
+      <% if (errors.length) { %>
+        <div class="form-errors" role="alert">
+          <%- icon('alert-circle', 18) %>
+          <ul>
+            <% errors.forEach(function (error) { %><li><%= error %></li><% }); %>
+          </ul>
+        </div>
+      <% } %>
+
+      <form action="/registro" method="post" novalidate>
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <% if (next) { %><input type="hidden" name="next" value="<%= next %>"><% } %>
+        <div class="honeypot" aria-hidden="true">
+          <label for="jm_hp">Sitio web</label>
+          <input type="text" id="jm_hp" name="jm_hp" tabindex="-1" autocomplete="new-password" data-lpignore="true" aria-hidden="true">
+        </div>
+
+        <div class="field">
+          <label for="name">Nombre completo</label>
+          <input class="input" type="text" id="name" name="name" autocomplete="name" required maxlength="80" value="<%= values.name || '' %>" placeholder="María José Contreras">
+        </div>
+
+        <div class="field">
+          <label for="email">Correo electrónico</label>
+          <input class="input" type="email" id="email" name="email" autocomplete="email" required maxlength="190" value="<%= values.email || '' %>" placeholder="tu@correo.cl">
+        </div>
+
+        <div class="field-grid">
+          <div class="field">
+            <label for="password">Contraseña</label>
+            <input class="input" type="password" id="password" name="password" autocomplete="new-password" required minlength="8" placeholder="Mínimo 8 caracteres">
+          </div>
+          <div class="field">
+            <label for="password_confirm">Repite la contraseña</label>
+            <input class="input" type="password" id="password_confirm" name="password_confirm" autocomplete="new-password" required minlength="8" placeholder="Otra vez">
+          </div>
+        </div>
+
+        <p class="hint" style="margin: -6px 0 18px;">Usa al menos 8 caracteres. Te recomendamos combinar letras, números y símbolos.</p>
+
+        <button class="btn btn--block btn--lg" type="submit">Crear mi cuenta <%- icon('arrow-right', 16) %></button>
+      </form>
+
+      <p class="auth__alt">¿Ya tienes una cuenta? <a href="/ingresar<%= next ? '?next=' + encodeURIComponent(next) : '' %>">Ingresa aquí</a></p>
+
+      <div class="auth__trust">
+        <span><%- icon('shield', 14) %> Datos protegidos</span>
+        <span><%- icon('lock', 14) %> Sin cargos ocultos</span>
+        <span><%- icon('heart', 14) %> Hecho con cuidado</span>
+      </div>
+    </div>
+  </div>
+
+  <aside class="auth__visual" aria-hidden="true">
+    <img src="/img/hero-garden.jpg" alt="">
+    <div class="auth__quote">
+      <p>“Un jardín no se hace de una vez: se cuida, se riega y se visita. Así también se cuida la memoria.”</p>
+      <span>Jardín Memorial</span>
+    </div>
+  </aside>
+</section>

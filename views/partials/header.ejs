@@ -1,0 +1,47 @@
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="/" aria-label="<%= site.name %> — inicio">
+      <%- brandMark(40) %>
+      <span class="brand__text">
+        <span class="brand__name">Jardín Memorial</span>
+        <span class="brand__sub">Recuerdos que florecen</span>
+      </span>
+    </a>
+
+    <nav class="site-nav" id="site-nav" aria-label="Navegación principal">
+      <a class="site-nav__link <%= activeNav === 'inicio' ? 'is-active' : '' %>" href="/">Inicio</a>
+      <a class="site-nav__link <%= activeNav === 'como-funciona' ? 'is-active' : '' %>" href="/como-funciona">Cómo funciona</a>
+      <a class="site-nav__link <%= activeNav === 'planes' ? 'is-active' : '' %>" href="/planes">Precios</a>
+      <a class="site-nav__link <%= activeNav === 'memoriales' ? 'is-active' : '' %>" href="/memoriales">Memoriales</a>
+      <a class="site-nav__link <%= activeNav === 'ayuda' ? 'is-active' : '' %>" href="/preguntas-frecuentes">Ayuda</a>
+      <% if (user) { %>
+        <a class="site-nav__link <%= activeNav === 'cuenta' ? 'is-active' : '' %>" href="/cuenta">Mi cuenta</a>
+        <form action="/salir" method="post" class="nav-mobile-only">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="site-nav__link nav-logout">Cerrar sesión</button>
+        </form>
+      <% } else { %>
+        <a class="site-nav__link" href="/ingresar">Ingresar</a>
+      <% } %>
+    </nav>
+
+    <div class="header-actions">
+      <% if (user) { %>
+        <a class="header-credit" href="/panel" title="Memoriales disponibles en tu cuenta">
+          <%- icon('leaf', 14) %>
+          <%= user.credits %> <%= user.credits === 1 ? 'memorial' : 'memoriales' %>
+        </a>
+        <a class="btn btn--ghost" href="/panel">Mi jardín</a>
+        <form action="/salir" method="post" class="header-logout">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <button type="submit" class="header-logout__btn">Salir</button>
+        </form>
+      <% } else { %>
+        <a class="btn" href="/registro">Crear cuenta</a>
+      <% } %>
+      <button class="nav-toggle" type="button" aria-label="Abrir menú" aria-controls="site-nav" aria-expanded="false" data-nav-toggle>
+        <span></span>
+      </button>
+    </div>
+  </div>
+</header>

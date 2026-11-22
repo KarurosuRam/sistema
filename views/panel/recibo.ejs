@@ -1,0 +1,146 @@
+<%
+  var estado = purchase.status || 'pagado';
+  var pagado = estado === 'pagado';
+  var pendiente = estado === 'pendiente';
+  var reembolsado = estado === 'reembolsado';
+  var pasarela = purchase.mode === 'mercadopago'
+    ? 'Mercado Pago'
+    : purchase.mode === 'flow'
+      ? 'Flow'
+      : 'la demostración';
+  var titulo = pagado
+    ? '¡Gracias por confiar en nosotros!'
+    : reembolsado
+      ? 'Devolvimos el dinero de esta compra'
+      : pendiente
+        ? 'Tu pago está pendiente'
+        : 'El pago no se completó';
+  var demoPendiente = pendiente && purchase.mode === 'demo';
+  var bajada = pagado
+    ? 'Ya puedes crear ' + (purchase.credits === 1 ? 'tu memorial' : 'tus ' + purchase.credits + ' memoriales') + '.'
+    : reembolsado
+      ? 'La devolución ya se hizo en ' + pasarela + '. Los memoriales que alcanzaste a crear siguen publicados.'
+      : demoPendiente
+        ? 'Esta compra de prueba quedó pendiente. Termínala para acreditar los memoriales.'
+        : pendiente
+          ? pasarela + ' todavía no confirma el pago. En cuanto lo haga, los cupos se suman solos a tu cuenta.'
+          : 'No se acreditó ningún cupo. Puedes reintentar el pago cuando quieras.';
+  var medio = purchase.mode === 'demo'
+    ? 'Demostración (simulado)'
+    : purchase.mode === 'mercadopago'
+      ? 'Mercado Pago' + (mpEnv === 'sandbox' ? ' · ambiente de pruebas' : '')
+      : purchase.mode === 'flow'
+        ? 'Flow' + (flowEnv === 'sandbox' ? ' · ambiente de pruebas' : '')
+        : 'Tarjeta';
+%>
+<section class="panel-shell">
+  <div class="container">
+    <div class="dash-head" style="justify-content: center; text-align: center; flex-direction: column; align-items: center;">
+      <p class="eyebrow eyebrow--center"><%= pagado ? 'Pago confirmado' : reembolsado ? 'Pago devuelto' : pendiente ? 'Pago en proceso' : 'Pago no completado' %></p>
+      <h1><%= titulo %></h1>
+      <p><%= bajada %></p>
+    </div>
+
+    <div class="receipt">
+      <div class="receipt__head">
+        <div>
+          <span class="receipt__brand"><%- brandMark(30) %> Jardín Memorial</span>
+          <p class="tiny muted" style="margin: 6px 0 0;">www.jardinmemorial.cl</p>
+        </div>
+        <div class="receipt__meta">
+          <strong>Comprobante <%= purchase.reference %></strong><br>
+          <%= helpers.formatDateTime(purchase.created_at) %><br>
+          <% if (pagado) { %>
+            <span class="badge" style="margin-top: 8px;"><%- icon('check', 12) %> Pagado</span>
+          <% } else if (reembolsado) { %>
+            <span class="badge badge--gold" style="margin-top: 8px;"><%- icon('arrow-left', 12) %> Reembolsado</span>
+          <% } else if (pendiente) { %>
+            <span class="badge badge--gold" style="margin-top: 8px;"><%- icon('clock', 12) %> Pendiente</span>
+          <% } else { %>
+            <span class="badge badge--clay" style="margin-top: 8px;"><%- icon('alert-circle', 12) %> <%= estado === 'anulado' ? 'Anulado' : 'Rechazado' %></span>
+          <% } %>
+        </div>
+      </div>
+
+      <% if (reembolsado) { %>
+        <div class="receipt-status receipt-status--pending">
+          <%- icon('arrow-left', 18) %>
+          <span>
+            <%= pasarela %> confirmó la devolución del monto completo. El dinero vuelve a tu medio de
+            pago según los plazos de tu banco (habitualmente entre 5 y 10 días hábiles).
+            Si tienes dudas, escríbenos a <a class="text-link" href="mailto:<%= site.email %>"><%= site.email %></a>
+            con la referencia <strong><%= purchase.reference %></strong>.
+          </span>
+        </div>
+      <% } else if (!pagado) { %>
+        <div class="receipt-status <%= pendiente ? 'receipt-status--pending' : 'receipt-status--failed' %>">
+          <%- icon(pendiente ? 'clock' : 'alert-circle', 18) %>
+          <span>
+            <% if (pendiente) { %>
+              Estamos esperando la confirmación de <%= pasarela %>. También puedes revisarlo ahora.
+            <% } else if (estado === 'invalido') { %>
+              El pago no coincide con la orden registrada. Escríbenos antes de reintentar.
+            <% } else { %>
+              El pago no se completó y no se acreditó ningún cupo.
+            <% } %>
+          </span>
+          <div class="receipt-status__actions">
+            <% if (purchase.provider === 'demo') { %>
+              <a class="btn btn--sm" href="/pago/demo/<%= purchase.reference %>">
+                <%- icon('card', 14) %> Completar pago de prueba
+              </a>
+            <% } else { %>
+              <form action="/panel/compra/<%= purchase.reference %>/verificar" method="post">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button class="btn btn--ghost btn--sm" type="submit"><%- icon('clock', 14) %> Verificar pago</button>
+              </form>
+            <% } %>
+            <form action="/panel/comprar/<%= purchase.plan %>" method="post"<% if (payment.provider !== 'demo' && typeof embeddedView !== 'undefined' && embeddedView) { %> target="_top"<% } %>>
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button class="btn btn--sm" type="submit"><%- icon('card', 14) %> Reintentar pago</button>
+            </form>
+          </div>
+        </div>
+      <% } %>
+
+      <div class="receipt__rows">
+        <div class="order-row"><span>Titular</span><span><%= user.name %></span></div>
+        <div class="order-row"><span>Correo</span><span><%= user.email %></span></div>
+        <div class="order-row"><span>Plan</span><span><%= purchase.plan_name %></span></div>
+        <div class="order-row"><span>Memoriales acreditados</span><span><%= pagado ? purchase.credits : reembolsado ? '0 (compra devuelta)' : '0 (se acreditan al confirmar)' %></span></div>
+        <div class="order-row"><span>Medio de pago</span><span><%= medio %></span></div>
+        <% if (purchase.provider_order) { %>
+          <div class="order-row"><span><%= purchase.mode === 'mercadopago' ? 'N.º de pago' : 'Orden Flow' %></span><span class="mono"><%= purchase.provider_order %></span></div>
+        <% } %>
+        <% if (purchase.paid_at) { %>
+          <div class="order-row"><span>Fecha de pago</span><span><%= helpers.formatDateTime(purchase.paid_at) %></span></div>
+        <% } %>
+        <div class="order-total">
+          <span><%= pagado ? 'Total pagado' : reembolsado ? 'Total devuelto' : 'Total' %></span>
+          <strong><%= helpers.formatCLP(purchase.amount) %></strong>
+        </div>
+      </div>
+
+      <div class="receipt__foot">
+        <% if (pagado) { %>
+          <p style="margin-bottom: 12px;">Este comprobante acredita la compra realizada en Jardín Memorial. Los memoriales no expiran y puedes usarlos cuando quieras.</p>
+          <a class="btn" href="/panel/nuevo" style="margin-bottom: 10px;"><%- icon('plus', 16) %> Crear un memorial</a>
+          <div class="receipt__stamp"><%- icon('shield', 13) %> Compra registrada en tu cuenta</div>
+        <% } else if (reembolsado) { %>
+          <p style="margin-bottom: 12px;">Este comprobante queda como registro de la compra y de su devolución. No se acreditaron cupos nuevos y el dinero ya salió de Jardín Memorial de vuelta a tu cuenta.</p>
+          <a class="btn btn--ghost" href="/panel/compras" style="margin-bottom: 10px;">Ver historial</a>
+          <div class="receipt__stamp"><%- icon('shield', 13) %> Devolución registrada en tu cuenta</div>
+        <% } else { %>
+          <p style="margin-bottom: 12px;">El comprobante se actualizará automáticamente cuando <%= pasarela %> confirme el pago. Si el cargo aparece en tu tarjeta y aquí sigue pendiente, escríbenos a <a class="text-link" href="mailto:<%= site.email %>"><%= site.email %></a> con la referencia <strong><%= purchase.reference %></strong>.</p>
+          <div class="receipt__stamp"><%- icon('shield', 13) %> Sin cobros duplicados: cada orden se acredita una sola vez</div>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="cert-actions">
+      <button class="btn btn--ghost" type="button" data-print>Imprimir comprobante</button>
+      <a class="btn btn--ghost" href="/panel/compras">Ver historial</a>
+      <a class="btn btn--ghost" href="/panel">Volver a mi jardín</a>
+    </div>
+  </div>
+</section>

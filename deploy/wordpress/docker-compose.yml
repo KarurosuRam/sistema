@@ -1,0 +1,41 @@
+# WordPress + MariaDB para probar el plugin en un equipo propio.
+#
+#   bash deploy/wordpress/build-plugin.sh
+#   cd deploy/wordpress && docker compose up -d
+#   http://localhost:8080  →  instalar WordPress
+#   Copiar dist/jardin-memorial-*.zip a wp-content/plugins vía el contenedor,
+#   o subirlo desde Plugins → Añadir nuevo → Subir plugin.
+#
+# El plugin no necesita Node: la app original no corre en este compose.
+services:
+  db:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: wordpress
+      MARIADB_USER: wordpress
+      MARIADB_PASSWORD: wordpress
+      MARIADB_ROOT_PASSWORD: root
+    volumes:
+      - db-data:/var/lib/mysql
+
+  wordpress:
+    image: wordpress:6.6-php8.3-apache
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - '8080:80'
+    environment:
+      WORDPRESS_DB_HOST: db:3306
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+      WORDPRESS_DEBUG: '1'
+    volumes:
+      - wp-data:/var/www/html
+      - ./plugin/jardin-memorial:/var/www/html/wp-content/plugins/jardin-memorial
+
+volumes:
+  db-data:
+  wp-data:

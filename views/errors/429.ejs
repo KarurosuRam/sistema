@@ -1,0 +1,9 @@
+<section class="error-page">
+  <div class="error-page__inner">
+    <%- brandMark(74) %>
+    <div class="error-page__code">429</div>
+    <h1>Tómate un momento</h1>
+    <p><%= typeof retryMessage !== 'undefined' && retryMessage ? retryMessage : 'Recibimos demasiadas solicitudes desde tu conexión. Espera unos minutos y vuelve a intentarlo.' %></p>
+    <a class="btn" href="/">Volver al inicio</a>
+  </div>
+</section>

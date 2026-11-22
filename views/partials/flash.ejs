@@ -1,0 +1,11 @@
+<% if (typeof flash !== 'undefined' && flash && flash.message) { %>
+  <div class="flash-stack" aria-live="polite" aria-atomic="true">
+    <div class="flash flash--<%= flash.type || 'info' %>" role="status">
+      <% if (flash.type === 'success') { %><%- icon('check-circle', 18) %><% } else if (flash.type === 'error') { %><%- icon('alert-circle', 18) %><% } else { %><%- icon('info', 18) %><% } %>
+      <div><%= flash.message %></div>
+      <button class="flash__close" type="button" aria-label="Cerrar aviso">
+        <%- icon('close', 14) %>
+      </button>
+    </div>
+  </div>
+<% } %>
