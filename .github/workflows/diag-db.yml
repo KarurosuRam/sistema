@@ -9,6 +9,7 @@ jobs:
     steps:
       - name: Estado
         run: |
+          exec > >(tee -a "$GITHUB_STEP_SUMMARY") 2>&1
           echo "== imagen =="; cat /etc/os-release | head -3
           echo "== servicios =="; systemctl list-unit-files | grep -iE 'maria|mysql' || echo "sin unidades"
           echo "== paquetes =="; dpkg -l | grep -iE 'mariadb|mysql' | head -10 || echo "sin paquetes"
