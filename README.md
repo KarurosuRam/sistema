@@ -296,7 +296,8 @@ La app arranca en modo demostración cuando no encuentra credenciales. Revisa:
 
 La plataforma completa —memoriales, cuentas, pagos, certificados y panel de administración—
 también existe como **plugin nativo de WordPress**: PHP + MySQL, sin Node y sin servidor
-propio, pensado para **hosting compartido**.
+propio, pensado para **hosting compartido**. Cobra con **Mercado Pago o Flow** (Webpay y
+tarjetas), con modo de prueba para recorrer la compra sin dinero real.
 
 ```bash
 bash deploy/wordpress/build-plugin.sh   # → dist/jardin-memorial-2.0.0.zip

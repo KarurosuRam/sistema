@@ -19,7 +19,7 @@ siendo el mismo WordPress de siempre.
 | Extensiones PHP | `mbstring`, `gd` o `imagick`, `zip`, `openssl` |
 | Base de datos | MySQL 5.7+ / MariaDB 10.3+ |
 | Permisos | escritura en `wp-content/uploads` (el plugin crea `jardin-memorial/`) |
-| HTTPS | obligatorio para Mercado Pago |
+| HTTPS | obligatorio para cobrar (Mercado Pago y Flow) |
 
 No hace falta SSH, Composer, Node ni WP-CLI. Todo se hace desde el escritorio de
 WordPress.
@@ -94,11 +94,18 @@ e «Ingresar» desde **Apariencia → Menús**.
 
 | Campo | Para qué sirve |
 |---|---|
-| **Pasarela** | «Pasarela de prueba» recorre la compra sin dinero real; «Mercado Pago» cobra de verdad |
-| **Ambiente** | Pruebas (`TEST-…`) o Producción (`APP_USR-…`) |
+| **Pasarela** | «Pasarela de prueba» recorre la compra sin dinero real; «Mercado Pago» o «Flow» cobran de verdad |
+| **Ambiente de Mercado Pago** | Pruebas (`TEST-…`) o Producción (`APP_USR-…`) |
 | **Access Token** | Se guarda **cifrado** (AES-256-GCM con `wp_salt('auth')`). Vacío = conservar el actual |
 | **Secreto del webhook** | Opcional pero recomendado: valida la firma `x-signature` de Mercado Pago |
+| **Ambiente de Flow** | Pruebas (`sandbox.flow.cl`) o Producción (`www.flow.cl`) |
+| **API Key / Secret Key de Flow** | Se guardan cifradas. Sin ambas, Flow no se activa |
 | **Correos administradores** | Además de los administradores de WordPress, quiénes ven pagos y reembolsos |
+
+Cada pasarela guarda sus propias credenciales: se pueden tener las dos
+configuradas y cambiar de una a otra sin volver a escribirlas. Si la pasarela
+elegida no tiene credenciales, el sitio **sigue en modo demostración** y no se
+cobra nada: el aviso de la cabecera lo dice.
 
 El aviso rojo de la cabecera del panel desaparece cuando hay token de pago y
 correo saliente configurado.
@@ -129,7 +136,20 @@ de compra), instalar un plugin SMTP (por ejemplo *WP Mail SMTP*) y probar desde
 
 ---
 
-## 4. Cobros con Mercado Pago
+## 4. Cobros
+
+Hay tres modos, y se elige en **Ajustes → Pasarela**:
+
+| Modo | Qué hace | Credenciales |
+|---|---|---|
+| Pasarela de prueba | Muestra una pantalla para aprobar o anular la compra. No cobra | ninguna |
+| Mercado Pago | Checkout Pro: el comprador paga en el sitio de Mercado Pago | Access Token |
+| Flow | Webpay, tarjetas de crédito y débito y otros medios habilitados | API Key + Secret Key |
+
+En los tres casos el cupo se acredita **solo** cuando se confirma el pago con el
+proveedor; nunca al volver el navegador sin comprobarlo.
+
+### 4.1 Mercado Pago
 
 1. En el panel de Mercado Pago, crear una aplicación y copiar el **Access Token**.
 2. Pegarlo en **Ajustes** con el ambiente correspondiente y guardar.
@@ -145,9 +165,47 @@ El webhook verifica la firma `x-signature` cuando hay secreto configurado,
 ignora las notificaciones que no son de pago y responde 200 siempre que la firma
 sea válida (Mercado Pago reintenta si recibe un error).
 
-**Reembolsos:** en **Pagos**, botón «Reembolsar». Llama a la API de Mercado
-Pago, marca la compra como reembolsada y devuelve los cupos que siguieran sin
-usar.
+### 4.2 Flow
+
+1. Entrar a <https://www.flow.cl> (o <https://sandbox.flow.cl> para pruebas),
+   ir a **Mis datos → Mis llaves** y copiar la **API Key** y la **Secret Key**.
+2. Pegarlas en **Ajustes**, elegir el ambiente y guardar.
+3. Elegir **Flow** como pasarela. Si faltan las llaves, el sitio se queda en modo
+   demostración y lo avisa en la cabecera.
+4. Probar una compra de $6.990 en ambiente de pruebas y comprobar lo mismo que
+   con Mercado Pago.
+
+Cómo funciona por dentro:
+
+- Cada llamada a Flow va firmada con **HMAC-SHA256** (parámetros ordenados,
+  `nombrevalor` concatenados) usando la Secret Key. Sin esa firma Flow rechaza
+  la orden.
+- La notificación servidor a servidor se recibe en
+  `https://tu-dominio.cl/wp-admin/admin-post.php?action=jm_flow&jm_flow=confirmar`
+  y **no necesita configurarse** en el panel de Flow: la URL viaja en la orden.
+  Se atiende por `admin-post.php` a propósito, porque no depende de las reglas de
+  enlace permanente del hosting.
+- Antes de acreditar se consulta **`payment/getStatus`** y se comprueban tres
+  cosas: que el `commerceOrder` sea la referencia de esa compra, que el monto
+  coincida con el plan y que la moneda sea CLP. Si algo no calza, la compra
+  queda **inválida** para revisión manual y no se acredita ningún cupo.
+- Si el comprador pierde la sesión al volver, se le pide ingreso y se le lleva
+  de vuelta a su comprobante; el pago ya quedó acreditado.
+
+**Reembolsos:** en **Pagos**, botón «Reembolsar». Llama a la API de la pasarela
+(`/v1/payments/:id/refunds` en Mercado Pago, `/payment/refund` en Flow), marca la
+compra como reembolsada y devuelve los cupos que siguieran sin usar.
+
+### 4.3 Qué ver antes de cobrar de verdad
+
+- El sitio responde por **HTTPS** con un certificado válido. Con HTTP el plugin
+  no deja iniciar compras reales y muestra un aviso rojo: la pasarela no podría
+  notificar el pago.
+- La pasarela figura como **activa** en **Pagos** (no «elegido, sin
+  credenciales»).
+- Una compra de prueba completa termina en **pagado** y suma cupos.
+- Un pago con monto alterado termina en **inválido**, sin cupos.
+- El botón **Reembolsar** devuelve el dinero y descuenta los cupos sin usar.
 
 ---
 
@@ -213,6 +271,7 @@ migración o actualización del plugin.
 ## 7. Verificación después de instalar
 
 1. `/memoriales/` abre sin 404 y muestra los memoriales públicos.
+   Comprobar en **Pagos** qué pasarela figura como activa.
 2. `/crear-cuenta/` crea una cuenta; el correo de bienvenida no es necesario,
    pero **Recuperar contraseña** debe enviar el enlace.
 3. Comprar en modo prueba, aprobar el pago demo y ver el comprobante en
@@ -280,7 +339,8 @@ jardin-memorial/
 │   ├── class-jm-util.php      slugs, fechas, CLP, flash, cifrado
 │   ├── class-jm-accounts.php  registro, login, límites, cupos
 │   ├── class-jm-media.php     subidas y miniaturas
-│   ├── class-jm-payments.php  planes, preferencia MP, webhook, reembolsos
+│   ├── class-jm-payments.php  planes, MP y Flow, webhooks, reembolsos
+│   ├── class-jm-flow.php      cliente de Flow (firma HMAC, órdenes, estado)
 │   ├── class-jm-migrate.php   importador del ZIP de la app Node
 │   ├── class-jm-actions.php   formularios (admin-post.php + nonce)
 │   ├── class-jm-frontend.php  rutas, plantillas, shortcodes, estilos

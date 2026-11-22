@@ -115,6 +115,7 @@ class JM_DB
             status VARCHAR(20) NOT NULL DEFAULT 'pendiente',
             mode VARCHAR(20) NOT NULL DEFAULT 'demo',
             provider_order VARCHAR(64) NULL,
+            provider_token VARCHAR(120) NULL,
             payer_email VARCHAR(190) NULL,
             paid_at DATETIME NULL,
             refund_id VARCHAR(64) NULL,
@@ -123,7 +124,8 @@ class JM_DB
             PRIMARY KEY  (id),
             UNIQUE KEY reference (reference),
             KEY user_id (user_id, created_at),
-            KEY provider_order (provider_order)
+            KEY provider_order (provider_order),
+            KEY provider_token (provider_token)
         ) $charset;";
 
         // Límite de intentos por IP y acción (mensajes, velas, ingreso).
@@ -138,6 +140,35 @@ class JM_DB
         ) $charset;";
 
         dbDelta($sql);
+
+        // Instalaciones hechas con 2.0.0: dbDelta agrega la columna al crear la
+        // tabla, pero en bases existentes se asegura por separado.
+        self::column($purchases, 'provider_token', 'VARCHAR(120) NULL');
+        self::index($purchases, 'provider_token', 'provider_token');
+
         update_option(self::OPTION, JM_DB_VERSION);
+    }
+
+    /**
+     * Añade una columna solo si no existe. Sirve para actualizar instalaciones
+     * hechas con 2.0.0 sin recrear la tabla ni perder compras.
+     */
+    private static function column($table, $column, $definition)
+    {
+        global $wpdb;
+        $exists = $wpdb->get_results("SHOW COLUMNS FROM $table LIKE '" . esc_sql($column) . "'");
+        if (empty($exists)) {
+            $wpdb->query("ALTER TABLE $table ADD COLUMN $column $definition");
+        }
+    }
+
+    /** Añade un índice solo si falta (un cambio de esquema no debe fallar). */
+    private static function index($table, $name, $columns)
+    {
+        global $wpdb;
+        $exists = $wpdb->get_results("SHOW INDEX FROM $table WHERE Key_name = '" . esc_sql($name) . "'");
+        if (empty($exists)) {
+            $wpdb->query("ALTER TABLE $table ADD KEY " . esc_sql($name) . " (" . $columns . ")");
+        }
     }
 }

@@ -53,6 +53,8 @@ $logged = is_user_logged_in();
   <p class="jm-small jm-muted" style="text-align:center;margin-top:24px">
     <?php if ($mode === 'demo') : ?>
       Esta instalación está en modo demostración: el pago se simula y no se cobra dinero real.
+    <?php elseif ($mode === 'flow') : ?>
+      El pago se hace en Flow: Webpay, tarjetas de crédito y débito, y otros medios habilitados.
     <?php else : ?>
       El pago se hace en Mercado Pago. Acepta tarjetas de crédito y débito.
     <?php endif; ?>

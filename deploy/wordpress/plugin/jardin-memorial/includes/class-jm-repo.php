@@ -384,6 +384,7 @@ class JM_Repo
             'status' => isset($data['status']) ? (string) $data['status'] : 'pendiente',
             'mode' => isset($data['mode']) ? (string) $data['mode'] : 'demo',
             'provider_order' => isset($data['provider_order']) ? $data['provider_order'] : null,
+            'provider_token' => isset($data['provider_token']) ? $data['provider_token'] : null,
             'payer_email' => isset($data['payer_email']) ? $data['payer_email'] : null,
             'paid_at' => isset($data['paid_at']) ? $data['paid_at'] : null,
             'created_at' => isset($data['created_at']) ? $data['created_at'] : $now,
@@ -417,6 +418,18 @@ class JM_Repo
         return $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM $table ORDER BY created_at DESC LIMIT %d",
             (int) $limit
+        ));
+    }
+
+    /** Compra por el token que entregó la pasarela (Flow). */
+    public static function find_purchase_by_token($token, $mode = 'flow')
+    {
+        global $wpdb;
+        $table = JM_DB::table('purchases');
+        return $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM $table WHERE provider_token = %s AND mode = %s LIMIT 1",
+            (string) $token,
+            (string) $mode
         ));
     }
 

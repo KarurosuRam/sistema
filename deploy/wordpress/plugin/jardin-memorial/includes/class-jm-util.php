@@ -201,6 +201,9 @@ class JM_Util
             'mp_env' => 'sandbox',
             'mp_token' => '',
             'mp_secret' => '',
+            'flow_env' => 'sandbox',
+            'flow_key' => '',
+            'flow_secret' => '',
             'notice' => '',
         );
         return wp_parse_args((array) get_option('jm_settings', array()), $defaults);

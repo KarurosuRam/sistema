@@ -52,7 +52,7 @@ $estados = array(
       </div>
       <div class="jm-receipt__row">
         <span>Medio de pago</span>
-        <span><?php echo esc_html($purchase->mode === 'demo' ? 'Pasarela de prueba' : ($purchase->mode === 'importado' ? 'Compra anterior' : 'Mercado Pago')); ?></span>
+        <span><?php echo esc_html($purchase->mode === 'importado' ? 'Compra anterior' : JM_Payments::mode_label($purchase->mode)); ?></span>
       </div>
       <?php if ($purchase->provider_order) : ?>
         <div class="jm-receipt__row"><span>N.º de pago</span><span><?php echo esc_html($purchase->provider_order); ?></span></div>

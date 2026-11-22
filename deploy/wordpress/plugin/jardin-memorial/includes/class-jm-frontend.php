@@ -336,12 +336,26 @@ class JM_Frontend
         $reference = isset($_GET['ref']) ? sanitize_text_field(wp_unslash($_GET['ref'])) : '';
         $purchase = $reference ? JM_Repo::find_purchase($reference) : null;
 
-        if (!$purchase || !is_user_logged_in() || (int) $purchase->user_id !== get_current_user_id()) {
+        if (!$purchase) {
             return self::render('comprobante.php', array('purchase' => null));
         }
 
-        // Al volver de Mercado Pago se consulta el estado real una vez.
-        if ($purchase->status === 'pendiente' && $purchase->mode === 'mercadopago' && isset($_GET['volver'])) {
+        // Compra propia pero sin sesión (se perdió al volver de la pasarela):
+        // se pide ingreso y se regresa al mismo comprobante.
+        if (!is_user_logged_in()) {
+            return self::render('auth-ingresar.php', array(
+                'errors' => array(),
+                'values' => array(),
+                'redirect' => JM_Payments::receipt_url($purchase),
+            ));
+        }
+
+        if ((int) $purchase->user_id !== get_current_user_id()) {
+            return self::render('comprobante.php', array('purchase' => null));
+        }
+
+        // Al volver de la pasarela se consulta el estado real una vez.
+        if ($purchase->status === 'pendiente' && isset($_GET['volver'])) {
             $result = JM_Payments::verify($purchase);
             if (!is_wp_error($result)) {
                 $purchase = JM_Repo::find_purchase($purchase->reference);

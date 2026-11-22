@@ -44,6 +44,13 @@ class JM_Actions
 
         add_action('admin_post_nopriv_jm_salir', array(__CLASS__, 'salir'));
         add_action('admin_post_jm_salir', array(__CLASS__, 'salir'));
+
+        // Flow llama a la notificación y al retorno desde fuera: no hay sesión
+        // ni nonce, la autenticidad la da la consulta de estado con nuestras
+        // credenciales. Se atienden por admin-post.php para no depender de las
+        // reglas de rewrite del hosting.
+        add_action('admin_post_nopriv_jm_flow', array(__CLASS__, 'flow'));
+        add_action('admin_post_jm_flow', array(__CLASS__, 'flow'));
     }
 
     /* ---------------------------------------------------------------- utils */
@@ -516,6 +523,109 @@ class JM_Actions
     }
 
     /* ------------------------------------------------------------- pagos */
+
+    /* ---------------------------------------------------------------- Flow */
+
+    /**
+     * Dos entradas de Flow:
+     *   ?jm_flow=confirmar  notificación servidor a servidor (POST con token)
+     *   ?jm_flow=retorno    vuelta del navegador (GET con token)
+     *
+     * En ambas se consulta el estado real en Flow antes de acreditar nada.
+     */
+    public static function flow()
+    {
+        nocache_headers();
+
+        $kind = isset($_REQUEST['jm_flow']) ? sanitize_key(wp_unslash($_REQUEST['jm_flow'])) : '';
+        $token = isset($_REQUEST['token']) ? sanitize_text_field(wp_unslash($_REQUEST['token'])) : '';
+
+        // Notificación: Flow espera un 200 para no reintentar.
+        if ($kind === 'confirmar') {
+            if ($token === '') {
+                status_header(200);
+                echo 'OK';
+                exit;
+            }
+            $result = JM_Payments::sync_flow($token);
+            if (is_wp_error($result)) {
+                error_log('[jardin-memorial] flow: ' . $result->get_error_message());
+            }
+            status_header(200);
+            header('Content-Type: text/plain; charset=utf-8');
+            echo 'OK';
+            exit;
+        }
+
+        // Retorno del navegador: se lleva al comprador a su comprobante.
+        if ($token === '') {
+            JM_Util::flash('error', 'No recibimos el token del pago. Si te cobraron, escríbenos con tu comprobante.');
+            self::back(JM_Util::page_url('planes'));
+        }
+
+        $result = JM_Payments::sync_flow($token);
+        if (is_wp_error($result)) {
+            JM_Util::flash(
+                'error',
+                'No pudimos confirmar el pago con Flow en este momento. Tu compra quedó registrada como pendiente; revisa el historial en unos minutos.'
+            );
+            self::back(JM_Util::page_url('planes'));
+        }
+
+        $purchase = isset($result['purchase']) ? $result['purchase'] : null;
+        self::flow_flash($result);
+
+        if ($purchase) {
+            $recibo = JM_Payments::receipt_url($purchase);
+
+            // Si la sesión se perdió en el camino, se pide ingreso y se vuelve
+            // directo al comprobante: el pago ya está acreditado igual.
+            if (!is_user_logged_in()) {
+                self::back(add_query_arg(
+                    'redirect_to',
+                    rawurlencode($recibo),
+                    JM_Util::page_url('ingresar')
+                ));
+            }
+            self::back($recibo);
+        }
+
+        self::back(JM_Util::page_url('planes'));
+    }
+
+    /** Mensajes de la vuelta desde una pasarela. */
+    private static function flow_flash($result)
+    {
+        $status = isset($result['status']) ? $result['status'] : '';
+        $purchase = isset($result['purchase']) ? $result['purchase'] : null;
+        $count = $purchase ? (int) $purchase->credits : 0;
+
+        if ($status === 'pagado') {
+            if (!empty($result['credited'])) {
+                JM_Util::flash('success', sprintf(
+                    'Pago aprobado. Se agregaron %d %s a tu cuenta.',
+                    $count,
+                    $count === 1 ? 'memorial' : 'memoriales'
+                ));
+            } else {
+                JM_Util::flash('info', 'El pago ya estaba confirmado en tu cuenta.');
+            }
+            return;
+        }
+        if ($status === 'rechazado') {
+            JM_Util::flash('error', 'Flow rechazó el pago. No se hizo ningún cargo y puedes intentarlo de nuevo.');
+            return;
+        }
+        if ($status === 'reembolsado') {
+            JM_Util::flash('info', 'Flow devolvió el dinero de esta compra.');
+            return;
+        }
+        if ($status === 'anulado') {
+            JM_Util::flash('error', 'El pago fue anulado. Puedes intentarlo otra vez cuando quieras.');
+            return;
+        }
+        JM_Util::flash('info', 'Tu pago está pendiente de confirmación. Actualizamos el estado en cuanto Flow nos avise.');
+    }
 
     public static function comprar()
     {

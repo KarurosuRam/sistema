@@ -2,10 +2,16 @@
 /**
  * Planes y cobros.
  *
- * Dos modos:
+ * Tres modos:
  *   - demo        → pasarela de prueba dentro del sitio, sin dinero real.
  *   - mercadopago → Checkout Pro: el comprador paga en Mercado Pago y los
  *                   cupos se acreditan solo cuando la API confirma el pago.
+ *   - flow        → Flow: la orden se crea en Flow y el comprador paga en su
+ *                   sitio. Los cupos se acreditan solo cuando getStatus
+ *                   confirma la orden con el monto y la referencia correctos.
+ *
+ * La pasarela activa se elige en Ajustes y solo entra en vigor si tiene sus
+ * credenciales; si no, el sitio sigue en modo demostración.
  *
  * No se usa el SDK: son dos llamadas HTTP (crear preferencia y consultar el
  * pago) que se hacen con la API de WordPress, así no hay dependencias que
@@ -53,13 +59,39 @@ class JM_Payments
         return JM_Util::settings();
     }
 
+    /** Pasarela realmente activa: demo · mercadopago · flow. */
     public static function mode()
     {
         $settings = self::settings();
         if ($settings['mode'] === 'mercadopago' && self::token() !== '') {
             return 'mercadopago';
         }
+        if ($settings['mode'] === 'flow' && JM_Flow::configured()) {
+            return 'flow';
+        }
         return 'demo';
+    }
+
+    /** Pasarela elegida en Ajustes, exista o no credencial. */
+    public static function requested_mode()
+    {
+        $settings = self::settings();
+        return in_array($settings['mode'], array('demo', 'mercadopago', 'flow'), true)
+            ? $settings['mode']
+            : 'demo';
+    }
+
+    /** Nombre legible de la pasarela activa. */
+    public static function mode_label($mode = null)
+    {
+        $mode = $mode ? $mode : self::mode();
+        if ($mode === 'mercadopago') {
+            return 'Mercado Pago';
+        }
+        if ($mode === 'flow') {
+            return 'Flow';
+        }
+        return 'Pasarela de prueba';
     }
 
     public static function token()
@@ -81,7 +113,8 @@ class JM_Payments
 
     public static function provider_name()
     {
-        return self::mode() === 'mercadopago' ? 'Mercado Pago' : 'la pasarela de prueba';
+        $mode = self::mode();
+        return $mode === 'demo' ? 'la pasarela de prueba' : self::mode_label($mode);
     }
 
     /* ------------------------------------------------------------- compras */
@@ -91,6 +124,15 @@ class JM_Payments
         $plan = self::plan($plan_id);
         if (!$plan) {
             return new WP_Error('jm_plan', 'Ese plan no existe.');
+        }
+
+        // Flow exige URLs públicas HTTPS para notificar y volver; sin eso el
+        // comprador pagaría y la compra nunca se acreditaría.
+        if (self::mode() !== 'demo' && !is_ssl()) {
+            return new WP_Error(
+                'jm_https',
+                'Los pagos reales necesitan HTTPS. Configura el certificado del dominio antes de cobrar.'
+            );
         }
 
         $reference = JM_Util::reference();
@@ -114,6 +156,10 @@ class JM_Payments
             return array('purchase' => $purchase, 'url' => self::demo_url($purchase));
         }
 
+        if (self::mode() === 'flow') {
+            return self::start_flow($purchase);
+        }
+
         $preference = self::create_preference($purchase);
         if (is_wp_error($preference)) {
             JM_Repo::update_purchase($reference, array('status' => 'anulado'));
@@ -124,6 +170,55 @@ class JM_Payments
         $purchase = JM_Repo::find_purchase($reference);
 
         return array('purchase' => $purchase, 'url' => $preference['init_point']);
+    }
+
+    /**
+     * Crea la orden en Flow y devuelve la URL de pago.
+     *
+     * `urlConfirmation` es la notificación servidor a servidor y `urlReturn`
+     * la vuelta del navegador; ambas tienen que ser HTTPS públicas para que
+     * Flow las acepte.
+     */
+    private static function start_flow($purchase)
+    {
+        $user = get_user_by('id', (int) $purchase->user_id);
+
+        $order = JM_Flow::create_payment(array(
+            'commerceOrder' => $purchase->reference,
+            'subject' => 'Jardín Memorial · ' . $purchase->plan_name,
+            'amount' => (int) $purchase->amount,
+            'email' => $user ? $user->user_email : '',
+            'urlConfirmation' => add_query_arg(
+                array('action' => 'jm_flow', 'jm_flow' => 'confirmar'),
+                admin_url('admin-post.php')
+            ),
+            'urlReturn' => add_query_arg(
+                array('action' => 'jm_flow', 'jm_flow' => 'retorno'),
+                admin_url('admin-post.php')
+            ),
+            'optional' => array(
+                'referencia' => $purchase->reference,
+                'plan' => $purchase->plan,
+                'cuenta' => (int) $purchase->user_id,
+            ),
+        ));
+
+        if (is_wp_error($order)) {
+            JM_Repo::update_purchase($purchase->reference, array('status' => 'anulado'));
+            return $order;
+        }
+
+        JM_Repo::update_purchase($purchase->reference, array(
+            'provider_token' => $order['token'],
+            'provider_order' => $order['flowOrder'] !== '' ? $order['flowOrder'] : null,
+        ));
+
+        $purchase = JM_Repo::find_purchase($purchase->reference);
+
+        return array(
+            'purchase' => $purchase,
+            'url' => JM_Flow::payment_url($order['url'], $order['token']),
+        );
     }
 
     public static function demo_url($purchase)
@@ -191,6 +286,92 @@ class JM_Payments
         return array(
             'id' => (string) $response['id'],
             'init_point' => (string) ($response['init_point'] ? $response['init_point'] : $response['sandbox_init_point']),
+        );
+    }
+
+    /* --------------------------------------------------------------- Flow */
+
+    /**
+     * Sincroniza una compra con el estado real de su orden en Flow.
+     *
+     * Comprobaciones antes de acreditar:
+     *   - el token existe en nuestra base y la compra está pendiente;
+     *   - `commerceOrder` que informa Flow es la referencia de esa compra;
+     *   - el monto y la moneda coinciden con el plan vendido.
+     *
+     * Es idempotente: la notificación de Flow y la vuelta del navegador pueden
+     * llegar juntas y los cupos se acreditan una sola vez.
+     */
+    public static function sync_flow($token)
+    {
+        $token = trim((string) $token);
+        if ($token === '') {
+            return new WP_Error('jm_flow_token', 'No recibimos el token de Flow.');
+        }
+
+        $purchase = JM_Repo::find_purchase_by_token($token, 'flow');
+        if (!$purchase) {
+            return new WP_Error('jm_flow_missing', 'No encontramos la compra de este pago.');
+        }
+
+        if ($purchase->status === 'pagado') {
+            return array('status' => 'pagado', 'already' => true, 'purchase' => $purchase);
+        }
+        if ($purchase->status === 'reembolsado') {
+            return array('status' => 'reembolsado', 'already' => true, 'purchase' => $purchase);
+        }
+
+        $data = JM_Flow::get_status($token);
+        if (is_wp_error($data)) {
+            return $data;
+        }
+
+        $status = JM_Flow::normalize_status(isset($data['status']) ? $data['status'] : 0);
+        $order = isset($data['commerceOrder']) ? (string) $data['commerceOrder'] : '';
+        $amount = isset($data['amount']) ? (int) round((float) $data['amount']) : 0;
+        $currency = isset($data['currency']) ? strtoupper((string) $data['currency']) : 'CLP';
+        $flow_order = isset($data['flowOrder']) ? (string) $data['flowOrder'] : $purchase->provider_order;
+        $payer = isset($data['payer']) ? (string) $data['payer'] : null;
+
+        // La orden tiene que ser la nuestra y por el monto vendido.
+        if ($status === 'pagado' && ($order !== (string) $purchase->reference || $amount !== (int) $purchase->amount || $currency !== 'CLP')) {
+            JM_Repo::update_purchase($purchase->reference, array(
+                'status' => 'invalido',
+                'provider_order' => $flow_order ? $flow_order : $purchase->provider_order,
+            ));
+            return new WP_Error(
+                'jm_flow_mismatch',
+                'El pago no coincide con la orden registrada (monto, moneda o referencia).'
+            );
+        }
+
+        if ($status === 'pagado') {
+            JM_Repo::update_purchase($purchase->reference, array(
+                'status' => 'pagado',
+                'provider_order' => $flow_order ? $flow_order : $purchase->provider_order,
+                'payer_email' => $payer,
+                'paid_at' => current_time('mysql'),
+            ));
+
+            $fresh = JM_Repo::find_purchase($purchase->reference);
+            if ($fresh && $fresh->status === 'pagado') {
+                JM_Accounts::add_credits((int) $fresh->user_id, (int) $fresh->credits);
+            }
+
+            return array('status' => 'pagado', 'credited' => true, 'purchase' => $fresh);
+        }
+
+        // Rechazada o anulada: nunca acredita. Pendiente: se conserva tal cual.
+        if (in_array($status, array('rechazado', 'anulado'), true) && $purchase->status === 'pendiente') {
+            JM_Repo::update_purchase($purchase->reference, array(
+                'status' => 'anulado',
+                'provider_order' => $flow_order ? $flow_order : $purchase->provider_order,
+            ));
+        }
+
+        return array(
+            'status' => $status,
+            'purchase' => JM_Repo::find_purchase($purchase->reference),
         );
     }
 
@@ -350,6 +531,9 @@ class JM_Payments
         if (!$purchase) {
             return new WP_Error('jm_purchase', 'No encontramos esa compra.');
         }
+        if ($purchase->mode === 'flow') {
+            return self::sync_flow($purchase->provider_token);
+        }
         if ($purchase->mode !== 'mercadopago') {
             return new WP_Error('jm_purchase', 'Esta compra es de la pasarela de prueba.');
         }
@@ -381,6 +565,9 @@ class JM_Payments
         if (!$purchase) {
             return new WP_Error('jm_purchase', 'No encontramos esa compra.');
         }
+        if ($purchase->mode === 'flow') {
+            return self::refund_flow($purchase);
+        }
         if ($purchase->mode !== 'mercadopago') {
             return new WP_Error('jm_refund', 'Fue una compra de prueba: no hay dinero que devolver.');
         }
@@ -400,6 +587,30 @@ class JM_Payments
         }
 
         return self::mark_refunded($purchase, isset($refund['id']) ? $refund['id'] : null);
+    }
+
+    /** Devuelve en Flow el dinero de una orden pagada. */
+    private static function refund_flow($purchase)
+    {
+        if (empty($purchase->provider_token)) {
+            return new WP_Error('jm_refund', 'Falta el token de Flow. Usa «Verificar» primero.');
+        }
+        if ($purchase->status === 'reembolsado') {
+            return new WP_Error('jm_refund', 'Esta compra ya está reembolsada.');
+        }
+        if ($purchase->status !== 'pagado') {
+            return new WP_Error('jm_refund', 'Solo se pueden devolver compras pagadas.');
+        }
+
+        $refund = JM_Flow::refund($purchase->provider_token, (int) $purchase->amount);
+        if (is_wp_error($refund)) {
+            return $refund;
+        }
+
+        return self::mark_refunded(
+            $purchase,
+            isset($refund['refundOrder']) ? (string) $refund['refundOrder'] : null
+        );
     }
 
     /** Cierra una compra como devuelta y libera los cupos sin usar. */

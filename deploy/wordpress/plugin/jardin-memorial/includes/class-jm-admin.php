@@ -71,6 +71,12 @@ class JM_Admin
         if ($settings['mode'] === 'mercadopago' && JM_Payments::token() === '') {
             echo '<div class="notice notice-warning"><p><strong>Jardín Memorial:</strong> el modo de pago es Mercado Pago pero falta el Access Token. Las compras quedan en la pasarela de prueba.</p></div>';
         }
+        if ($settings['mode'] === 'flow' && !JM_Flow::configured()) {
+            echo '<div class="notice notice-warning"><p><strong>Jardín Memorial:</strong> el modo de pago es Flow pero faltan la API Key o la Secret Key. Las compras quedan en la pasarela de prueba.</p></div>';
+        }
+        if (JM_Payments::mode() !== 'demo' && !is_ssl()) {
+            echo '<div class="notice notice-error"><p><strong>Jardín Memorial:</strong> el sitio no está en HTTPS. Mercado Pago y Flow necesitan HTTPS público para notificar el pago; las compras reales no se acreditarán hasta instalar el certificado.</p></div>';
+        }
         if (!self::correo_configurado()) {
             echo '<div class="notice notice-info"><p><strong>Jardín Memorial:</strong> WordPress no tiene un plugin de correo (SMTP) configurado. El enlace de recuperación de contraseña puede no llegar; puedes generarlo a mano en <a href="' . esc_url(admin_url('admin.php?page=jm-correo')) . '">Correo y claves</a>.</p></div>';
         }
@@ -97,12 +103,23 @@ class JM_Admin
 
         echo '<table class="widefat striped" style="max-width:820px;margin:16px 0 26px">';
         echo '<tbody>';
-        echo '<tr><th style="width:220px">Pasarela activa</th><td><strong>' . esc_html($mode === 'mercadopago' ? 'Mercado Pago' : 'Pasarela de prueba') . '</strong></td></tr>';
+        echo '<tr><th style="width:220px">Pasarela activa</th><td><strong>' . esc_html(JM_Payments::mode_label($mode)) . '</strong>';
+        if ($mode === 'demo' && JM_Payments::requested_mode() !== 'demo') {
+            echo ' <em>(' . esc_html(JM_Payments::mode_label(JM_Payments::requested_mode())) . ' elegido, sin credenciales)</em>';
+        }
+        echo '</td></tr>';
         if ($mode === 'mercadopago') {
             $tipo = JM_Payments::token_is_test() ? 'pruebas (TEST-)' : 'producción (APP_USR-)';
             echo '<tr><th>Access Token</th><td><code>' . esc_html(self::mask($token)) . '</code> · ' . esc_html($tipo) . '</td></tr>';
             echo '<tr><th>Firma del webhook</th><td>' . (JM_Payments::webhook_secret() !== '' ? 'definida' : 'sin definir (la app igual consulta el pago real)') . '</td></tr>';
             echo '<tr><th>URL de notificación</th><td><code>' . esc_html(rest_url('jardin-memorial/v1/mp')) . '</code></td></tr>';
+        }
+        if ($mode === 'flow' || JM_Payments::requested_mode() === 'flow') {
+            echo '<tr><th>Ambiente de Flow</th><td>' . esc_html(JM_Flow::environment() === 'production' ? 'Producción' : 'Pruebas') . '</td></tr>';
+            echo '<tr><th>API Key</th><td>' . (JM_Flow::configured() ? '<code>' . esc_html(self::mask(JM_Flow::api_key())) . '</code>' : 'sin definir') . '</td></tr>';
+            if ($mode === 'flow') {
+                echo '<tr><th>Notificación de Flow</th><td><code>' . esc_html(add_query_arg(array('action' => 'jm_flow', 'jm_flow' => 'confirmar'), admin_url('admin-post.php'))) . '</code></td></tr>';
+            }
         }
         echo '<tr><th>Ventas pagadas</th><td><strong>' . esc_html(JM_Util::clp($totals->amount_paid)) . '</strong> · ' . (int) $totals->credits_sold . ' memoriales</td></tr>';
         echo '<tr><th>Pagos pendientes</th><td>' . (int) $totals->pending . '</td></tr>';
@@ -141,7 +158,7 @@ class JM_Admin
                 echo '</form> ';
             }
 
-            if ($purchase->status === 'pagado' && $purchase->mode === 'mercadopago') {
+            if ($purchase->status === 'pagado' && in_array($purchase->mode, array('mercadopago', 'flow'), true)) {
                 echo '<form method="post" action="' . esc_url(admin_url('admin-post.php')) . '" style="display:inline" onsubmit="return confirm(\'Se devolverá el dinero en Mercado Pago y se quitarán los cupos sin usar. Los memoriales creados no se borran. ¿Continuar?\');">';
                 wp_nonce_field('jm_admin_reembolsar');
                 echo '<input type="hidden" name="action" value="jm_admin_reembolsar">';
@@ -202,8 +219,9 @@ class JM_Admin
                             <select name="mode" id="jm_mode">
                                 <option value="demo" <?php selected($settings['mode'], 'demo'); ?>>Pasarela de prueba (sin cobros reales)</option>
                                 <option value="mercadopago" <?php selected($settings['mode'], 'mercadopago'); ?>>Mercado Pago — Checkout Pro</option>
+                                <option value="flow" <?php selected($settings['mode'], 'flow'); ?>>Flow — Webpay, tarjetas y otros medios</option>
                             </select>
-                            <p class="description">Con «Pasarela de prueba» se puede recorrer la compra completa sin dinero real.</p>
+                            <p class="description">Con «Pasarela de prueba» se puede recorrer la compra completa sin dinero real. Cada pasarela necesita sus propias credenciales.</p>
                         </td>
                     </tr>
                     <tr>
@@ -231,6 +249,40 @@ class JM_Admin
                         </td>
                     </tr>
                     <tr>
+                        <th scope="row" colspan="2"><h3 style="margin:8px 0 0">Flow</h3></th>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="jm_flow_env">Ambiente</label></th>
+                        <td>
+                            <select name="flow_env" id="jm_flow_env">
+                                <option value="sandbox" <?php selected($settings['flow_env'], 'sandbox'); ?>>Pruebas (sandbox.flow.cl)</option>
+                                <option value="production" <?php selected($settings['flow_env'], 'production'); ?>>Producción (www.flow.cl)</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="jm_flow_key">API Key</label></th>
+                        <td>
+                            <input type="password" class="regular-text" id="jm_flow_key" name="flow_key" autocomplete="off"
+                                   placeholder="<?php echo JM_Flow::configured() ? esc_attr('Guardada: ' . self::mask(JM_Flow::api_key())) : 'apiKey de Flow'; ?>">
+                            <p class="description">Se guarda cifrada. Déjala vacía para conservar la actual.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row"><label for="jm_flow_secret">Secret Key</label></th>
+                        <td>
+                            <input type="password" class="regular-text" id="jm_flow_secret" name="flow_secret" autocomplete="off"
+                                   placeholder="<?php echo JM_Flow::configured() ? 'Guardada' : 'secretKey de Flow'; ?>">
+                            <p class="description">Firma cada llamada a Flow. Sin ella no se pueden crear ni verificar órdenes.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">URL de notificación</th>
+                        <td><code><?php echo esc_html(add_query_arg(array('action' => 'jm_flow', 'jm_flow' => 'confirmar'), admin_url('admin-post.php'))); ?></code>
+                            <p class="description">Flow la recibe sola; no hay que configurarla en el panel de Flow.</p>
+                        </td>
+                    </tr>
+                    <tr>
                         <th scope="row"><label for="jm_admin_emails">Correos administradores</label></th>
                         <td>
                             <input type="text" class="regular-text" id="jm_admin_emails" name="admin_emails" value="<?php echo esc_attr($admin_emails); ?>">
@@ -252,7 +304,7 @@ class JM_Admin
 
         $settings = JM_Payments::settings();
         $mode = isset($_POST['mode']) ? sanitize_key(wp_unslash($_POST['mode'])) : 'demo';
-        $settings['mode'] = $mode === 'mercadopago' ? 'mercadopago' : 'demo';
+        $settings['mode'] = in_array($mode, array('mercadopago', 'flow'), true) ? $mode : 'demo';
 
         $env = isset($_POST['mp_env']) ? sanitize_key(wp_unslash($_POST['mp_env'])) : 'sandbox';
         $settings['mp_env'] = $env === 'production' ? 'production' : 'sandbox';
@@ -262,6 +314,16 @@ class JM_Admin
         }
         if (!empty($_POST['mp_secret'])) {
             $settings['mp_secret'] = JM_Util::encrypt(sanitize_text_field(wp_unslash($_POST['mp_secret'])));
+        }
+
+        $flow_env = isset($_POST['flow_env']) ? sanitize_key(wp_unslash($_POST['flow_env'])) : 'sandbox';
+        $settings['flow_env'] = $flow_env === 'production' ? 'production' : 'sandbox';
+
+        if (!empty($_POST['flow_key'])) {
+            $settings['flow_key'] = JM_Util::encrypt(sanitize_text_field(wp_unslash($_POST['flow_key'])));
+        }
+        if (!empty($_POST['flow_secret'])) {
+            $settings['flow_secret'] = JM_Util::encrypt(sanitize_text_field(wp_unslash($_POST['flow_secret'])));
         }
 
         update_option('jm_settings', $settings);
