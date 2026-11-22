@@ -311,13 +311,17 @@ jobs:
 
           # El enlace se guarda en la rama y en una incidencia: el resumen del
           # trabajo y los artefactos no se pueden consultar desde fuera.
-          printf '%s\n' "$URL" demo demo-jardin-2026 "${WP_ADMIN_USER}" "${WP_ADMIN_PASS}" > enlace.txt
+          echo "$URL" > enlace.txt
+          echo "demo" >> enlace.txt
+          echo "demo-jardin-2026" >> enlace.txt
+          echo "${WP_ADMIN_USER}" >> enlace.txt
+          echo "${WP_ADMIN_PASS}" >> enlace.txt
 
           git config user.name "Jardín Memorial"
           git config user.email "bot@jardinmemorial.cl"
-          git add -f enlace.txt
-          git commit -q -m "Enlace de pruebas: $URL"
-          git push -q origin "HEAD:refs/heads/${GITHUB_REF_NAME}" || echo "No se pudo guardar enlace.txt en la rama"
+          # La incidencia es la vía legible: los logs, el resumen del trabajo y
+          # los artefactos de Actions no se pueden consultar desde fuera.
+          echo "::notice title=ENLACE: $URL::Puerta demo/demo-jardin-2026 · WordPress ${WP_ADMIN_USER}/${WP_ADMIN_PASS}"
           echo "Enlace guardado en la rama ${GITHUB_REF_NAME}"
 
           gh issue create \
@@ -348,18 +352,18 @@ jobs:
             NUEVO=$(git ls-remote origin "refs/heads/${RAMA}" | cut -f1)
             if [ -n "$NUEVO" ] && [ "$NUEVO" != "$ULTIMO" ]; then
               echo "Cambios nuevos (${ULTIMO} → ${NUEVO}); actualizando…"
-              git fetch origin "${RAMA}" --quiet
-              git checkout --quiet FETCH_HEAD
-
-              # Plugin: se copia encima; los datos y uploads no se tocan.
-              cp -a deploy/wordpress/plugin/jardin-memorial/. \
-                wordpress/wp-content/plugins/jardin-memorial/
-              sudo chown -R www-data:www-data wordpress/wp-content
-
-              wp eval 'JM_DB::maybe_upgrade();' --path=wordpress || true
-              wp cache flush --path=wordpress || true
-
-              echo "Actualizado a ${NUEVO}."
+              # Un fallo al actualizar se anota y se sigue sirviendo la versión
+              # anterior: el enlace no se debe caer por un commit a medias.
+              if git fetch origin "${RAMA}" --quiet \
+                 && git checkout --quiet FETCH_HEAD \
+                 && cp -a deploy/wordpress/plugin/jardin-memorial/. \
+                      wordpress/wp-content/plugins/jardin-memorial/ \
+                 && wp eval 'JM_DB::maybe_upgrade();' --path=wordpress \
+                 && wp cache flush --path=wordpress; then
+                echo "Actualizado a ${NUEVO}."
+              else
+                echo "::warning title=Actualización fallida: ${NUEVO}::Se conserva la versión anterior; revisar el commit."
+              fi
               ULTIMO="$NUEVO"
             fi
           done
