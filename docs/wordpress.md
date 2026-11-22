@@ -390,3 +390,4 @@ jardin-memorial/
   contraseña con token de 43 caracteres, 60 minutos de vida y límite de 8
   solicitudes cada 30 minutos.
 - Contraseña con `wp_hash_password`, sesión de WordPress (sin cookies propias).
+prueba-vigia-1795390200
