@@ -252,19 +252,27 @@ jobs:
             sleep 3
           done
           echo "Inicio: $CODE"
-          [ "$CODE" = "200" ] || { echo "El sitio no responde"; exit 1; }
+          PROBLEMAS=""
+          [ "$CODE" = "200" ] || PROBLEMAS="inicio=$CODE;"
 
           for RUTA in /memoriales/ /planes/ /mi-jardin/ /crear-cuenta/; do
             C=$(curl -s -o /dev/null -w '%{http_code}' -u 'demo:demo-jardin-2026' "$URL$RUTA")
             echo "  $RUTA → $C"
-            [ "$C" = "200" ] || exit 1
+            [ "$C" = "200" ] || PROBLEMAS="${PROBLEMAS}${RUTA}=$C;"
           done
 
           for SLUG in rosa-elena-munoz oscar-contreras-pena camila-fuentes-rojas nala; do
             C=$(curl -s -o /dev/null -w '%{http_code}' -u 'demo:demo-jardin-2026' "$URL/m/$SLUG")
             echo "  /m/$SLUG → $C"
-            [ "$C" = "200" ] || exit 1
+            [ "$C" = "200" ] || PROBLEMAS="${PROBLEMAS}/m/$SLUG=$C;"
           done
+
+          if [ -n "$PROBLEMAS" ]; then
+            # Se mira qué dice WordPress en el inicio para orientar el arreglo.
+            DETALLE=$(curl -s -u 'demo:demo-jardin-2026' "$URL/" | tr '\n' ' ' | sed 's/<[^>]*>//g' | tr -s ' ' | cut -c1-300)
+            echo "::error title=DIAG enlace: ${PROBLEMAS} :: texto: ${DETALLE}::fin"
+            exit 1
+          fi
 
       - name: Publicar el enlace
         env:
