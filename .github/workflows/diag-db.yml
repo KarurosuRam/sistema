@@ -20,7 +20,10 @@ jobs:
             sudo -u mysql mysqld_safe --skip-networking=0 --bind-address=127.0.0.1 >/tmp/mysqld.log 2>&1 &
             sleep 8
             echo "== activo =="; systemctl is-active mariadb 2>&1 || true
-            echo "== root =="; sudo mysql -e "SELECT VERSION();" 2>&1 | head -3
+            echo "== root socket =="; sudo mysql -e "SELECT VERSION();" 2>&1 | head -3
+            echo "== root tcp =="; mysql -h 127.0.0.1 -uroot -e "SELECT VERSION();" 2>&1 | head -3
+            echo "== log mysqld =="; tail -12 /tmp/mysqld.log 2>&1
+            echo "== error log =="; sudo tail -12 /var/log/mysql/error.log 2>&1
           } 2>&1 | tee "$OUT"
           while IFS= read -r linea; do
             [ -n "$linea" ] && echo "::warning title=DIAG::$linea"
