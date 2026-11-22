@@ -58,12 +58,20 @@ const server = http.createServer((req, res) => {
 
   // La app va detrás de un túnel HTTPS: se le dice que la petición original
   // llegó cifrada para que arme enlaces absolutos (QR, certificados) correctos.
+  //
+  // PUBLIC_HOST permite fijar el dominio público cuando el túnel no reenvía el
+  // Host original (es lo que necesita WordPress para no redirigir a su dominio
+  // interno con un 301).
+  const hostPublico = process.env.PUBLIC_HOST || req.headers.host || '';
   const headers = {
     ...req.headers,
     'x-forwarded-proto': 'https',
     'x-forwarded-for': req.socket.remoteAddress || '',
-    'x-forwarded-host': req.headers.host || ''
+    'x-forwarded-host': hostPublico
   };
+  if (hostPublico) {
+    headers.host = hostPublico;
+  }
 
   const upstream = http.request(
     {

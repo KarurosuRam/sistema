@@ -224,9 +224,17 @@ jobs:
           echo "url=$URL" >> "$GITHUB_OUTPUT"
           echo "Túnel: $URL"
 
+          # WordPress arma enlaces absolutos con su `home`: si sigue apuntando a
+          # 127.0.0.1, cada visita redirige fuera del túnel (301). Se cambia a la
+          # dirección pública antes de comprobar nada.
+          wp option update home "$URL" --path=wordpress
+          wp option update siteurl "$URL" --path=wordpress
+          wp rewrite flush --hard --path=wordpress
+
       - name: Servir el sitio y la puerta de acceso
         env:
           GATE_PASSWORD: demo-jardin-2026
+          URL: ${{ steps.tunel.outputs.url }}
         run: |
           # El túnel apunta al puerto 8080: detrás está la puerta con usuario y
           # contraseña y, más atrás, el WordPress real en el 8081.
@@ -236,6 +244,7 @@ jobs:
           echo $! > wp.pid
           GATE_PASSWORD="$GATE_PASSWORD" \
           GATE_USER=demo APP_PORT=8081 PORT=8080 \
+          PUBLIC_HOST="${URL#https://}" \
             node scripts/acceso-privado.js > puerta.log 2>&1 &
           echo $! > puerta.pid
           sleep 3
@@ -247,7 +256,7 @@ jobs:
           URL: ${{ steps.tunel.outputs.url }}
         run: |
           for _ in $(seq 1 40); do
-            CODE=$(curl -s -o /dev/null -w '%{http_code}' -u 'demo:demo-jardin-2026' "$URL/")
+            CODE=$(curl -sL -o /dev/null -w '%{http_code}' -u 'demo:demo-jardin-2026' "$URL/")
             [ "$CODE" = "200" ] && break
             sleep 3
           done
@@ -256,13 +265,13 @@ jobs:
           [ "$CODE" = "200" ] || PROBLEMAS="inicio=$CODE;"
 
           for RUTA in /memoriales/ /planes/ /mi-jardin/ /crear-cuenta/; do
-            C=$(curl -s -o /dev/null -w '%{http_code}' -u 'demo:demo-jardin-2026' "$URL$RUTA")
+            C=$(curl -sL -o /dev/null -w '%{http_code}' -u 'demo:demo-jardin-2026' "$URL$RUTA")
             echo "  $RUTA → $C"
             [ "$C" = "200" ] || PROBLEMAS="${PROBLEMAS}${RUTA}=$C;"
           done
 
           for SLUG in rosa-elena-munoz oscar-contreras-pena camila-fuentes-rojas nala; do
-            C=$(curl -s -o /dev/null -w '%{http_code}' -u 'demo:demo-jardin-2026' "$URL/m/$SLUG")
+            C=$(curl -sL -o /dev/null -w '%{http_code}' -u 'demo:demo-jardin-2026' "$URL/m/$SLUG")
             echo "  /m/$SLUG → $C"
             [ "$C" = "200" ] || PROBLEMAS="${PROBLEMAS}/m/$SLUG=$C;"
           done
